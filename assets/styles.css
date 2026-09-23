@@ -362,4 +362,5 @@ button { cursor: pointer; }
 .rev-group h3 { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-family: var(--text); padding: 16px 0 6px; }
 .review-item.ok .n { color: var(--ok); }
 .review-item .ans .right.plain { color: var(--ok); }
-.res-actions { display: flex; justify-content: flex-end; }
+.res-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.res-actions a.btn { text-decoration: none; }

@@ -361,6 +361,8 @@
     $("sName").textContent = name || "—"; $("sEmail").textContent = S.email || "";
     $("sDate").textContent = "Completed " + new Date(S.finishedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
+    $("certBtn").href = "certificate.html?" + new URLSearchParams({ n: name, c: sc.c, t: n, b: best && best.pct > 0 ? best.name : "", d: new Date(S.finishedAt).toISOString() });
+
     renderReview("wrong");
     if (distinction && !S.confettiShown) { S.confettiShown = true; save(); confetti(); }
   }
