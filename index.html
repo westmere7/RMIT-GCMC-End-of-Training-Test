@@ -92,7 +92,7 @@
             <li><span class="n">01</span><p><b>Timing.</b> The clock can't be paused. It submits at 00:00.</p></li>
             <li><span class="n">02</span><p><b>Answers.</b> Final once submitted. A skipped question counts as wrong.</p></li>
             <li><span class="n">03</span><p><b>Written answers.</b> A word or short phrase. Capitals and accents don't matter.</p></li>
-            <li class="crit"><span class="n">04</span><p><b>Critical questions.</b> Marked <span class="crit-chip">Critical</span>. A wrong answer loses <span id="dPen">3</span> marks.</p></li>
+            <li class="crit"><span class="n">04</span><p><b>Critical questions.</b> Marked <span class="crit-chip">Critical</span>. A wrong or skipped answer loses <span id="dPen">3</span> marks. <span id="dCritN"></span></p></li>
             <li><span class="n">05</span><p><b>Keyboard.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
           </ol>
         </section>
@@ -129,6 +129,7 @@
             <div class="q-info"><span class="k">Format</span><b id="qType">Single choice</b></div>
             <div class="q-marks" id="qMarks">1 mark</div>
           </div>
+          <div class="crit-notice" id="critNotice" hidden role="alert"><b>Critical question.</b> <span id="critNoticeText">A wrong or skipped answer loses 3 marks.</span> Take your time.</div>
           <div id="qBody"></div>
           <div class="q-actions">
             <button class="btn" id="submitBtn" disabled>Submit answer</button>
@@ -149,13 +150,8 @@
           <p class="count" id="count">0 <small>of 30 answered</small></p>
           <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
           <div class="dots" id="dots"></div>
-          <div class="legend"><span><i style="background:var(--navy)"></i>Answered</span><span><i style="background:var(--navy-30)"></i>Skipped</span><span><i style="box-shadow:inset 0 0 0 2px var(--red)"></i>Current</span></div>
+          <div class="legend"><span><i style="background:var(--navy)"></i>Answered</span><span><i style="background:var(--navy-30)"></i>Skipped</span><span><i style="box-shadow:inset 0 0 0 2px var(--red)"></i>Current</span><span class="lg-crit"><i></i>Critical</span></div>
           <p class="note">Answers are saved as you go. Refreshing won't stop the clock.</p>
-        </div>
-        <div class="card examiners" id="examiners">
-          <div class="ex-head"><p class="eyebrow">Examiners online</p><span class="ex-live"><i></i><b id="exCount">1</b> live</span></div>
-          <ul class="ex-list" id="exList"></ul>
-          <p class="ex-foot">This session is observed for quality assurance.</p>
         </div>
       </aside>
     </div>
@@ -221,7 +217,6 @@
 
   <script src="assets/common.js"></script>
   <script src="assets/meter.js"></script>
-  <script src="assets/examiners.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

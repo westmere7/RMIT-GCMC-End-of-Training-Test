@@ -52,6 +52,8 @@
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
     $("dPen").textContent = PENALTY();
+    const nCrit = DATA.questions.filter((q) => q.critical).length;
+    $("dCritN").textContent = nCrit ? "Your paper may include some; they're flagged in red." : "";
     $("briefLead").textContent = "Covers every part of your onboarding. Read the conditions, then start.";
 
     S = load();
@@ -126,7 +128,6 @@
     show("scrTest");
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
-    startExaminers();
     buildDots(); renderQuestion(); runClock();
   }
 
@@ -156,18 +157,10 @@
     upd(); tick = setInterval(upd, 250);
   }
 
-  // ---------- examiners ----------
-  let examiners = null;
-  function startExaminers() {
-    if (examiners) examiners.stop();
-    examiners = new Examiners($("exList"), $("exCount"), (DATA.settings || {}).examiners, S.examiners, (state) => { S.examiners = state; save(); });
-    S.examiners = examiners.s; save(); examiners.start();
-  }
-
   // ---------- progress ----------
   function buildDots() {
     const box = $("dots"); box.innerHTML = "";
-    QS().forEach((_, i) => { const d = document.createElement("span"); d.textContent = i + 1; box.appendChild(d); });
+    QS().forEach((q, i) => { const d = document.createElement("span"); d.textContent = i + 1; if (q.critical) { d.dataset.crit = "1"; d.title = "Critical question"; } box.appendChild(d); });
     updateProgress();
   }
   function updateProgress() {
@@ -190,6 +183,7 @@
     $("qType").textContent = A.TYPE_LABEL[q.type] || "Question";
     $("qTopic").textContent = A.categoryOf(q);
     $("qCard").classList.toggle("critical", !!q.critical);
+    $("critNotice").hidden = !q.critical; $("critNoticeText").textContent = `A wrong or skipped answer loses ${PENALTY()} marks.`;
     $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>−${PENALTY()} marks if wrong</small>` : "1 mark";
     $("qStatus").className = "status"; $("qStatus").innerHTML = '<span class="kbd">Press <b>Enter</b> to submit</span>';
     const body = $("qBody"); body.innerHTML = "";
@@ -302,7 +296,7 @@
 
   // ---------- finish & results ----------
   function finish(timedOut) {
-    clearInterval(tick); if (examiners) examiners.stop();
+    clearInterval(tick);
     QS().forEach((q) => { if (!S.responses[q.id]) S.responses[q.id] = { response: null, correct: false, skipped: true, timedOut: !!timedOut }; });
     S.finished = true; S.finishedAt = Math.min(Date.now(), S.startedAt + S.limitMs); S.timedOut = !!timedOut;
     save();
