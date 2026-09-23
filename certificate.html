@@ -232,7 +232,7 @@
         const d = isNaN(v.date) ? new Date() : v.date, name = (v.name || "").trim() || "Candidate";
         const [latin, gloss] = honours(pct);
         $("cName").textContent = name;
-        $("cBody").textContent = "having endured four days of onboarding, a question bank with opinions and a meter that never sits still, sat the End‑of‑Training Assessment and scored";
+        $("cBody").textContent = "having completed the onboarding programme in full, and sat the End‑of‑Training Assessment with courage, composure and a strong cup of coffee, achieved a score of";
         $("cPct").textContent = pct + "%";
         $("cOf").textContent = `${c} of ${t} correct`;
         $("cBody2").textContent = (v.best ? `with particular brilliance in ${v.best}, ` : "") + "and is hereby admitted to the rank of";
