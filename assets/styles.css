@@ -436,3 +436,10 @@ button { cursor: pointer; }
 .ex-list { margin-top: 10px; }
 .ex-list li { padding: 8px 0; }
 .ex-foot { margin-top: 8px; }
+
+/* meter lamp: stays lit and breathes while the needle is pinned near an end (red side red, navy side navy) */
+.meter-face .lamp.peak i { animation: lampPeak 1.2s ease-in-out infinite; }
+.meter-face .lamp.peak.good i { background: var(--navy); box-shadow: 0 0 10px 2px rgba(0, 0, 84, 0.45); }
+.meter-face .lamp.peak { color: var(--red); }
+.meter-face .lamp.peak.good { color: var(--navy); }
+@keyframes lampPeak { 50% { filter: brightness(1.35); transform: scale(1.15); } }
