@@ -28,12 +28,13 @@
   Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
   Meter.prototype.setName = function (n) { this.name = String(n || "").trim(); };
   Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6; };
-  // a harder bounce now and then: a big flick, a rebound the other way, then the spring settles it as usual
+  // a harder bounce now and then: a big flick while the spring goes loose, so the needle swings through
+  // a few decaying oscillations; the looseness then fades and the needle is back to its usual steady self
   Meter.prototype.jolt = function (dir) {
     if (this.reduced) return this.kick(dir);
     const k = this.span / 0.52;
-    this.vel += dir * k * (4.2 + Math.random() * 1.6);
-    setTimeout(() => { this.vel -= dir * k * (2.2 + Math.random() * 1.2); }, 260 + Math.random() * 120);
+    this.looseT = 0;
+    this.vel += dir * k * (2.0 + Math.random() * 0.7);
   };
   Meter.prototype.zone = function (p) {
     const v = p == null ? this.p : p;
@@ -50,7 +51,12 @@
     const sig = amp * k * (0.009 * Math.sin(this.t * 5.3) + 0.005 * Math.sin(this.t * 9.7 + 1.3) + 0.004 * Math.sin(this.t * 2.1 + 2));
     if (!this.reduced && Math.random() < dt * 0.7) this.vel += (Math.random() - 0.5) * 0.25 * k;
     const target = this.p * S * 0.9 + sig;
-    const acc = 110 * (target - this.theta) - 13 * this.vel; // under-damped: a small overshoot, then settles
+    // normally stiff and well damped; after a jolt, softer and barely damped, easing back over a few seconds
+    // (fully loose for the first second, then it tightens up over the next two or three)
+    let L = 0;
+    if (this.looseT != null) { this.looseT += dt; L = this.looseT < 1.1 ? 1 : Math.exp(-(this.looseT - 1.1) / 1.2); if (L < 0.01) this.looseT = null; }
+    const K = 110 - 54 * L, D = 13 - 11 * L;
+    const acc = K * (target - this.theta) - D * this.vel;
     this.vel += acc * dt; this.theta += this.vel * dt;
     const lim = S + 0.04;
     if (this.theta > lim) { this.theta = lim; this.vel *= -0.35; }
