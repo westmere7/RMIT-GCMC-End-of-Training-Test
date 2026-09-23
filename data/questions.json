@@ -15,8 +15,7 @@
       "Brand",
       "RMIT",
       "Glossary",
-      "Aussie English",
-      "Misc"
+      "Aussie English"
     ],
     "assessmentCode": "GCMC-VN-ONB-2026",
     "shuffleOptions": true,
@@ -953,128 +952,132 @@
     {
       "id": "q64",
       "type": "single",
-      "category": "Team",
       "prompt": "Who checks a new request and its materials, picks the team and codes the ticket?",
+      "correct": [
+        2
+      ],
       "options": [
         "The GCMC Coordinator",
         "Danh",
         "The Account Manager",
         "The stakeholder"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Team"
     },
     {
       "id": "q65",
       "type": "single",
-      "category": "Team",
       "prompt": "A brief you've been assigned is unclear. Who do you ask first?",
+      "correct": [
+        2
+      ],
       "options": [
         "Another squad's designer",
         "Đức",
         "Danh",
         "The Account Manager"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Team"
     },
     {
       "id": "q66",
       "type": "single",
-      "category": "Team",
       "prompt": "Who is the go-to for digital display, Google Web Designer and motion?",
+      "correct": [
+        2
+      ],
       "options": [
         "Trinh",
         "Trân",
         "Eden",
         "Danh"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Team"
     },
     {
       "id": "q67",
       "type": "single",
-      "category": "Team",
       "prompt": "Who is the go-to for INTON style, China & SEA assets, CRICOS and brand checks?",
+      "correct": [
+        3
+      ],
       "options": [
         "Trân",
         "Trúc",
         "Eden",
         "Trinh"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q68",
       "type": "single",
-      "category": "Team",
       "prompt": "Who is the go-to for brand guidelines, Open Day and Domestic campaigns?",
+      "correct": [
+        3
+      ],
       "options": [
         "Eden",
         "Trúc",
         "Trinh",
         "Trân"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q69",
       "type": "single",
-      "category": "Team",
       "prompt": "Who is the go-to for Monday.com, video and motion, and hops between squads on a contract?",
+      "correct": [
+        3
+      ],
       "options": [
         "Trinh",
         "Trân",
         "Eden",
         "Trúc"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q70",
       "type": "single",
-      "category": "Team",
       "prompt": "How many people are in the team now, including you?",
+      "correct": [
+        3
+      ],
       "options": [
         "Eight",
         "Five",
         "Six",
         "Seven"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q71",
       "type": "single",
-      "category": "Team",
       "prompt": "Are designers fixed to one squad?",
+      "correct": [
+        2
+      ],
       "options": [
         "Yes. Each designer stays on one squad",
         "Only during Open Day season",
         "No. We rotate across INTON and Domestic for variety and to cover each other",
         "Only seniors rotate"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Team"
     },
     {
       "id": "q72",
       "type": "multi",
-      "category": "Team",
       "prompt": "Which of these do you take to Đức rather than Danh? (select all that apply)",
+      "correct": [
+        0,
+        1,
+        3
+      ],
       "options": [
         "Planning leave",
         "Your capacity",
@@ -1083,269 +1086,269 @@
         "Ticket priorities",
         "Feedback on a draft"
       ],
-      "correct": [
-        0,
-        1,
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q73",
       "type": "single",
-      "category": "Team",
       "prompt": "In the request chain, what's your part?",
+      "correct": [
+        0
+      ],
       "options": [
         "Design it, share it, iterate, deliver the FA and close it out",
         "Review and approve the work",
         "Check the request and code the ticket",
         "Take the brief and check scope and timing"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Team"
     },
     {
       "id": "q74",
       "type": "single",
-      "category": "Culture",
       "prompt": "What happens at the Monday Marketing team meeting?",
+      "correct": [
+        3
+      ],
       "options": [
         "A design critique",
         "Sprint planning with the Coordinator",
         "INTON task approvals",
         "The wider team goes through the week ahead"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Culture"
     },
     {
       "id": "q75",
       "type": "short",
-      "category": "Culture",
       "prompt": "What are the team's hangouts called?",
       "answers": [
         "RM-Ate-T",
         "RMAteT",
         "RM Ate T"
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q76",
       "type": "single",
-      "category": "Culture",
       "prompt": "Where do you make recognition official?",
+      "correct": [
+        3
+      ],
       "options": [
         "ServiceNow",
         "The Demand Tracker",
         "Workday",
         "RMIT Kudos"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Culture"
     },
     {
       "id": "q77",
       "type": "single",
-      "category": "Culture",
       "prompt": "You wake up sick on a workday. What does our team DNA say?",
+      "correct": [
+        0
+      ],
       "options": [
         "Log off and recover. The team will cover",
         "Tell the stakeholder directly",
         "Finish your open tickets first",
         "Work from home instead"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q78",
       "type": "single",
-      "category": "Culture",
       "prompt": "From October, after what time (Vietnam) should you expect a Melbourne reply only the next day?",
+      "correct": [
+        1
+      ],
       "options": [
         "12:00",
         "13:00",
         "14:00",
         "15:00"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Culture"
     },
     {
       "id": "q79",
       "type": "single",
-      "category": "Culture",
       "prompt": "When should you share drafts on Frame.io so comments are usually waiting when you arrive?",
+      "correct": [
+        2
+      ],
       "options": [
         "First thing in the morning",
         "At lunchtime",
         "In the afternoon",
         "Late at night"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Culture"
     },
     {
       "id": "q80",
       "type": "multi",
-      "category": "Culture",
       "prompt": "Which of these are Victorian public holidays to keep in mind? (select all that apply)",
+      "correct": [
+        0,
+        1
+      ],
       "options": [
         "AFL Grand Final Friday",
         "Melbourne Cup",
         "Mid-Autumn Festival",
         "Tết"
       ],
-      "correct": [
-        0,
-        1
-      ]
+      "category": "Culture"
     },
     {
       "id": "q81",
       "type": "single",
-      "category": "Culture",
       "prompt": "How should a meeting be booked?",
+      "correct": [
+        2
+      ],
       "options": [
         "As short notice as possible",
         "Always an hour long",
         "Agenda or desired outcome up front, actions and owners at the end",
         "Only on Fridays"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Culture"
     },
     {
       "id": "q82",
       "type": "single",
-      "category": "Culture",
       "prompt": "You need to message someone outside their working hours. What do you do?",
+      "correct": [
+        2
+      ],
       "options": [
         "Call them instead",
         "Wait until they message you",
         "Use schedule send in Outlook or Teams",
         "Send it now so it's done"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Culture"
     },
     {
       "id": "q83",
       "type": "single",
-      "category": "Culture",
       "prompt": "How often is the Marketing showcase, and how is it held?",
+      "correct": [
+        1
+      ],
       "options": [
         "Yearly, in Melbourne",
         "Quarterly, face to face",
         "Weekly, on Teams",
         "Monthly, by email"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Culture"
     },
     {
       "id": "q84",
       "type": "single",
-      "category": "Culture",
       "prompt": "What is a retro?",
+      "correct": [
+        0
+      ],
       "options": [
         "After a big project, a quick look back at what to keep and what to change",
         "A review of old campaigns for reuse",
         "A monthly budget review",
         "The first meeting of a new project"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q85",
       "type": "single",
-      "category": "Culture",
       "prompt": "What is RMIT Creative Community?",
+      "correct": [
+        2
+      ],
       "options": [
         "A student design club",
         "The Brand Hub's comment page",
         "Where RMIT design teams share recent work, wins and struggles",
         "The team's Teams chat"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Culture"
     },
     {
       "id": "q86",
       "type": "single",
-      "category": "Culture",
       "prompt": "What's the rule on camera and attention in meetings?",
+      "correct": [
+        3
+      ],
       "options": [
         "Multitask quietly if the meeting runs long",
         "Cameras always off",
         "Cameras only for the presenter",
         "Cameras on where Wi-Fi allows, notifications off while others talk"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Culture"
     },
     {
       "id": "q87",
       "type": "single",
-      "category": "Culture",
       "prompt": "A teammate has a rostered day off. What does the team expect?",
+      "correct": [
+        0
+      ],
       "options": [
         "Hand over before it and don't ping them on it",
         "Message them only if it's urgent",
         "Copy them on everything so they can catch up",
         "Nothing special"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q88",
       "type": "single",
-      "category": "Culture",
       "prompt": "What is the team's view on after-hours work?",
+      "correct": [
+        3
+      ],
       "options": [
         "Expected in busy weeks",
         "Required for INTON launches",
         "Fine if Melbourne asks",
         "Minimal to none. Plan so it stays that way"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Culture"
     },
     {
       "id": "q89",
       "type": "single",
-      "category": "Work",
       "prompt": "In our review process, what is Gate 2?",
+      "correct": [
+        3
+      ],
       "options": [
         "An internal review by a senior",
         "The final SharePoint upload",
         "Danh's brief check",
         "The stakeholder review"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q90",
       "type": "multi",
-      "category": "Work",
       "prompt": "Each round of campaign assets, which three places do you update? (select all that apply)",
+      "correct": [
+        1,
+        4,
+        5
+      ],
       "options": [
         "The workload dashboard",
         "Monday.com",
@@ -1354,137 +1357,137 @@
         "Frame.io",
         "The asset tracker"
       ],
-      "correct": [
-        1,
-        4,
-        5
-      ]
+      "category": "Work"
     },
     {
       "id": "q91",
       "type": "single",
-      "category": "Work",
       "prompt": "On a small task, who sends the files to the stakeholder?",
+      "correct": [
+        0
+      ],
       "options": [
         "You can send them yourself and cc a senior or Danh",
         "Only the Account Manager",
         "Only Danh",
         "The Coordinator"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Work"
     },
     {
       "id": "q92",
       "type": "single",
-      "category": "Work",
       "prompt": "A stakeholder asks you directly for a design, without using the request form. What do you do?",
+      "correct": [
+        3
+      ],
       "options": [
         "Say no",
         "Create the Monday item yourself",
         "Start it straight away",
         "Point them to the request form and let Danh know"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q93",
       "type": "single",
-      "category": "Work",
       "prompt": "Which Demand Tracker status means the ticket has its project code and is waiting to be assigned?",
+      "correct": [
+        0
+      ],
       "options": [
         "Ready to assign (VN)",
         "Incoming / New",
         "Under assessment",
         "In review"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Work"
     },
     {
       "id": "q94",
       "type": "single",
-      "category": "Work",
       "prompt": "On the Domestic asset tracker, which status comes just before Completed?",
+      "correct": [
+        0
+      ],
       "options": [
         "File delivery",
         "Briefed",
         "In progress",
         "Needs review"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Work"
     },
     {
       "id": "q95",
       "type": "single",
-      "category": "Work",
       "prompt": "What is the INTON asset tracker's status order, left to right?",
+      "correct": [
+        3
+      ],
       "options": [
         "In progress → Yet to brief → In review → Completed",
         "Yet to brief → In review → In progress → Completed",
         "Briefed → In progress → Needs review → Completed",
         "Yet to brief → In progress → In review → Completed"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q96",
       "type": "single",
-      "category": "Work",
       "prompt": "How is a stakeholder's approval recorded in a tracker?",
+      "correct": [
+        3
+      ],
       "options": [
         "Just changing the status",
         "A thumbs-up emoji",
         "A verbal OK in a call",
         "Written, named and dated, like 'Approved JT 19/05'"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q97",
       "type": "single",
-      "category": "Work",
       "prompt": "Two stakeholders give you conflicting feedback. What do you do?",
+      "correct": [
+        2
+      ],
       "options": [
         "Follow the more senior one",
         "Make two versions without telling anyone",
         "Don't pick a side. Flag it to Danh",
         "Follow whoever replied first"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Work"
     },
     {
       "id": "q98",
       "type": "single",
-      "category": "Work",
       "prompt": "What must go in the subject line of a task email?",
+      "correct": [
+        1
+      ],
       "options": [
         "The stakeholder's name",
         "The task code",
         "The due date",
         "Your name"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Work"
     },
     {
       "id": "q99",
       "type": "multi",
-      "category": "Work",
       "prompt": "Which belong on the digital display checklist? (select all that apply)",
+      "correct": [
+        1,
+        2,
+        3
+      ],
       "options": [
         "Sound on by default",
         "CRICOS still readable",
@@ -1492,73 +1495,73 @@
         "clickTag set to the landing page",
         "One HTML file for all six sizes"
       ],
-      "correct": [
-        1,
-        2,
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q100",
       "type": "single",
-      "category": "Work",
       "prompt": "When setting up a display build in Illustrator, how do you export each element?",
+      "correct": [
+        3
+      ],
       "options": [
         "As PDF",
         "As PSD",
         "As GIF",
         "As SVG"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q101",
       "type": "short",
-      "category": "Work",
       "prompt": "What must every HTML5 banner have set to the landing page?",
       "answers": [
         "clickTag",
         "click tag",
         "clicktag"
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q102",
       "type": "single",
-      "category": "Work",
       "prompt": "In digital display, what does the FA folder hold?",
+      "correct": [
+        3
+      ],
       "options": [
         "Nothing until approval",
         "Only the working Illustrator files",
         "Raw photos",
         "The .zip files for the agency, plus static backups"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q103",
       "type": "single",
-      "category": "Work",
       "prompt": "How should files be named?",
+      "correct": [
+        0
+      ],
       "options": [
         "To convention, job code first",
         "Your name first",
         "The date first",
         "However is clearest to you"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Work"
     },
     {
       "id": "q104",
       "type": "multi",
-      "category": "Work",
       "prompt": "Which of these are Rights checks on the quality-control checklist? (select all that apply)",
+      "correct": [
+        0,
+        1,
+        4
+      ],
       "options": [
         "Licensed fonts, music and stock",
         "No ex-staff in photos",
@@ -1566,550 +1569,550 @@
         "Sizes and file weights",
         "Student image consent still valid"
       ],
-      "correct": [
-        0,
-        1,
-        4
-      ]
+      "category": "Work"
     },
     {
       "id": "q105",
       "type": "single",
-      "category": "Work",
       "prompt": "Why are display banners kept so small?",
+      "correct": [
+        1
+      ],
       "options": [
         "RMIT brand rules require it",
         "They load fast, don't get in the way, and heavy ones get rejected by the ad network",
         "Frame.io can't preview big files",
         "They're easier to email"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Work"
     },
     {
       "id": "q106",
       "type": "single",
-      "category": "Work",
       "prompt": "On the live task, after uploading round one to Frame.io, what's next?",
+      "correct": [
+        0
+      ],
       "options": [
         "Tell the stakeholder on Monday",
         "Archive it on SharePoint",
         "Send the FA",
         "Mark it Done"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Work"
     },
     {
       "id": "q107",
       "type": "single",
-      "category": "Work",
       "prompt": "On big campaigns, who manages the stakeholder?",
+      "correct": [
+        3
+      ],
       "options": [
         "You, on your own",
         "Đức",
         "The Account Manager",
         "Seniors and Danh"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q108",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Which channel typically gets a reply in 1–3 hours and suits urgent quick questions?",
+      "correct": [
+        2
+      ],
       "options": [
         "Email",
         "Monday.com",
         "Teams",
         "The asset tracker"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q109",
       "type": "single",
-      "category": "Platforms",
       "prompt": "A decision gets made in a Teams chat. What next?",
+      "correct": [
+        1
+      ],
       "options": [
         "Add it to the workload dashboard",
         "Log it on Monday",
         "Email everyone",
         "Nothing. Teams keeps it"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q110",
       "type": "single",
-      "category": "Platforms",
       "prompt": "How are Domestic FAs shared?",
+      "correct": [
+        3
+      ],
       "options": [
         "Attached to an email",
         "Uploaded to Monday",
         "Downloaded from Frame.io",
         "As SharePoint links only"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q111",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Which of these is Frame.io not for?",
+      "correct": [
+        0
+      ],
       "options": [
         "Archiving working files",
         "Comparing stacked versions",
         "Stakeholder comments",
         "Commenting on a video frame"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q112",
       "type": "fill",
-      "category": "Platforms",
       "prompt": "SharePoint and Frame.io folders follow the Monday item name and ___.",
       "answers": [
         "code",
         "project code",
         "job code",
         "task code"
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q113",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Something IT-related isn't working. Where do you raise it?",
+      "correct": [
+        2
+      ],
       "options": [
         "Workday",
         "Teams",
         "ServiceNow",
         "Monday.com"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q114",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Where do you request leave and find your payslips?",
+      "correct": [
+        3
+      ],
       "options": [
         "ServiceNow",
         "Outlook",
         "SharePoint",
         "Workday"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q115",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Which tool adds subtitles to video, with presets?",
+      "correct": [
+        0
+      ],
       "options": [
         "Sub Machine",
         "Mister Horse",
         "Audio Network",
         "Frame.io"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q116",
       "type": "single",
-      "category": "Platforms",
       "prompt": "What is Mister Horse?",
+      "correct": [
+        2
+      ],
       "options": [
         "A subtitle tool",
         "A Monday.com add-on",
         "After Effects animation presets",
         "A stock music library"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q117",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Where do we get music and sound effects?",
+      "correct": [
+        2
+      ],
       "options": [
         "Flickr",
         "TikTok Creative Center only",
         "Audio Network",
         "Adobe Stock"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q118",
       "type": "single",
-      "category": "Platforms",
       "prompt": "How do you get the team's Adobe Stock login?",
+      "correct": [
+        2
+      ],
       "options": [
         "Create your own",
         "It's in the onboarding deck",
         "Ask Danh",
         "Raise a ServiceNow ticket"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q119",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Which is Domestic's main channel?",
+      "correct": [
+        3
+      ],
       "options": [
         "WeChat",
         "Teams",
         "Email",
         "Monday.com"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q120",
       "type": "single",
-      "category": "Platforms",
       "prompt": "What do you need to view the workload dashboard?",
+      "correct": [
+        2
+      ],
       "options": [
         "Danh's password",
         "A Monday.com login",
         "Nothing. Viewing needs no sign-in",
         "A VPN"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q121",
       "type": "single",
-      "category": "Platforms",
       "prompt": "What's your part in keeping the workload dashboard right?",
+      "correct": [
+        0
+      ],
       "options": [
         "Keep the task code on everything and tell Danh when scope or asset counts change",
         "Nothing at all",
         "Update it every Friday",
         "Log every job yourself"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q122",
       "type": "single",
-      "category": "Platforms",
       "prompt": "In the workload dashboard, what does the Calendar view show?",
+      "correct": [
+        0
+      ],
       "options": [
         "Busy days, with Vietnam and Melbourne public holidays marked",
         "Everyone's leave balances",
         "Only Open Day dates",
         "Stakeholder birthdays"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q123",
       "type": "single",
-      "category": "Platforms",
       "prompt": "What is the GCMC Demand Tracker for, compared with a stakeholder's project board?",
+      "correct": [
+        0
+      ],
       "options": [
         "Top-level recaps, short log updates and flagging problems",
         "Uploading drafts",
         "Storing FAs",
         "Detailed feedback loops"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q124",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Where do Adobe brand assets sync across the team?",
+      "correct": [
+        0
+      ],
       "options": [
         "Adobe Shared Libraries",
         "Monday.com",
         "Workday",
         "Frame.io"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q125",
       "type": "single",
-      "category": "Brand",
       "prompt": "What colour is the logo on a red background?",
+      "correct": [
+        0
+      ],
       "options": [
         "All white",
         "Navy",
         "Red and white",
         "Black"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q126",
       "type": "single",
-      "category": "Brand",
       "prompt": "What's the most pixels you can use in one design?",
+      "correct": [
+        3
+      ],
       "options": [
         "No limit",
         "One",
         "Three",
         "Two"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Brand"
     },
     {
       "id": "q127",
       "type": "single",
-      "category": "Brand",
       "prompt": "When can you skip the tagline?",
+      "correct": [
+        2
+      ],
       "options": [
         "Never",
         "Only on print",
         "On internal or very functional pieces, or when space is tight",
         "On every social post"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q128",
       "type": "single",
-      "category": "Brand",
       "prompt": "How small can the CRICOS line go?",
+      "correct": [
+        0
+      ],
       "options": [
         "About 6pt minimum, Helvetica Neue LT Pro Medium",
         "It can't be resized",
         "10pt minimum, Museo",
         "4pt, any font"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q129",
       "type": "single",
-      "category": "Brand",
       "prompt": "How should a URL be set?",
+      "correct": [
+        3
+      ],
       "options": [
         "Any font, as long as it's underlined",
         "Helvetica Light, split over two lines if needed",
         "Museo, uppercase, with www",
         "Helvetica Neue 75 Bold, lowercase, no www, on one line"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Brand"
     },
     {
       "id": "q130",
       "type": "single",
-      "category": "Brand",
       "prompt": "The URL is too long for the layout. What do you do?",
+      "correct": [
+        3
+      ],
       "options": [
         "Split it over two lines",
         "Shrink it until it fits",
         "Leave it out",
         "Ask for a short link or a QR code"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Brand"
     },
     {
       "id": "q131",
       "type": "short",
-      "category": "Brand",
       "prompt": "Which typeface is used for subheads and body copy?",
       "answers": [
         "Helvetica Neue LT Pro",
         "Helvetica Neue",
         "Helvetica"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q132",
       "type": "single",
-      "category": "Brand",
       "prompt": "What is RMIT Blue's hex value?",
+      "correct": [
+        0
+      ],
       "options": [
         "#000054",
         "#E61E2A",
         "#1E2761",
         "#003366"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q133",
       "type": "single",
-      "category": "Brand",
       "prompt": "Which gradient map do you use for a navy duotone?",
+      "correct": [
+        0
+      ],
       "options": [
         "Classic",
         "Midnight",
         "Deep Blue",
         "RMIT Navy"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q134",
       "type": "single",
-      "category": "Brand",
       "prompt": "When is a navy + red photo treatment allowed?",
+      "correct": [
+        3
+      ],
       "options": [
         "Never",
         "On any photo",
         "On student portraits",
         "On buildings only, unless a campaign style guide says otherwise"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Brand"
     },
     {
       "id": "q135",
       "type": "single",
-      "category": "Brand",
       "prompt": "On Open Day 2026, what's the rule for focus frames?",
+      "correct": [
+        0
+      ],
       "options": [
         "It must make sense with the message and never sit on a dominant face",
         "Use as many frames as possible",
         "Always frame the biggest face",
         "Frames are optional decoration"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q136",
       "type": "single",
-      "category": "Brand",
       "prompt": "Where are Roy and Milo used most?",
+      "correct": [
+        2
+      ],
       "options": [
         "Internal staff comms",
         "OOH billboards in Melbourne",
         "INTON, especially China: WeChat stickers, GIFs and seasonal greetings",
         "Domestic eDMs"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q137",
       "type": "single",
-      "category": "Brand",
       "prompt": "When were Roy and Milo born?",
+      "correct": [
+        1
+      ],
       "options": [
         "August 2023",
         "October 2021",
         "January 2019",
         "1887"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Brand"
     },
     {
       "id": "q138",
       "type": "single",
-      "category": "Brand",
       "prompt": "The Brand Hub and the Vietnam guideline site disagree. Which wins?",
+      "correct": [
+        2
+      ],
       "options": [
         "Whichever is newer",
         "The stakeholder decides",
         "The Brand Hub",
         "The Vietnam guideline site"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q139",
       "type": "single",
-      "category": "Brand",
       "prompt": "Why shouldn't you use non-brand fonts?",
+      "correct": [
+        2
+      ],
       "options": [
         "Frame.io can't show them",
         "They load slowly",
         "Licences cost money and create legal risk",
         "They don't support Vietnamese"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q140",
       "type": "single",
-      "category": "Brand",
       "prompt": "Can you put a logo inside the pixel?",
+      "correct": [
+        0
+      ],
       "options": [
         "No",
         "Only on red",
         "Yes, if it's small",
         "Yes, on INTON assets"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q141",
       "type": "multi",
-      "category": "Brand",
       "prompt": "Which rules apply to Indigenous artwork? (select all that apply)",
+      "correct": [
+        0,
+        3,
+        4
+      ],
       "options": [
         "Only use it when a stakeholder asks",
         "Recolour it to match the palette",
@@ -2117,466 +2120,467 @@
         "Never distort, rotate or modify it",
         "Always credit the artist"
       ],
-      "correct": [
-        0,
-        3,
-        4
-      ]
+      "category": "Brand"
     },
     {
       "id": "q142",
       "type": "single",
-      "category": "Brand",
       "prompt": "What tone should Domestic copy take?",
+      "correct": [
+        0
+      ],
       "options": [
         "Plain, confident English, with no translations",
         "Mandarin first",
         "Casual slang",
         "Formal and bilingual"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q143",
       "type": "single",
-      "category": "Brand",
       "prompt": "How do Domestic campaign looks differ?",
+      "correct": [
+        3
+      ],
       "options": [
         "Every piece uses the same template",
         "Domestic ignores the brand",
         "Domestic uses yellow as the main colour",
         "Big campaigns get their own style guide"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Brand"
     },
     {
       "id": "q144",
       "type": "single",
-      "category": "RMIT",
       "prompt": "In 1954 the college was renamed…",
+      "correct": [
+        3
+      ],
       "options": [
         "Royal Melbourne Institute of Technology",
         "Melbourne Working College",
         "RMIT University",
         "Royal Melbourne Technical College"
       ],
-      "correct": [
-        3
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q145",
       "type": "single",
-      "category": "RMIT",
       "prompt": "When did it become the Royal Melbourne Institute of Technology?",
+      "correct": [
+        2
+      ],
       "options": [
         "1992",
         "1954",
         "1960",
         "1887"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q146",
       "type": "single",
-      "category": "RMIT",
       "prompt": "How many students did the Working Men's College open with?",
+      "correct": [
+        1
+      ],
       "options": [
         "32",
         "320",
         "82",
         "1,200"
       ],
-      "correct": [
-        1
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q147",
       "type": "single",
-      "category": "RMIT",
       "prompt": "Storey Hall's 1995 extension is famous for which colours?",
+      "correct": [
+        1
+      ],
       "options": [
         "Black and gold",
         "Green and violet",
         "Yellow and grey",
         "Red and navy"
       ],
-      "correct": [
-        1
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q148",
       "type": "single",
-      "category": "RMIT",
       "prompt": "Which regional site is home to RMIT's aviation academy?",
+      "correct": [
+        2
+      ],
       "options": [
         "Brunswick",
         "Bendigo",
         "Point Cook",
         "Bundoora"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q149",
       "type": "single",
-      "category": "RMIT",
       "prompt": "The City campus sits inside which Melbourne zone?",
+      "correct": [
+        2
+      ],
       "options": [
         "The Docklands zone",
         "The Olympic Park precinct",
         "The Free Tram Zone",
         "The Southbank arts precinct"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q150",
       "type": "single",
-      "category": "RMIT",
       "prompt": "Which ranking line will you typeset often?",
+      "correct": [
+        0
+      ],
       "options": [
         "Top 10 in Australia (QS World University Rankings 2026)",
         "Number 1 in the world",
         "Top 5 in Victoria",
         "Top 100 in Asia"
       ],
-      "correct": [
-        0
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q151",
       "type": "single",
-      "category": "RMIT",
       "prompt": "About how many students study at the Melbourne campuses?",
+      "correct": [
+        1
+      ],
       "options": [
         "More than 500,000",
         "More than 82,000",
         "About 320",
         "About 12,000"
       ],
-      "correct": [
-        1
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q152",
       "type": "single",
-      "category": "RMIT",
       "prompt": "In this seat, who are most of your stakeholders?",
+      "correct": [
+        2
+      ],
       "options": [
         "Other universities",
         "RMIT Vietnam students",
         "GCMC squads in Melbourne",
         "External agencies"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q153",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What does IA stand for?",
+      "correct": [
+        3
+      ],
       "options": [
         "International Asset",
         "Image Archive",
         "Internal Approval",
         "Interest Area"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q154",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What is BAU?",
+      "correct": [
+        2
+      ],
       "options": [
         "A campaign launch",
         "Brand Asset Update",
         "Business as usual: monthly social, EDMs and publications",
         "A type of file format"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q155",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What does SR stand for, as in INTON SR?",
+      "correct": [
+        1
+      ],
       "options": [
         "Senior Review",
         "Student Recruitment",
         "Social Reach",
         "Stakeholder Request"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q156",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What does PG mean?",
+      "correct": [
+        2
+      ],
       "options": [
         "Program Guide",
         "Page",
         "Postgraduate",
         "Parental guidance"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q157",
       "type": "single",
-      "category": "Glossary",
       "prompt": "In a tracker, what does the Convert stage mean?",
+      "correct": [
+        0
+      ],
       "options": [
         "Remarketing to people who already engaged",
         "Reaching new people",
         "Translating copy",
         "Converting file formats"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q158",
       "type": "single",
-      "category": "Glossary",
       "prompt": "Semester 2 runs from…",
+      "correct": [
+        1
+      ],
       "options": [
         "June to October",
         "July to November",
         "August to December",
         "March to June"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q159",
       "type": "fill",
-      "category": "Glossary",
       "prompt": "DOM is short for ___.",
       "answers": [
         "Domestic"
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q160",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What is a squad?",
+      "correct": [
+        0
+      ],
       "options": [
         "A cross-functional team owning one audience end to end",
         "A group chat",
         "A campaign",
         "Our design team in Vietnam"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q161",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What does NSL mean?",
+      "correct": [
+        1
+      ],
       "options": [
         "National student list",
         "Non-school leavers",
         "Next semester launch",
         "New student lead"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q162",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "A stakeholder opens with \"How ya going?\" What's the usual reply?",
+      "correct": [
+        2
+      ],
       "options": [
         "Not yet",
         "I'm going to the office",
         "Good, you?",
         "By tram"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q163",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "\"I reckon the red works better.\" Reckon means…",
+      "correct": [
+        1
+      ],
       "options": [
         "Doubt",
         "Think",
         "Count",
         "Remember"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q164",
       "type": "short",
-      "category": "Aussie English",
       "prompt": "\"Keen to see round two!\" In one word, keen means…",
       "answers": [
         "eager",
         "excited",
         "enthusiastic"
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q165",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "Your stakeholder says \"Nah yeah\". What do they mean?",
+      "correct": [
+        2
+      ],
       "options": [
         "Maybe",
         "No",
         "Yes",
         "Not sure"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q166",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "Feedback says they're \"stoked\" with v3. How do they feel?",
+      "correct": [
+        0
+      ],
       "options": [
         "Very happy",
         "Annoyed",
         "Confused",
         "Tired"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q167",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "\"Cheers\" can mean…",
+      "correct": [
+        3
+      ],
       "options": [
         "Please",
         "Sorry",
         "Only a toast",
         "Thanks, and also hi and bye"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q168",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "You ask for one more size and they reply \"Too easy\". They mean…",
+      "correct": [
+        1
+      ],
       "options": [
         "That's too simple",
         "Sure, no problem",
         "Try harder",
         "It's too hard"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q169",
       "type": "fill",
-      "category": "Aussie English",
       "prompt": "\"Let me ___ out the specs.\" (figure out)",
       "answers": [
         "suss"
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q170",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "\"Good on ya\" means…",
+      "correct": [
+        2
+      ],
       "options": [
         "Be careful",
         "Goodbye",
         "Well done",
         "Good luck"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q171",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "\"Heaps better, thanks.\" Heaps means…",
+      "correct": [
+        2
+      ],
       "options": [
         "A little",
         "Slightly",
         "A lot",
         "Not really"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q172",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "What does \"brekkie\" mean?",
+      "correct": [
+        2
+      ],
       "options": [
         "A short break",
         "A broken file",
         "Breakfast",
         "A brief"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q173",
       "type": "multi",
-      "category": "Misc",
       "prompt": "Which markets does INTON cover? (select all that apply)",
+      "correct": [
+        0,
+        1,
+        3,
+        4
+      ],
       "options": [
         "China",
         "Indonesia and Malaysia",
@@ -2584,138 +2588,122 @@
         "Bangladesh and Sri Lanka",
         "Kenya"
       ],
-      "correct": [
-        0,
-        1,
-        3,
-        4
-      ]
+      "category": "Team"
     },
     {
       "id": "q174",
       "type": "single",
-      "category": "Misc",
       "prompt": "INTON requests usually come in at least two languages. Which pair is most common?",
+      "correct": [
+        1
+      ],
       "options": [
         "English and Hindi",
         "English and Mandarin",
         "English and Vietnamese",
         "Mandarin and Malay"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Team"
     },
     {
       "id": "q175",
       "type": "single",
-      "category": "Misc",
       "prompt": "Which squad covers international students already living in Australia?",
+      "correct": [
+        2
+      ],
       "options": [
         "Alumni",
         "BPX",
         "Domestic",
         "INTON"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Team"
     },
     {
       "id": "q176",
       "type": "single",
-      "category": "Misc",
       "prompt": "INTON's new Kenya Open Day is in…",
+      "correct": [
+        1
+      ],
       "options": [
         "March 2026",
         "September 2026",
         "December 2026",
         "June 2027"
       ],
-      "correct": [
-        1
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q177",
       "type": "single",
-      "category": "Misc",
       "prompt": "When is Domestic's Open Day?",
+      "correct": [
+        3
+      ],
       "options": [
         "November",
         "March",
         "January",
         "August"
       ],
-      "correct": [
-        3
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q178",
       "type": "single",
-      "category": "Misc",
       "prompt": "INTON's H2 acquisition push is for which intake?",
+      "correct": [
+        2
+      ],
       "options": [
         "The February intake",
         "Semester 1",
         "The October intake (Semester 3)",
         "Summer school"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q179",
       "type": "single",
-      "category": "Misc",
       "prompt": "In week 2 of your first month, what's the plan?",
+      "correct": [
+        1
+      ],
       "options": [
         "Own a big campaign on your own",
         "Shadow: join the INTON stand-up and sprint planning, pair with a senior on a BAU task",
         "Nothing: it's a rest week",
         "Present to Melbourne"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Culture"
     },
     {
       "id": "q180",
       "type": "single",
-      "category": "Misc",
       "prompt": "When do you start owning small INTON BAU tickets?",
+      "correct": [
+        0
+      ],
       "options": [
         "Weeks 3–4, with senior review before anything goes to a stakeholder",
         "Week 2, without review",
         "Day 1",
         "After six months"
       ],
-      "correct": [
-        0
-      ]
-    },
-    {
-      "id": "q181",
-      "type": "single",
-      "category": "Misc",
-      "prompt": "Who is at your end-of-month check-in?",
-      "options": [
-        "HR",
-        "Only the stakeholder",
-        "Danh and Đức",
-        "The whole squad"
-      ],
-      "correct": [
-        2
-      ]
+      "category": "Work"
     },
     {
       "id": "q182",
       "type": "multi",
-      "category": "Misc",
       "prompt": "Which are China platforms you'll design for on INTON? (select all that apply)",
+      "correct": [
+        0,
+        2,
+        4
+      ],
       "options": [
         "Weibo",
         "Marketo",
@@ -2723,56 +2711,52 @@
         "Reddit",
         "WeChat"
       ],
-      "correct": [
-        0,
-        2,
-        4
-      ]
+      "category": "Brand"
     },
     {
       "id": "q183",
       "type": "single",
-      "category": "Misc",
       "prompt": "Who does INTON also talk to, besides students?",
+      "correct": [
+        3
+      ],
       "options": [
         "Agencies",
         "RMIT alumni only",
         "Other universities",
         "Their parents"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Team"
     },
     {
       "id": "q184",
       "type": "single",
-      "category": "Misc",
       "prompt": "On INTON channel lists, what is Xiaohongshu also called?",
+      "correct": [
+        0
+      ],
       "options": [
         "Red (Rednote)",
         "Baidu",
         "WeChat",
         "Douyin"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Brand"
     },
     {
       "id": "q185",
       "type": "single",
-      "category": "Misc",
       "prompt": "Which Domestic campaign follows ATAR results?",
+      "correct": [
+        2
+      ],
       "options": [
         "Always On",
         "Kenya Open Day",
         "Change of Preference",
         "Semester 1 intake"
       ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     }
   ],
   "candidates": []
