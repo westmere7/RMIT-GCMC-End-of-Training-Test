@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>End-of-Training Assessment · RMIT</title>
+  <link rel="icon" href="assets/pixel.png">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <img src="assets/rmit-logo-white.png" alt="RMIT University">
+    <span class="divider"></span>
+    <div class="portal">Staff Assessment Portal<small id="topSubtitle">GCMC Creative Services · Vietnam</small></div>
+    <span class="spacer"></span>
+    <span class="who" id="whoBox" hidden>Signed in as <b id="whoEmail"></b></span>
+    <button class="link-btn" id="signOut" hidden>Sign out</button>
+  </header>
+
+  <!-- boot / error -->
+  <section class="screen center-msg" id="scrBoot">
+    <div class="card"><p class="eyebrow">Loading</p><h2 id="bootTitle">Preparing your assessment…</h2><p id="bootMsg"></p></div>
+  </section>
+
+  <!-- sign in -->
+  <section class="screen" id="scrLogin" hidden>
+    <div class="login">
+      <div class="hero">
+        <div>
+          <p class="eyebrow" id="loginCode">GCMC-VN-ONB-2026</p>
+          <h1 id="loginTitle">End-of-Training Assessment</h1>
+          <p class="lead">Confirm what you've learned across your onboarding: team, brand, squads, platforms and workflow.</p>
+        </div>
+        <dl class="meta">
+          <div><dt>Questions</dt><dd><b id="metaQ">30</b></dd></div>
+          <div><dt>Time limit</dt><dd><b id="metaT">10 minutes</b></dd></div>
+          <div><dt>Attempts</dt><dd><b>1</b></dd></div>
+        </dl>
+      </div>
+      <div class="panel">
+        <form id="loginForm" novalidate>
+          <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
+          <h2>Sign in to begin</h2>
+          <p class="hint">Use your RMIT staff email and your staff ID.</p>
+          <div class="field">
+            <label for="email">RMIT email</label>
+            <input class="input" id="email" type="email" autocomplete="username" placeholder="firstname.lastname@rmit.edu.vn" required>
+          </div>
+          <div class="field">
+            <label for="staffId">Staff ID</label>
+            <input class="input" id="staffId" type="password" autocomplete="current-password" placeholder="Your staff ID" required>
+          </div>
+          <p class="error-msg" id="loginError" role="alert"></p>
+          <button class="btn navy" type="submit" id="loginBtn">Sign in</button>
+          <p class="fineprint">This assessment is for authorised RMIT staff only. Your responses, score and completion time are recorded for your training record.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- briefing -->
+  <section class="screen" id="scrBrief" hidden>
+    <div class="container brief">
+      <div class="card">
+        <p class="eyebrow" id="briefCode">Assessment</p>
+        <h1 id="briefTitle">Before you begin</h1>
+        <p class="lead" id="briefLead"></p>
+        <dl class="details">
+          <div><dt>Questions</dt><dd id="dQ">30</dd></div>
+          <div><dt>Time limit</dt><dd id="dT">10:00</dd></div>
+          <div><dt>Question types</dt><dd>Choice, fill-in, short answer</dd></div>
+          <div><dt>Candidate</dt><dd id="dCand">Nghia</dd></div>
+        </dl>
+        <label class="confirm"><input type="checkbox" id="agree"> I confirm I am completing this assessment on my own, without the onboarding deck open.</label>
+        <button class="btn" id="startBtn" disabled>Start assessment</button>
+      </div>
+      <div class="card">
+        <p class="eyebrow">Conditions</p>
+        <ul class="rules">
+          <li><span class="n">1</span><span>The timer starts when you press Start and cannot be paused. At 00:00 your assessment is submitted automatically.</span></li>
+          <li><span class="n">2</span><span>Answers are final once submitted. You can skip a question, but it will be marked incorrect.</span></li>
+          <li><span class="n">3</span><span>Written answers are one word or a short phrase. Capitals, accents and punctuation don't matter.</span></li>
+          <li><span class="n">4</span><span>The performance meter responds to every answer you submit. Keep an eye on it.</span></li>
+          <li><span class="n">5</span><span>Use a desktop browser. Keyboard: <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- test -->
+  <section class="screen" id="scrTest" hidden>
+    <div class="container test">
+      <main>
+        <div class="card meter-card">
+          <div class="head"><span class="eyebrow">Performance meter</span><span class="reading" id="meterReading">Live reading</span></div>
+          <div class="meter-face">
+            <span class="brandmark">RMIT · GCMC</span>
+            <span class="lamp" id="lamp"><i></i>SIGNAL</span>
+            <canvas id="meter" aria-label="Performance meter" role="img"></canvas>
+          </div>
+        </div>
+        <div class="card q-card" id="qCard">
+          <div class="q-meta"><span class="num" id="qNum">Question 1</span><span class="chip type" id="qType">Single choice</span><span class="chip" id="qTopic">Topic</span></div>
+          <div id="qBody"></div>
+          <div class="q-actions">
+            <button class="btn" id="submitBtn" disabled>Submit answer</button>
+            <button class="btn quiet" id="skipBtn">Skip question</button>
+            <span class="status" id="qStatus"><span class="kbd">Press <b>Enter</b> to submit</span></span>
+          </div>
+        </div>
+      </main>
+      <aside class="side">
+        <div class="timer" id="timer">
+          <p class="eyebrow">Time remaining</p>
+          <div class="clock">
+            <svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="bar" id="ring" cx="40" cy="40" r="34"/></svg>
+            <span class="digits" id="digits">10:00</span>
+          </div>
+          <p class="sub" id="timerSub">Submits automatically at 00:00</p>
+        </div>
+        <div class="card progress-card">
+          <p class="eyebrow">Progress</p>
+          <p class="count" id="count">0 <small>of 30 answered</small></p>
+          <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+          <div class="dots" id="dots"></div>
+          <div class="legend"><span><i style="background:var(--navy)"></i>Answered</span><span><i style="background:var(--navy-30)"></i>Skipped</span><span><i style="box-shadow:inset 0 0 0 2px var(--red)"></i>Current</span></div>
+        </div>
+        <p class="note">Your answers are saved as you go. Refreshing the page won't stop the clock.</p>
+      </aside>
+    </div>
+  </section>
+
+  <!-- results -->
+  <section class="screen" id="scrResults" hidden>
+    <div class="container">
+      <div class="results-top">
+        <div class="score-card">
+          <p class="eyebrow">Assessment complete</p>
+          <h1 id="resTitle">Congratulations.</h1>
+          <p id="resMsg"></p>
+          <div class="big"><span class="pct" id="resPct">0%</span><span class="of" id="resOf">0 of 30 correct<span>Final meter reading</span></span></div>
+          <span class="badge" id="resBadge" hidden>Distinction</span>
+        </div>
+        <div class="card">
+          <p class="eyebrow">Your record</p>
+          <dl class="stats">
+            <div><dt>Correct</dt><dd id="sCorrect">0</dd></div>
+            <div><dt>To revisit</dt><dd id="sWrong">0</dd></div>
+            <div><dt>Time used</dt><dd id="sTime">0:00</dd></div>
+            <div><dt>Meter reading</dt><dd id="sZone">Probation</dd></div>
+            <div><dt>Completed</dt><dd id="sDate">—</dd></div>
+            <div><dt>Status</dt><dd>Onboarded</dd></div>
+            <div class="wide"><dt>Candidate</dt><dd class="email" id="sEmail">—</dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="card review">
+        <h2>Questions to revisit</h2>
+        <p class="sub">What you answered, and what we were looking for.</p>
+        <div id="reviewList"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="desktop-only"><div><h2>Desktop only</h2><p>This assessment is designed for a desktop browser. Please open it on a larger screen, or widen this window.</p></div></div>
+  <canvas id="confetti" hidden></canvas>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/meter.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

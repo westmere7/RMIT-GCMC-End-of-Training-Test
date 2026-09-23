@@ -1,0 +1,191 @@
+{
+  "email": "danh.nguyen15@rmit.edu.vn",
+  "assessment": "GCMC-VN-ONB-2026",
+  "startedAt": "2026-09-23T10:22:45.362Z",
+  "finishedAt": "2026-09-23T10:29:05.337Z",
+  "correct": 19,
+  "total": 30,
+  "timedOut": false,
+  "responses": [
+    {
+      "id": "q01",
+      "prompt": "What does GCMC stand for?",
+      "given": "Group Content and Marketing Centre",
+      "correct": false
+    },
+    {
+      "id": "q02",
+      "prompt": "Which squad recruits international students who are not living in Australia? Answer with the squad's name.",
+      "given": "No answer",
+      "correct": false
+    },
+    {
+      "id": "q03",
+      "prompt": "Who is the team's Creative Services Lead?",
+      "given": "Trân",
+      "correct": false
+    },
+    {
+      "id": "q04",
+      "prompt": "What is Đức's role in relation to you?",
+      "given": "He reviews every FA before it is delivered",
+      "correct": false
+    },
+    {
+      "id": "q05",
+      "prompt": "The project code [26.0122.A] shows the year, the month, the day, and the ticket's ___ that day.",
+      "given": "order",
+      "correct": true
+    },
+    {
+      "id": "q06",
+      "prompt": "Who logs jobs into the GCMC Workload Report dashboard?",
+      "given": "The Account Manager",
+      "correct": false
+    },
+    {
+      "id": "q07",
+      "prompt": "A task is only \"Done\" when… (select all that apply)",
+      "given": "The stakeholder has given written approval · The SharePoint FA link is posted on Monday and in the asset tracker · It is marked Done on both the project board and the GCMC Demand Tracker · FA and working files are on SharePoint",
+      "correct": true
+    },
+    {
+      "id": "q08",
+      "prompt": "Which platform should you never upload files to?",
+      "given": "Monday.com",
+      "correct": true
+    },
+    {
+      "id": "q09",
+      "prompt": "For INTON work, which channel is the source of truth for design rounds, feedback and approvals?",
+      "given": "Email",
+      "correct": true
+    },
+    {
+      "id": "q10",
+      "prompt": "The INTON stand-up happens every ___ and lasts about 15 minutes.",
+      "given": "Thursday",
+      "correct": true
+    },
+    {
+      "id": "q11",
+      "prompt": "Which stand-up are you required to attend?",
+      "given": "The INTON stand-up only",
+      "correct": true
+    },
+    {
+      "id": "q12",
+      "prompt": "What is RMIT's CRICOS provider code?",
+      "given": "No answer",
+      "correct": false
+    },
+    {
+      "id": "q13",
+      "prompt": "What is the maximum total file size for an HTML5 banner?",
+      "given": "150 KB",
+      "correct": true
+    },
+    {
+      "id": "q14",
+      "prompt": "Which of these are INTON style rules? (select all that apply)",
+      "given": "No URLs on Rednote (Xiaohongshu) assets · No colour filters on photos with people · No English tagline on Chinese assets",
+      "correct": false
+    },
+    {
+      "id": "q15",
+      "prompt": "RMIT Yellow should stay below what share of any artwork?",
+      "given": "20%",
+      "correct": true
+    },
+    {
+      "id": "q16",
+      "prompt": "Which colour must appear in every application and is never tinted?",
+      "given": "RMIT Red",
+      "correct": true
+    },
+    {
+      "id": "q17",
+      "prompt": "Which typeface is used for RMIT headlines?",
+      "given": "Museo 700",
+      "correct": false
+    },
+    {
+      "id": "q18",
+      "prompt": "RMIT's tone of voice is…",
+      "given": "Bold, future-focused and driven by purpose",
+      "correct": true
+    },
+    {
+      "id": "q19",
+      "prompt": "Roy is a platypus and Milo is a ___.",
+      "given": "wombat",
+      "correct": true
+    },
+    {
+      "id": "q20",
+      "prompt": "In our glossary, what does \"FA\" stand for?",
+      "given": "Formal Approval",
+      "correct": false
+    },
+    {
+      "id": "q21",
+      "prompt": "In an asset tracker, what does one row represent?",
+      "given": "One asset",
+      "correct": true
+    },
+    {
+      "id": "q22",
+      "prompt": "Which checks belong on the quality-control checklist before you send a file? (select all that apply)",
+      "given": "No ex-staff in the photos · Right audience, copy and images · RGB or CMYK, and bleed or no bleed · Safe zones on TikTok, Instagram and YouTube",
+      "correct": true
+    },
+    {
+      "id": "q23",
+      "prompt": "Mid-project, a stakeholder asks for extra sizes and a second language version. What do you do?",
+      "given": "Decline: it's out of scope",
+      "correct": false
+    },
+    {
+      "id": "q24",
+      "prompt": "From 4 October 2026 (daylight saving), how far ahead of Ho Chi Minh City is Melbourne?",
+      "given": "4 hours",
+      "correct": true
+    },
+    {
+      "id": "q25",
+      "prompt": "RMIT opened in Melbourne in ___ as the Working Men's College.",
+      "given": "1887",
+      "correct": true
+    },
+    {
+      "id": "q26",
+      "prompt": "Which campus is 18 km north-east of Melbourne's city centre?",
+      "given": "Brunswick",
+      "correct": false
+    },
+    {
+      "id": "q27",
+      "prompt": "A Melbourne stakeholder asks for round two \"this arvo\". What is an arvo?",
+      "given": "afternoon",
+      "correct": true
+    },
+    {
+      "id": "q28",
+      "prompt": "Your stakeholder replies \"Yeah nah\" to your suggestion. What do they mean?",
+      "given": "No",
+      "correct": true
+    },
+    {
+      "id": "q29",
+      "prompt": "The team works four days in the office, with ___ as our work-from-home day.",
+      "given": "friday",
+      "correct": true
+    },
+    {
+      "id": "q30",
+      "prompt": "Which of these is part of our team's DNA?",
+      "given": "Challenge ideas, not people",
+      "correct": true
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+/* Editor-only styles (layered on styles.css). */
+.btn.small { padding: 9px 16px; font-size: 14px; }
+.savebar { position: sticky; top: 68px; z-index: 15; background: #fff; border-bottom: 1px solid var(--line); }
+.savebar-in { display: flex; align-items: center; gap: 10px; padding-top: 12px; padding-bottom: 12px; }
+.savebar .spacer { flex: 1; }
+.save-state { font-size: 14px; color: var(--muted); font-weight: 700; }
+.save-state.dirty { color: var(--red-dark); }
+.save-state.ok { color: var(--ok); }
+.admin { display: grid; gap: 22px; }
+.admin .card { padding: 26px 30px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 20px; margin-top: 14px; }
+.help { font-size: 13px; color: var(--muted); margin-top: 8px; max-width: 90ch; }
+.muted { color: var(--muted); font-family: var(--text); font-weight: 400; font-size: 18px; }
+.gate-actions { align-content: end; }
+.list-head { margin: 8px 0 14px; }
+.list-head h2 { font-size: 26px; }
+
+.qe { background: #fff; border-radius: var(--radius); padding: 22px 26px; margin-bottom: 14px; border: 1px solid transparent; }
+.qe.invalid { border-color: var(--red); }
+.qe-head { display: flex; align-items: center; gap: 12px; }
+.qe-head .n { font-family: var(--display); color: var(--red); font-size: 22px; width: 42px; }
+.qe-head select, .qe-head .topic { width: auto; }
+.qe-head .topic { flex: 1; }
+.qe-head .tools { display: flex; gap: 4px; }
+.icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 3px; width: 34px; height: 34px; color: var(--navy); font-size: 15px; }
+.icon-btn:hover { background: var(--grey-50); }
+.icon-btn.danger:hover { background: #fdeaea; color: var(--red-dark); border-color: #f3b6b9; }
+.qe textarea.input { min-height: 64px; resize: vertical; margin-top: 12px; font-family: var(--text); }
+.qe .opts { display: grid; gap: 8px; margin-top: 12px; }
+.qe .opt-row { display: grid; grid-template-columns: 34px 1fr 34px; gap: 10px; align-items: center; }
+.qe .opt-row input[type="radio"], .qe .opt-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--ok); justify-self: center; }
+.qe .opt-row .input { padding: 9px 12px; }
+.qe .opt-row.correct .input { border-color: var(--ok); background: #f1f8f4; }
+.qe .sub-actions { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.qe .answers-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 14px; display: block; }
+.qe .tester { display: flex; gap: 10px; align-items: center; margin-top: 10px; font-size: 13px; }
+.qe .tester .input { max-width: 260px; padding: 8px 10px; }
+.qe .tester .res.yes { color: var(--ok); font-weight: 700; }
+.qe .tester .res.no { color: var(--red-dark); font-weight: 700; }
+.qe .problems { color: var(--red-dark); font-size: 13px; font-weight: 700; margin-top: 10px; }
+.add-row { display: flex; gap: 10px; align-items: center; padding: 8px 0 30px; color: var(--muted); font-size: 14px; }

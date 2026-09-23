@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Assessment Editor · RMIT</title>
+  <link rel="icon" href="assets/pixel.png">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <img src="assets/rmit-logo-white.png" alt="RMIT University">
+    <span class="divider"></span>
+    <div class="portal">Assessment Editor<small>Questions, answers and settings</small></div>
+    <span class="spacer"></span>
+    <a class="link-btn" href="./" target="_blank" rel="noopener">Open the test ↗</a>
+  </header>
+
+  <div class="savebar">
+    <div class="container savebar-in">
+      <span id="saveState" class="save-state">Loading…</span>
+      <span class="spacer"></span>
+      <label class="btn ghost small" for="importFile">Import JSON</label>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <button class="btn ghost small" id="downloadBtn">Download JSON</button>
+      <button class="btn small" id="saveBtn">Save changes</button>
+    </div>
+  </div>
+
+  <main class="container admin">
+    <section class="card">
+      <p class="eyebrow">Settings</p>
+      <div class="grid-3">
+        <div class="field"><label for="sTitle">Title</label><input class="input" id="sTitle"></div>
+        <div class="field"><label for="sSubtitle">Subtitle</label><input class="input" id="sSubtitle"></div>
+        <div class="field"><label for="sCode">Assessment code</label><input class="input" id="sCode"></div>
+        <div class="field"><label for="sName">Candidate first name</label><input class="input" id="sName"></div>
+        <div class="field"><label for="sMins">Time limit (minutes)</label><input class="input" id="sMins" type="number" min="1" max="120"></div>
+        <div class="field"><label for="sConf">Confetti from (%)</label><input class="input" id="sConf" type="number" min="0" max="100"></div>
+        <div class="field"><label for="gLeft">Meter · left label</label><input class="input" id="gLeft"></div>
+        <div class="field"><label for="gMid">Meter · middle label</label><input class="input" id="gMid"></div>
+        <div class="field"><label for="gRight">Meter · right label</label><input class="input" id="gRight"></div>
+      </div>
+      <label class="confirm"><input type="checkbox" id="sShuffle"> Shuffle answer options for each attempt</label>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Sign-in gate</p>
+      <p class="help" id="gateState"></p>
+      <div class="grid-3">
+        <div class="field"><label for="aEmail">Candidate email</label><input class="input" id="aEmail" type="email" placeholder="Leave blank to keep the current one"></div>
+        <div class="field"><label for="aId">Staff ID</label><input class="input" id="aId" placeholder="Leave blank to keep the current one"></div>
+        <div class="field gate-actions"><button class="btn ghost small" id="clearGate" type="button">Remove gate (accept anyone)</button></div>
+      </div>
+      <p class="help">Stored as SHA-256 fingerprints, so the JSON never shows the actual email or ID. Email case doesn't matter, and spaces in the ID are ignored.</p>
+    </section>
+
+    <section>
+      <div class="list-head">
+        <h2>Questions <span id="qCount" class="muted"></span></h2>
+        <p class="help">Written answers ignore capitals, accents, spaces and punctuation, so “Thursday.”, “thursday” and “THURSDAY” all match. For fill-in questions, put <b>___</b> (three underscores) where the blank goes.</p>
+      </div>
+      <div id="qList"></div>
+      <div class="add-row">
+        <span>Add a question:</span>
+        <button class="btn ghost small" data-add="single">Single choice</button>
+        <button class="btn ghost small" data-add="multi">Multi choice</button>
+        <button class="btn ghost small" data-add="fill">Fill in the blank</button>
+        <button class="btn ghost small" data-add="short">Short answer</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/common.js"></script>
+  <script src="assets/admin.js"></script>
+</body>
+</html>
