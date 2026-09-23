@@ -285,7 +285,10 @@ button { cursor: pointer; }
 }
 
 /* ---------- v3: full-width meter, name step, dynamic results ---------- */
-.test > .meter-card { grid-column: 1 / -1; }
+.test > .meter-card { grid-column: 1 / -1; padding: 0; margin: -8px 0 -6px; }
+.meter-card .meter-face { background: none; border: 0; border-radius: 0; overflow: visible; }
+.meter-card .meter-face .brandmark { left: 0; top: 4px; }
+.meter-card .meter-face .lamp { right: 0; top: 5px; }
 .meter-face canvas { height: 260px; }
 .q-card { margin-top: 0; }
 .name-step { animation: rise 0.35s ease both; }

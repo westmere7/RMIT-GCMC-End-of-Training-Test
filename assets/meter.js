@@ -3,7 +3,7 @@
    The candidate's first name rides on the needle tip. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
-  const C = { red: "#e61e2a", navy: "#000054", grey: "#cfd1c9", muted: "#6b6b8a", tick: "#000054" };
+  const C = { red: "#e61e2a", navy: "#000054", grey: "#d3d5cd", muted: "#6b6b8a", tick: "#000054", minor: "#a9a9c4" };
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
 
   function Meter(canvas, lamp, labels) {
@@ -59,15 +59,16 @@
     const ang = (a) => -Math.PI / 2 + a; // 0 = straight up
     const pt = (a, r) => [cx + r * Math.cos(ang(a)), cy + r * Math.sin(ang(a))];
     // zone bands
-    const bands = [[-S, -S / 3, C.red], [-S / 3, S / 3, C.grey], [S / 3, S, C.navy]];
-    g.lineWidth = 12; g.lineCap = "butt";
+    const gap = 3 / R; // a hairline break between the zones
+    const bands = [[-S, -S / 3 - gap, C.red], [-S / 3 + gap, S / 3 - gap, C.grey], [S / 3 + gap, S, C.navy]];
+    g.lineWidth = 10; g.lineCap = "butt";
     for (const [a, b, col] of bands) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, R - 5, ang(a), ang(b)); g.stroke(); }
     // ticks
-    g.strokeStyle = C.tick;
     for (let i = 0; i <= 40; i++) {
       const a = -S + (2 * S * i) / 40, major = i % 5 === 0;
-      const [x1, y1] = pt(a, R + 3), [x2, y2] = pt(a, R + (major ? 20 : 10));
-      g.lineWidth = major ? 2 : 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      const [x1, y1] = pt(a, R + 6), [x2, y2] = pt(a, R + (major ? 18 : 11));
+      g.strokeStyle = major ? C.tick : C.minor; g.lineWidth = major ? 1.5 : 1;
+      g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
     g.textAlign = "center"; g.textBaseline = "middle";
     let x, y;
@@ -88,10 +89,12 @@
     }
     g.textAlign = "center"; g.textBaseline = "middle";
     // needle
-    const [nx, ny] = pt(this.theta, R + 20), [bx, by] = pt(this.theta, R - (this.h - 34 - this.top));
-    g.save(); g.shadowColor = "rgba(0,0,84,0.25)"; g.shadowBlur = 3; g.shadowOffsetX = 1.5; g.shadowOffsetY = 1;
-    g.strokeStyle = C.red; g.lineWidth = 2.6; g.lineCap = "round";
-    g.beginPath(); g.moveTo(bx, by); g.lineTo(nx, ny); g.stroke(); g.restore();
+    // needle: flat, fading out towards the (unseen) pivot
+    const [nx, ny] = pt(this.theta, R + 20), [bx, by] = pt(this.theta, R - (this.h - 4 - this.top));
+    const ng = g.createLinearGradient(nx, ny, bx, by);
+    ng.addColorStop(0, C.red); ng.addColorStop(0.55, C.red); ng.addColorStop(1, "rgba(230,30,42,0)");
+    g.strokeStyle = ng; g.lineWidth = 2.6; g.lineCap = "round";
+    g.beginPath(); g.moveTo(bx, by); g.lineTo(nx, ny); g.stroke();
     // the candidate's first name, riding on the needle tip
     if (this.name) {
       g.font = "700 13px " + TEXT;
@@ -104,12 +107,6 @@
       g.beginPath(); g.moveTo(tx - 5, py + ph / 2 - 1); g.lineTo(tx + 5, py + ph / 2 - 1); g.lineTo(tx, py + ph / 2 + 6); g.closePath(); g.fill();
       g.fillStyle = "#fff"; g.fillText(this.name, px, py + 1);
     }
-    // hood over the pivot side
-    const grad = g.createLinearGradient(0, h - 40, 0, h);
-    grad.addColorStop(0, "rgba(241,242,236,0)"); grad.addColorStop(1, "rgba(227,229,224,1)");
-    g.fillStyle = grad; g.fillRect(0, h - 40, w, 40);
-    g.fillStyle = C.muted; g.font = "700 10px " + TEXT;
-    g.fillText("P E R F O R M A N C E", cx, h - 13);
   };
 
   global.Meter = Meter;
