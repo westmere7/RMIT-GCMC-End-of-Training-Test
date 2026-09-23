@@ -25,6 +25,7 @@
     $("sMins").value = s.timeLimitMinutes || 10; $("sMins").oninput = (e) => { s.timeLimitMinutes = Math.max(1, +e.target.value || 10); markDirty(); };
     $("sPer").value = s.questionsPerAttempt || 30; $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(1, +e.target.value || 30); markDirty(); renderBank(); };
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
+    $("sPen").value = s.criticalPenalty == null ? 3 : s.criticalPenalty; $("sPen").oninput = (e) => { s.criticalPenalty = Math.max(0, +e.target.value || 0); markDirty(); renderBank(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };
     s.categories = A.categoriesOf(s);
     $("sCats").value = s.categories.join(", ");
@@ -40,7 +41,9 @@
   function renderBank() {
     const n = D.questions.length, per = Math.min((D.settings || {}).questionsPerAttempt || 30, n);
     const cats = new Set(D.questions.map(A.categoryOf));
-    $("bankInfo").innerHTML = "<b>" + n + "</b> questions in <b>" + cats.size + "</b> categories. Each attempt draws <b>" + per + "</b> at random" + (per >= cats.size ? ", with at least one from every category." : ".");
+    const nc = D.questions.filter((q) => q.critical).length, pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
+    $("bankInfo").innerHTML = "<b>" + n + "</b> questions in <b>" + cats.size + "</b> categories. Each attempt draws <b>" + per + "</b> at random" + (per >= cats.size ? ", with at least one from every category." : ".")
+      + " <b>" + nc + "</b> marked critical (−" + pen + " each if wrong).";
   }
   // ---------- people (first names, saved straight to the live API) ----------
   let peopleApi = true;
@@ -135,13 +138,17 @@
     const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
     for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
     cat.onchange = () => { q.category = cat.value; markDirty(); renderBank(); };
+    const crit = document.createElement("label"); crit.className = "crit-toggle"; crit.title = "A wrong answer on a critical question loses extra marks";
+    crit.innerHTML = '<input type="checkbox"> Critical'; const cb = crit.querySelector("input"); cb.checked = !!q.critical;
+    el.classList.toggle("critical", !!q.critical);
+    cb.onchange = () => { if (cb.checked) q.critical = true; else delete q.critical; el.classList.toggle("critical", cb.checked); markDirty(); renderBank(); };
     const tools = document.createElement("div"); tools.className = "tools";
     const tool = (label, title, fn, danger) => { const b = document.createElement("button"); b.type = "button"; b.className = "icon-btn" + (danger ? " danger" : ""); b.textContent = label; b.title = title; b.setAttribute("aria-label", title); b.onclick = fn; tools.append(b); };
     tool("↑", "Move up", () => { if (i > 0) { [D.questions[i - 1], D.questions[i]] = [D.questions[i], D.questions[i - 1]]; markDirty(); renderList(); } });
     tool("↓", "Move down", () => { if (i < D.questions.length - 1) { [D.questions[i + 1], D.questions[i]] = [D.questions[i], D.questions[i + 1]]; markDirty(); renderList(); } });
     tool("⧉", "Duplicate", () => { const c = JSON.parse(JSON.stringify(q)); c.id = newId(); D.questions.splice(i + 1, 0, c); markDirty(); renderList(); });
     tool("✕", "Delete question", () => { D.questions.splice(i, 1); markDirty(); renderList(); }, true);
-    head.append(sel, cat, tools); el.append(head);
+    head.append(sel, cat, crit, tools); el.append(head);
 
     const prompt = document.createElement("textarea"); prompt.className = "input"; prompt.id = "prompt-" + q.id; prompt.value = q.prompt || "";
     prompt.placeholder = q.type === "fill" ? "Sentence with ___ where the blank goes" : "Question text";

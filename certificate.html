@@ -228,7 +228,7 @@
       const roman = (n) => [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]].reduce((s, [v, r]) => { while (n >= v) { s += r; n -= v; } return s; }, "");
 
       function render(v) {
-        const c = Math.max(0, Math.min(v.t, v.c | 0)), t = Math.max(1, v.t | 0), pct = Math.round((100 * c) / t);
+        const c = Math.max(0, Math.min(v.t, v.c | 0)), t = Math.max(1, v.t | 0), pct = v.pct != null && !isNaN(v.pct) ? Math.max(0, Math.min(100, v.pct)) : Math.round((100 * c) / t);
         const d = isNaN(v.date) ? new Date() : v.date, name = (v.name || "").trim() || "Candidate";
         const [latin, gloss] = honours(pct);
         $("cName").textContent = name;
@@ -249,7 +249,7 @@
         $("modeTag").textContent = "OFFICIAL"; $("modeTag").style.background = "#fac800"; $("modeTag").style.color = "#000054";
         $("modeText").textContent = "Your certificate"; $("editors").hidden = true;
         $("hint").textContent = "In the print dialog, choose A4, portrait, margins “None”, and turn on background graphics.";
-        render({ name: q.get("n"), c: +q.get("c"), t: +q.get("t"), best: q.get("b") || "", date: new Date(q.get("d") || Date.now()) });
+        render({ name: q.get("n"), c: +q.get("c"), t: +q.get("t"), pct: q.has("p") ? +q.get("p") : null, best: q.get("b") || "", date: new Date(q.get("d") || Date.now()) });
       } else {
         const today = new Date(); $("fDate").value = today.toISOString().slice(0, 10);
         const read = () => render({ name: $("fName").value, c: +$("fC").value, t: +$("fT").value, best: $("fBest").value.trim(), date: new Date($("fDate").value + "T12:00") });

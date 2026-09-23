@@ -51,6 +51,7 @@
     $("dQ").textContent = n; $("dT").textContent = mins;
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
+    $("dPen").textContent = PENALTY();
     $("briefLead").textContent = "Covers every part of your onboarding. Read the conditions, then start.";
 
     S = load();
@@ -130,12 +131,15 @@
   }
 
   // ---------- scoring ----------
+  const PENALTY = () => { const v = (DATA.settings || {}).criticalPenalty; return v == null || v === "" ? 3 : Math.max(0, +v || 0); };
   function score() {
-    let c = 0, w = 0;
-    QS().forEach((q) => { const r = S.responses[q.id]; if (!r) return; if (r.correct) c++; else w++; });
-    // tracks accuracy once a few answers are in; early answers nudge it in small steps
-    return { c, w, p: Math.max(-1, Math.min(1, (c - w) / Math.max(c + w, 8))) };
+    let c = 0, w = 0, crit = 0;
+    QS().forEach((q) => { const r = S.responses[q.id]; if (!r) return; if (r.correct) c++; else { w++; if (q.critical) crit++; } });
+    const pen = PENALTY(), marks = c - pen * crit;
+    // tracks accuracy once a few answers are in; early answers nudge it in small steps (critical misses weigh extra)
+    return { c, w, crit, pen, marks, p: Math.max(-1, Math.min(1, (c - w - pen * crit) / Math.max(c + w, 8))) };
   }
+  const pctOf = (sc, n) => Math.max(0, Math.round((100 * sc.marks) / n));
 
   // ---------- clock ----------
   function remaining() { return Math.max(0, S.limitMs - (Date.now() - S.startedAt)); }
@@ -185,6 +189,8 @@
     $("qNo").textContent = String(S.index + 1).padStart(2, "0"); $("qOfN").textContent = `of ${n}`;
     $("qType").textContent = A.TYPE_LABEL[q.type] || "Question";
     $("qTopic").textContent = A.categoryOf(q);
+    $("qCard").classList.toggle("critical", !!q.critical);
+    $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>−${PENALTY()} marks if wrong</small>` : "1 mark";
     $("qStatus").className = "status"; $("qStatus").innerHTML = '<span class="kbd">Press <b>Enter</b> to submit</span>';
     const body = $("qBody"); body.innerHTML = "";
     current = q.type === "single" || q.type === "multi" ? [] : "";
@@ -252,7 +258,7 @@
     $("qStatus").className = "status recorded"; $("qStatus").textContent = skipped ? "Skipped" : "Answer recorded";
     meter.setScore(score().p);
     // roughly one answer in four gets a harder bounce, never two in a row
-    const hard = !S.lastJolt && Math.random() < 0.25;
+    const hard = (q.critical && !correct) || (!S.lastJolt && Math.random() < 0.25);
     S.lastJolt = hard; save();
     if (hard) meter.jolt(correct ? 1 : -1); else meter.kick(correct ? 1 : -1);
     updateProgress();
@@ -305,7 +311,7 @@
       fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         email: S.email, name: S.name, assessment: DATA.settings.assessmentCode, attempt: S.attempt || 1,
         startedAt: new Date(S.startedAt).toISOString(), finishedAt: new Date(S.finishedAt).toISOString(),
-        correct: sc.c, total: QS().length, timedOut: S.timedOut, longestStreak: an.streak,
+        correct: sc.c, total: QS().length, criticalErrors: sc.crit, criticalPenalty: sc.pen, marks: sc.marks, percent: pctOf(sc, QS().length), timedOut: S.timedOut, longestStreak: an.streak,
         byCategory: an.byCat.map(({ name, correct, total }) => ({ name, correct, total })),
         responses: QS().map((q) => ({ id: q.id, category: A.categoryOf(q), prompt: q.prompt, given: A.responseText(q, S.responses[q.id].response), correct: S.responses[q.id].correct })),
       }) }).catch(() => {});
@@ -327,7 +333,7 @@
   function showResults() {
     if (meter) meter.stop();
     const st = DATA.settings || {}, qs = QS(), n = qs.length;
-    const sc = score(), pct = Math.round((100 * sc.c) / n), an = analyse();
+    const sc = score(), pct = pctOf(sc, n), an = analyse();
     const zone = new Meter(null, null, LABELS()).zone(sc.p);
     const name = S.name || "";
     const distinction = pct >= (st.confettiThreshold || 95);
@@ -340,7 +346,8 @@
     $("resBadge").hidden = !distinction;
     const zt = $("resZone"); zt.textContent = "Meter: " + zone;
     zt.className = "zone-tag" + (sc.p >= 1 / 3 ? " good" : sc.p <= -1 / 3 ? " bad" : "");
-    $("resOf").textContent = `${sc.c} of ${n} correct`;
+    $("resOf").textContent = `${sc.c} of ${n} correct` + (sc.crit ? ` · −${sc.pen * sc.crit} for critical errors` : "");
+    $("resCrit").hidden = !sc.crit; $("resCrit").textContent = `${sc.crit} critical ${sc.crit === 1 ? "error" : "errors"}`;
     show("scrResults");
     countUp($("resPct"), pct, 1200);
 
@@ -349,8 +356,8 @@
     qs.forEach((q, i) => {
       const r = S.responses[q.id] || {};
       const cell = document.createElement("i");
-      cell.className = r.correct ? "ok" : r.skipped ? "skip" : "no";
-      cell.title = `Q${i + 1} · ${A.categoryOf(q)} · ${r.correct ? "right" : r.skipped ? "skipped" : "wrong"}`;
+      cell.className = (r.correct ? "ok" : r.skipped ? "skip" : "no") + (q.critical && !r.correct ? " crit" : "");
+      cell.title = `Q${i + 1} · ${A.categoryOf(q)}${q.critical ? " · critical" : ""} · ${r.correct ? "right" : r.skipped ? "skipped" : "wrong"}`;
       cell.style.animationDelay = reduced ? "0s" : 0.4 + i * 0.03 + "s";
       strip.append(cell);
     });
@@ -379,7 +386,7 @@
     $("sName").textContent = name || "—"; $("sEmail").textContent = S.email || "";
     $("sDate").textContent = "Completed " + new Date(S.finishedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
-    $("certBtn").href = "certificate.html?" + new URLSearchParams({ n: name, c: sc.c, t: n, b: best && best.pct > 0 ? best.name : "", d: new Date(S.finishedAt).toISOString() });
+    $("certBtn").href = "certificate.html?" + new URLSearchParams({ n: name, c: sc.c, t: n, p: pct, b: best && best.pct > 0 ? best.name : "", d: new Date(S.finishedAt).toISOString() });
 
     renderReview("wrong");
     if (distinction && !S.confettiShown) { S.confettiShown = true; save(); confetti(); }
@@ -402,7 +409,7 @@
         const row = document.createElement("div"); row.className = "review-item" + (r.correct ? " ok" : "");
         const given = r.timedOut ? "Not reached (time ran out)" : A.responseText(q, r.response);
         row.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span>
-          <div class="q">${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}</div>
+          <div class="q">${q.critical ? `<span class="crit-chip">Critical${r.correct ? "" : ` · −${PENALTY()}`}</span> ` : ""}${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}</div>
           <div class="ans">${r.correct
             ? `<div><label>Your answer</label><span class="right plain">${A.escapeHtml(given)} ✓</span></div>`
             : `<div><label>Your answer</label><span class="yours${r.response == null ? " none" : ""}">${A.escapeHtml(given)}</span></div>

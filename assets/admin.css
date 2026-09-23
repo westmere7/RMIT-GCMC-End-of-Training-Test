@@ -65,3 +65,9 @@
 .ed-tabs .tab { padding: 8px 16px; }
 .ed-tabs .tab b { margin-left: 4px; font-variant-numeric: tabular-nums; }
 .admin > [data-panel] > .card:first-child, .admin > [data-panel].card { margin-top: 0; }
+
+/* ---------- critical toggle ---------- */
+.crit-toggle { display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; height: 44px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; font-size: 14px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.crit-toggle input { width: 16px; height: 16px; accent-color: var(--red); }
+.crit-toggle:has(input:checked) { border-color: var(--red); color: var(--red); background: #fff5f5; }
+.qe.critical { box-shadow: 0 0 0 1.5px var(--red); }

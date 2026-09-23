@@ -92,7 +92,8 @@
             <li><span class="n">01</span><p><b>Timing.</b> The clock can't be paused. It submits at 00:00.</p></li>
             <li><span class="n">02</span><p><b>Answers.</b> Final once submitted. A skipped question counts as wrong.</p></li>
             <li><span class="n">03</span><p><b>Written answers.</b> A word or short phrase. Capitals and accents don't matter.</p></li>
-            <li><span class="n">04</span><p><b>Keyboard.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
+            <li class="crit"><span class="n">04</span><p><b>Critical questions.</b> Marked <span class="crit-chip">Critical</span>. A wrong answer loses <span id="dPen">3</span> marks.</p></li>
+            <li><span class="n">05</span><p><b>Keyboard.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
           </ol>
         </section>
 
@@ -126,7 +127,7 @@
             <div class="q-no"><span id="qNo">01</span><small id="qOfN">of 30</small></div>
             <div class="q-info"><span class="k">Section</span><b id="qTopic">Topic</b></div>
             <div class="q-info"><span class="k">Format</span><b id="qType">Single choice</b></div>
-            <div class="q-marks">1 mark</div>
+            <div class="q-marks" id="qMarks">1 mark</div>
           </div>
           <div id="qBody"></div>
           <div class="q-actions">
@@ -169,7 +170,7 @@
           <p class="eyebrow">Assessment complete</p>
           <h1 id="resTitle">Congratulations.</h1>
           <p id="resMsg"></p>
-          <div class="res-tags"><span class="badge" id="resBadge" hidden>Distinction</span><span class="zone-tag" id="resZone">Too close to call</span></div>
+          <div class="res-tags"><span class="badge" id="resBadge" hidden>Distinction</span><span class="zone-tag" id="resZone">Too close to call</span><span class="zone-tag bad" id="resCrit" hidden></span></div>
         </div>
         <div class="res-score">
           <span class="pct"><span id="resPct">0</span><small>%</small></span>

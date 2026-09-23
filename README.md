@@ -38,6 +38,12 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 - **The random draw takes at least one question from each category** whenever the number of questions per attempt is at least the number of categories. The rest are drawn at random.
 - **Results break the score down by category**, with the strongest and weakest named.
 
+## Critical questions
+
+- **Tick "Critical"** on any question in the editor. The candidate sees it flagged in red, with the penalty.
+- **A wrong or skipped critical question loses extra marks**: 3 by default, changeable in Settings. The score is (correct − penalties) ÷ questions, never below 0%.
+- **Results list the critical errors.** Each result row in Supabase also stores `criticalErrors`, `marks` and `percent`.
+
 ## Run it locally
 
 Double-click `Start Test.bat`. It opens http://localhost:8765/.

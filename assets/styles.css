@@ -437,9 +437,11 @@ button { cursor: pointer; }
 .ex-list li { padding: 8px 0; }
 .ex-foot { margin-top: 8px; }
 
-/* meter lamp: stays lit and breathes while the needle is pinned near an end (red side red, navy side navy) */
-.meter-face .lamp.peak i { animation: lampPeak 1.2s ease-in-out infinite; }
-.meter-face .lamp.peak.good i { background: var(--navy); box-shadow: 0 0 10px 2px rgba(0, 0, 84, 0.45); }
-.meter-face .lamp.peak { color: var(--red); }
-.meter-face .lamp.peak.good { color: var(--navy); }
-@keyframes lampPeak { 50% { filter: brightness(1.35); transform: scale(1.15); } }
+/* ---------- critical questions ---------- */
+.crit-chip { display: inline-block; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; padding: 3px 7px; border-radius: 2px; vertical-align: 2px; }
+.q-marks .crit-chip { font-size: 11px; padding: 4px 9px; }
+.q-marks small { display: block; margin-top: 5px; font-size: 11px; letter-spacing: 0.04em; text-transform: none; color: var(--red); }
+.q-card.critical .q-head { background: #fff5f5; }
+.rules li.crit b { color: var(--red); }
+.res-strip i.crit { box-shadow: inset 0 -6px 0 #fac800; }
+.review-item .q .crit-chip { margin-right: 6px; }
