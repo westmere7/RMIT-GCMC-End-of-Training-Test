@@ -22,10 +22,10 @@
     this.top = 74; this.cx = this.w / 2; this.cy = this.top + this.R;
   };
   Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
-  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.6 : 2.9); };
+  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.5 : 1.6); };
   Meter.prototype.zone = function (p) {
     const v = p == null ? this.p : p;
-    return v <= -1 / 3 ? this.labels.left : v >= 1 / 3 ? this.labels.right : this.labels.middle;
+    return v <= -1 / 3 ? this.labels.left : v >= 1 / 3 ? this.labels.right : "Too close to call";
   };
   Meter.prototype.start = function () { if (!this.running) { this.running = true; requestAnimationFrame(this.frame); } };
   Meter.prototype.stop = function () { this.running = false; };
@@ -35,15 +35,15 @@
     const dt = Math.min(0.05, this.last ? (ts - this.last) / 1000 : 0.016); this.last = ts; this.t += dt;
     const amp = this.reduced ? 0.12 : 1;
     // the "signal": layered wobble plus the odd random transient, like programme audio on a VU
-    const sig = amp * (0.022 * Math.sin(this.t * 9.1) + 0.014 * Math.sin(this.t * 15.7 + 1.3) + 0.012 * Math.sin(this.t * 4.3 + 2));
-    if (!this.reduced && Math.random() < dt * 2.6) this.vel += (Math.random() - 0.5) * 0.9;
+    const sig = amp * (0.009 * Math.sin(this.t * 5.3) + 0.005 * Math.sin(this.t * 9.7 + 1.3) + 0.004 * Math.sin(this.t * 2.1 + 2));
+    if (!this.reduced && Math.random() < dt * 0.7) this.vel += (Math.random() - 0.5) * 0.25;
     const target = this.p * SPAN * 0.9 + sig;
-    const acc = 150 * (target - this.theta) - 11 * this.vel; // under-damped: overshoots, then settles
+    const acc = 110 * (target - this.theta) - 13 * this.vel; // under-damped: a small overshoot, then settles
     this.vel += acc * dt; this.theta += this.vel * dt;
     const lim = SPAN + 0.07;
     if (this.theta > lim) { this.theta = lim; this.vel *= -0.35; }
     if (this.theta < -lim) { this.theta = -lim; this.vel *= -0.35; }
-    if (this.lamp) this.lamp.classList.toggle("on", Math.abs(this.vel) > 0.9);
+    if (this.lamp) this.lamp.classList.toggle("on", Math.abs(this.vel) > 0.55);
     this.draw();
     requestAnimationFrame(this.frame);
   };
@@ -70,8 +70,8 @@
     [x, y] = pt(SPAN + 0.035, R + 12); g.fillStyle = C.navy; g.fillText("+", x, y);
     // labels
     g.font = "700 14px " + DISPLAY;
-    const lab = [[-SPAN * 0.66, this.labels.left, C.red], [0, this.labels.middle, C.muted], [SPAN * 0.66, this.labels.right, C.navy]];
-    for (const [a, text, col] of lab) { [x, y] = pt(a, R + 40); g.fillStyle = col; g.fillText(text.toUpperCase(), x, y); }
+    const lab = [[-SPAN * 0.66, this.labels.left, C.red], [SPAN * 0.66, this.labels.right, C.navy]];
+    for (const [a, text, col] of lab) { if (!text) continue; [x, y] = pt(a, R + 46); g.fillStyle = col; g.fillText(text.toUpperCase(), x, y); }
     // needle
     const [nx, ny] = pt(this.theta, R + 24), [bx, by] = pt(this.theta, R - 70);
     g.save(); g.shadowColor = "rgba(0,0,84,0.25)"; g.shadowBlur = 3; g.shadowOffsetX = 1.5; g.shadowOffsetY = 1;

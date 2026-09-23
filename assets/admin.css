@@ -11,7 +11,14 @@
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 20px; margin-top: 14px; }
 .help { font-size: 13px; color: var(--muted); margin-top: 8px; max-width: 90ch; }
 .muted { color: var(--muted); font-family: var(--text); font-weight: 400; font-size: 18px; }
-.gate-actions { align-content: end; }
+.cand-list { display: grid; gap: 8px; margin-top: 14px; }
+.cand-row { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 10px; align-items: center; }
+.cand-row.new { margin-top: 12px; }
+.cand-item { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 10px; align-items: center; background: var(--grey-50); border-radius: var(--radius); padding: 10px 14px; font-size: 14px; }
+.cand-item b { color: var(--ink); font-size: 15px; }
+.cand-item .set { color: var(--ok); font-weight: 700; }
+.conflict { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; background: #fdeaea; border: 1px solid #f3b6b9; color: var(--red-dark); border-radius: var(--radius); padding: 14px 18px; margin-top: 18px; font-size: 14px; }
+.conflict span { color: var(--body); flex: 1; min-width: 280px; }
 .list-head { margin: 8px 0 14px; }
 .list-head h2 { font-size: 26px; }
 
@@ -39,3 +46,4 @@
 .qe .tester .res.no { color: var(--red-dark); font-weight: 700; }
 .qe .problems { color: var(--red-dark); font-size: 13px; font-weight: 700; margin-top: 10px; }
 .add-row { display: flex; gap: 10px; align-items: center; padding: 8px 0 30px; color: var(--muted); font-size: 14px; }
+#conflict { padding-bottom: 0; }

@@ -69,7 +69,7 @@
           <div><dt>Questions</dt><dd id="dQ">30</dd></div>
           <div><dt>Time limit</dt><dd id="dT">10:00</dd></div>
           <div><dt>Question types</dt><dd>Choice, fill-in, short answer</dd></div>
-          <div><dt>Candidate</dt><dd id="dCand">Nghia</dd></div>
+          <div><dt>Candidate</dt><dd id="dCand">—</dd></div>
         </dl>
         <label class="confirm"><input type="checkbox" id="agree"> I confirm I am completing this assessment on my own, without the onboarding deck open.</label>
         <button class="btn" id="startBtn" disabled>Start assessment</button>
@@ -80,8 +80,9 @@
           <li><span class="n">1</span><span>The timer starts when you press Start and cannot be paused. At 00:00 your assessment is submitted automatically.</span></li>
           <li><span class="n">2</span><span>Answers are final once submitted. You can skip a question, but it will be marked incorrect.</span></li>
           <li><span class="n">3</span><span>Written answers are one word or a short phrase. Capitals, accents and punctuation don't matter.</span></li>
-          <li><span class="n">4</span><span>The performance meter responds to every answer you submit. Keep an eye on it.</span></li>
-          <li><span class="n">5</span><span>Use a desktop browser. Keyboard: <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</span></li>
+          <li><span class="n">4</span><span>Each attempt draws its questions at random from the full question bank, so no two attempts are the same.</span></li>
+          <li><span class="n">5</span><span>The performance meter responds to every answer you submit. Keep an eye on it.</span></li>
+          <li><span class="n">6</span><span>Use a desktop browser. Keyboard: <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</span></li>
         </ul>
       </div>
     </div>
@@ -112,10 +113,7 @@
       <aside class="side">
         <div class="timer" id="timer">
           <p class="eyebrow">Time remaining</p>
-          <div class="clock">
-            <svg viewBox="0 0 80 80" aria-hidden="true"><circle class="track" cx="40" cy="40" r="34"/><circle class="bar" id="ring" cx="40" cy="40" r="34"/></svg>
-            <span class="digits" id="digits">10:00</span>
-          </div>
+          <div class="clock"><span class="digits" id="digits">10:00</span></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
         </div>
         <div class="card progress-card">

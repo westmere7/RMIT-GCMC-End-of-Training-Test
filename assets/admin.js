@@ -4,33 +4,60 @@
   const A = window.Assess;
   const $ = (id) => document.getElementById(id);
   let D = null, dirty = false;
+  // The editor link carries the key: /admin.html?key=… (only checked when ADMIN_KEY is set on the server).
+  const KEY_STORE = "gcmc-admin-key";
+  const adminKey = (() => {
+    const k = new URLSearchParams(location.search).get("key");
+    try { if (k) sessionStorage.setItem(KEY_STORE, k); return k || sessionStorage.getItem(KEY_STORE) || ""; } catch (e) { return k || ""; }
+  })();
 
   function setState(text, cls) { const el = $("saveState"); el.textContent = text; el.className = "save-state " + (cls || ""); }
   function markDirty() { dirty = true; setState("Unsaved changes", "dirty"); }
   addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   // ---------- settings ----------
-  const SETTINGS = [["sTitle", "title"], ["sSubtitle", "subtitle"], ["sCode", "assessmentCode"], ["sName", "candidateName"]];
+  const SETTINGS = [["sTitle", "title"], ["sSubtitle", "subtitle"], ["sCode", "assessmentCode"]];
   function renderSettings() {
     const s = (D.settings = D.settings || {}); s.gauge = s.gauge || {};
     for (const [id, key] of SETTINGS) { $(id).value = s[key] || ""; $(id).oninput = (e) => { s[key] = e.target.value; markDirty(); }; }
     $("sMins").value = s.timeLimitMinutes || 10; $("sMins").oninput = (e) => { s.timeLimitMinutes = Math.max(1, +e.target.value || 10); markDirty(); };
+    $("sPer").value = s.questionsPerAttempt || 30; $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(1, +e.target.value || 30); markDirty(); renderBank(); };
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };
-    for (const [id, key, def] of [["gLeft", "left", "Back to Day 1"], ["gMid", "middle", "Probation"], ["gRight", "right", "Welcome to the team"]]) {
+    delete s.gauge.middle;
+    for (const [id, key, def] of [["gLeft", "left", "HR would like a word"], ["gRight", "right", "Welcome to the team"]]) {
       $(id).value = s.gauge[key] || def; $(id).oninput = (e) => { s.gauge[key] = e.target.value; markDirty(); };
     }
     renderGate();
   }
-  function renderGate() {
-    const a = (D.auth = D.auth || {});
-    const on = a.emailSha256 || a.staffIdSha256;
-    $("gateState").innerHTML = on
-      ? "<b>Gate is on.</b> Only the saved email and staff ID can sign in. Type new values below to replace them."
-      : "<b>Gate is off.</b> Any RMIT email and any staff ID will be accepted until you set them here.";
+  function renderBank() {
+    const n = D.questions.length, per = Math.min((D.settings || {}).questionsPerAttempt || 30, n);
+    $("bankInfo").innerHTML = "<b>" + n + "</b> questions in the bank. Each attempt draws <b>" + per + "</b> at random.";
   }
-  $("aEmail").oninput = $("aId").oninput = markDirty;
-  $("clearGate").onclick = () => { D.auth = { emailSha256: "", staffIdSha256: "" }; $("aEmail").value = ""; $("aId").value = ""; renderGate(); markDirty(); };
+  function renderGate() {
+    // migrate the old single gate into the candidate list
+    delete D.auth;
+    const list = (D.candidates = D.candidates || []);
+    $("gateState").innerHTML = list.length
+      ? "<b>" + list.length + " " + (list.length > 1 ? "people" : "person") + " listed.</b> Anyone can still sign in; listed people are greeted by name."
+      : "<b>Nobody listed.</b> Anyone can sign in, and is greeted by the first part of their email.";
+    const box = $("candList"); box.innerHTML = "";
+    list.forEach((c, i) => {
+      const row = document.createElement("div"); row.className = "cand-item";
+      row.innerHTML = "<b>" + A.escapeHtml(c.name || "Unnamed") + "</b><span class=\"set\">" + (c.emailSha256 ? "Email set" : "No email") + "</span>";
+      const del = document.createElement("button"); del.type = "button"; del.className = "icon-btn danger"; del.textContent = "✕";
+      del.title = "Remove candidate"; del.setAttribute("aria-label", "Remove " + (c.name || "candidate"));
+      del.onclick = () => { list.splice(i, 1); markDirty(); renderGate(); };
+      row.append(del); box.append(row);
+    });
+  }
+  $("cAdd").onclick = async () => {
+    const name = $("cName").value.trim(), email = A.normEmail($("cEmail").value);
+    if (!name || !email) { setState("Enter a first name and an email.", "dirty"); return; }
+    D.candidates.push({ name, emailSha256: await A.sha256(email) });
+    $("cName").value = ""; $("cEmail").value = "";
+    markDirty(); renderGate();
+  };
 
   // ---------- questions ----------
   const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
@@ -60,7 +87,7 @@
 
   function renderList() {
     const box = $("qList"); box.innerHTML = "";
-    $("qCount").textContent = `· ${D.questions.length}`;
+    $("qCount").textContent = `· ${D.questions.length}`; renderBank();
     D.questions.forEach((q, i) => box.append(renderQuestion(q, i)));
   }
 
@@ -141,10 +168,6 @@
   async function collect() {
     const bad = D.questions.map((q, i) => [i + 1, problems(q)]).filter(([, p]) => p.length);
     if (bad.length) throw new Error(`Fix question ${bad.map(([n]) => n).join(", ")} first.`);
-    const email = A.normEmail($("aEmail").value), id = A.normStaffId($("aId").value);
-    D.auth = D.auth || {};
-    if (email) D.auth.emailSha256 = await A.sha256(email);
-    if (id) D.auth.staffIdSha256 = await A.sha256(id);
     D.questions.forEach((q) => { if (isChoice(q.type)) { q.options = q.options.map((o) => String(o).trim()); } });
     return D;
   }
@@ -153,19 +176,34 @@
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "questions.json"; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   }
-  $("saveBtn").onclick = async () => {
+  async function save(force) {
     let data;
     try { data = await collect(); } catch (e) { setState(e.message, "dirty"); return; }
+    let res;
     try {
-      const res = await fetch("/api/questions", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
-      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || res.status);
-      dirty = false; $("aEmail").value = ""; $("aId").value = ""; renderGate();
-      setState(`Saved · ${new Date().toLocaleTimeString()} · the test uses these next time it loads`, "ok");
-    } catch (e) {
+      res = await fetch("/api/questions" + (force ? "?force=1" : ""), {
+        method: "PUT", headers: { "Content-Type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(data),
+      });
+    } catch (e) { res = null; }
+    if (!res || res.status === 404 || res.status === 405 || !(res.headers.get("content-type") || "").includes("json")) {
       download(data); dirty = false;
-      setState("No local server here, so questions.json was downloaded. Replace data/questions.json with it.", "dirty");
+      setState("There's no save API on this host, so questions.json was downloaded. Replace data/questions.json with it.", "dirty");
+      return;
     }
-  };
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 409) { showConflict(); return; }
+    if (!res.ok) { setState(body.error || "Save failed (" + res.status + ").", "dirty"); return; }
+    D.revision = body.revision; dirty = false; hideConflict();
+    setState(`Saved · revision ${body.revision} · ${new Date().toLocaleTimeString()}`, "ok");
+  }
+  function showConflict() {
+    setState("Someone else saved while you were editing.", "dirty");
+    $("conflict").hidden = false;
+  }
+  function hideConflict() { $("conflict").hidden = true; }
+  $("saveBtn").onclick = () => save(false);
+  $("reloadLatest").onclick = async () => { dirty = false; D = await A.loadData(); renderAll(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
+  $("overwrite").onclick = () => save(true);
   $("downloadBtn").onclick = async () => { try { download(await collect()); } catch (e) { setState(e.message, "dirty"); } };
   $("importFile").onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
@@ -176,7 +214,7 @@
 
   function renderAll() { renderSettings(); renderList(); }
   (async () => {
-    try { D = await A.loadData(); renderAll(); setState("All changes saved", "ok"); }
+    try { D = await A.loadData(); renderAll(); setState("Up to date · revision " + (D.revision || 0), "ok"); }
     catch (e) { setState(e.message, "dirty"); }
   })();
 })();

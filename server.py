@@ -2,7 +2,8 @@
 
 Serves the site from this folder and adds a tiny API:
   GET  /api/questions   -> data/questions.json
-  PUT  /api/questions   -> overwrite data/questions.json (previous copy kept in data/backups/)
+  PUT  /api/questions   -> overwrite data/questions.json (previous copy kept in data/backups/);
+                           409 if someone saved since you loaded (send ?force=1 to overwrite)
   POST /api/results     -> save an attempt to data/results/
 
 Standard library only. Run:  python server.py   (then open http://localhost:8765/)
@@ -57,6 +58,14 @@ class Handler(SimpleHTTPRequestHandler):
             data = self._read_body()
             if not isinstance(data, dict) or not isinstance(data.get("questions"), list):
                 return self._json(400, {"error": "Expected an object with a 'questions' list."})
+            current = 0
+            if os.path.exists(QUESTIONS):
+                with open(QUESTIONS, encoding="utf-8") as f:
+                    current = int(json.load(f).get("revision") or 0)
+            if "force=1" not in self.path and int(data.get("revision") or 0) != current:
+                return self._json(409, {"error": "Someone else saved changes after you opened the editor.", "revision": current})
+            data["revision"] = current + 1
+            data.pop("updatedAt", None)
             os.makedirs(os.path.join(DATA, "backups"), exist_ok=True)
             if os.path.exists(QUESTIONS):
                 shutil.copy2(QUESTIONS, os.path.join(DATA, "backups", f"questions-{stamp()}.json"))
@@ -64,7 +73,7 @@ class Handler(SimpleHTTPRequestHandler):
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             os.replace(tmp, QUESTIONS)
-            return self._json(200, {"ok": True, "count": len(data["questions"])})
+            return self._json(200, {"ok": True, "revision": data["revision"], "count": len(data["questions"])})
         except Exception as e:  # noqa: BLE001 - report any failure back to the editor
             return self._json(500, {"error": str(e)})
 

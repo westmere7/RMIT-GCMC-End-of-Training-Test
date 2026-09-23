@@ -20,10 +20,15 @@
   const normEmail = (v) => String(v || "").trim().toLowerCase();
   const normStaffId = (v) => String(v || "").replace(/\s+/g, "").toUpperCase();
 
-  /** Reads data/questions.json (works on any web server; the local server also serves it). */
+  /** The live question document: /api/questions (Vercel + Supabase, or the local server),
+      falling back to the bundled data/questions.json on a plain static host. */
   async function loadData() {
+    try {
+      const res = await fetch("/api/questions", { cache: "no-store" });
+      if (res.ok && (res.headers.get("content-type") || "").includes("json")) return await res.json();
+    } catch (e) { /* no API here: use the bundled file */ }
     const res = await fetch("data/questions.json?t=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) throw new Error("Could not load data/questions.json (" + res.status + ").");
+    if (!res.ok) throw new Error("Could not load the questions (" + res.status + ").");
     return res.json();
   }
 

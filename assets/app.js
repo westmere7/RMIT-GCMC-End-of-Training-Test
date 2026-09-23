@@ -6,7 +6,10 @@
   const KEY = "gcmc-assessment-v1";
   const LETTERS = "ABCDEFGHIJ";
 
-  let DATA = null, S = null, meter = null, tick = null, locked = false;
+  let DATA = null, S = null, meter = null, tick = null, locked = false, BYID = {};
+  const QS = () => (S && S.qids ? S.qids.map((id) => BYID[id]).filter(Boolean) : []);
+  const perAttempt = () => Math.min((DATA.settings || {}).questionsPerAttempt || DATA.questions.length, DATA.questions.length);
+  const LABELS = () => Object.assign({ left: "HR would like a word", right: "Welcome to the team" }, (DATA.settings || {}).gauge || {});
 
   // ---------- state (per browser tab, survives a refresh) ----------
   const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: carry on in memory */ } };
@@ -16,7 +19,7 @@
     for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id;
     const signedIn = S && S.email;
     $("whoBox").hidden = !signedIn; $("signOut").hidden = !signedIn || id === "scrTest";
-    if (signedIn) $("whoEmail").textContent = S.email;
+    if (signedIn) { $("whoEmail").textContent = S.email; $("dCand").textContent = S.name || "—"; }
     scrollTo(0, 0);
   }
 
@@ -31,16 +34,18 @@
       return;
     }
     const st = DATA.settings || {};
-    const n = DATA.questions.length, mins = st.timeLimitMinutes || 10;
+    DATA.questions.forEach((q) => { BYID[q.id] = q; });
+    const n = perAttempt(), mins = st.timeLimitMinutes || 10;
     document.title = (st.title || "End-of-Training Assessment") + " · RMIT";
     $("topSubtitle").textContent = st.subtitle || "";
     $("loginCode").textContent = st.assessmentCode || ""; $("briefCode").textContent = st.assessmentCode || "";
     $("loginTitle").textContent = st.title || "End-of-Training Assessment";
     $("metaQ").textContent = n; $("metaT").textContent = mins + " minutes";
-    $("dQ").textContent = n; $("dT").textContent = mins + ":00"; $("dCand").textContent = st.candidateName || "Candidate";
+    $("dQ").textContent = n; $("dT").textContent = mins + ":00";
     $("briefLead").textContent = `${n} questions covering everything from your onboarding: the team and GCMC, RMIT Melbourne, brand and squad style, platforms, workflow, meetings, and a little Aussie English. You have ${mins} minutes.`;
 
     S = load();
+    if (S && S.started && !S.qids) S = null;
     if (S && S.finished) return showResults();
     if (S && S.started) return startTest(true);
     if (S && S.email) return show("scrBrief");
@@ -53,17 +58,15 @@
     const email = A.normEmail($("email").value), id = A.normStaffId($("staffId").value);
     const err = $("loginError");
     if (!email || !id) { err.textContent = "Enter your RMIT email and staff ID."; return; }
-    if (!/^[^@\s]+@(student\.)?rmit\.edu\.(au|vn)$/.test(email)) { err.textContent = "Use your RMIT staff email address (…@rmit.edu.vn or …@rmit.edu.au)."; return; }
-    const auth = DATA.auth || {};
-    if (auth.emailSha256 || auth.staffIdSha256) {
-      const [eh, ih] = await Promise.all([A.sha256(email), A.sha256(id)]);
-      if ((auth.emailSha256 && eh !== auth.emailSha256) || (auth.staffIdSha256 && ih !== auth.staffIdSha256)) {
-        err.textContent = "Those details don't match our records. Check your email and staff ID and try again.";
-        $("staffId").value = ""; $("staffId").focus(); return;
-      }
-    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Enter a valid email address."; return; }
+    // Testing build: any email and any staff ID get in. A listed name, if there is one, is used to greet them.
+    let name = email.split("@")[0].split(/[._-]/)[0];
+    name = name.charAt(0).toUpperCase() + name.slice(1);
+    const eh = await A.sha256(email);
+    const who = (DATA.candidates || []).find((c) => c.emailSha256 === eh);
+    if (who && who.name) name = who.name;
     err.textContent = "";
-    S = { email, started: false, finished: false };
+    S = { email, name, started: false, finished: false };
     save(); show("scrBrief");
   });
   $("signOut").addEventListener("click", () => { try { sessionStorage.removeItem(KEY); } catch (e) {} location.reload(); });
@@ -79,12 +82,12 @@
     if (!resume) {
       S.started = true; S.startedAt = Date.now(); S.index = 0; S.responses = {};
       S.limitMs = (st.timeLimitMinutes || 10) * 60000;
-      S.order = DATA.questions.map((q) => (q.options ? (st.shuffleOptions ? shuffle(q.options.map((_, i) => i)) : q.options.map((_, i) => i)) : null));
+      S.qids = shuffle(DATA.questions.map((q) => q.id)).slice(0, perAttempt());
+      S.order = QS().map((q) => (q.options ? (st.shuffleOptions ? shuffle(q.options.map((_, i) => i)) : q.options.map((_, i) => i)) : null));
       save();
     }
     show("scrTest");
-    const labels = Object.assign({ left: "Back to Day 1", middle: "Probation", right: "Welcome to the team" }, st.gauge || {});
-    meter = meter || new Meter($("meter"), $("lamp"), labels);
+    meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.resize(); meter.setScore(score().p); meter.start();
     buildDots(); renderQuestion(); runClock();
   }
@@ -92,25 +95,22 @@
   // ---------- scoring ----------
   function score() {
     let c = 0, w = 0;
-    DATA.questions.forEach((q) => {
+    QS().forEach((q) => {
       const r = S.responses[q.id];
       if (!r) return;
       if (r.correct) c++; else w++;
     });
-    const div = Math.max(6, DATA.questions.length / 2);
-    return { c, w, p: Math.max(-1, Math.min(1, (c - w) / div)) };
+    // tracks accuracy once a few answers are in; early answers nudge it in small steps
+    return { c, w, p: Math.max(-1, Math.min(1, (c - w) / Math.max(c + w, 8))) };
   }
 
   // ---------- clock ----------
   function remaining() { return Math.max(0, S.limitMs - (Date.now() - S.startedAt)); }
   function runClock() {
-    const ring = $("ring"), circ = 2 * Math.PI * 34;
-    ring.style.strokeDasharray = circ;
     clearInterval(tick);
     const upd = () => {
       const ms = remaining(), s = Math.ceil(ms / 1000);
       $("digits").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-      ring.style.strokeDashoffset = circ * (1 - ms / S.limitMs);
       $("timer").classList.toggle("warn", s <= 60); $("timer").classList.toggle("critical", s <= 30);
       $("timerSub").textContent = s <= 60 ? "Final minute. Unanswered questions will be marked incorrect." : "Submits automatically at 00:00";
       if (ms <= 0) { clearInterval(tick); finish(true); }
@@ -121,15 +121,15 @@
   // ---------- progress ----------
   function buildDots() {
     const box = $("dots"); box.innerHTML = "";
-    DATA.questions.forEach(() => box.appendChild(document.createElement("span")));
+    QS().forEach(() => box.appendChild(document.createElement("span")));
     updateProgress();
   }
   function updateProgress() {
-    const n = DATA.questions.length, done = Object.keys(S.responses).length;
+    const n = QS().length, done = Object.keys(S.responses).length;
     $("count").innerHTML = `${done} <small>of ${n} answered</small>`;
     $("barFill").style.width = (100 * done) / n + "%";
     [...$("dots").children].forEach((d, i) => {
-      const r = S.responses[DATA.questions[i].id];
+      const r = S.responses[QS()[i].id];
       d.className = r ? (r.skipped ? "skipped" : "done") : i === S.index ? "current" : "";
     });
     $("meterReading").textContent = "Live reading: " + meter.zone();
@@ -139,7 +139,7 @@
   let current = null; // the in-progress response for the question on screen
   function renderQuestion() {
     locked = false;
-    const q = DATA.questions[S.index], n = DATA.questions.length;
+    const q = QS()[S.index], n = QS().length;
     $("qCard").classList.remove("locked");
     $("qNum").textContent = `Question ${S.index + 1} of ${n}`;
     $("qType").textContent = A.TYPE_LABEL[q.type] || "Question";
@@ -200,7 +200,7 @@
 
   function submit(skipped) {
     if (locked) return;
-    const q = DATA.questions[S.index];
+    const q = QS()[S.index];
     const resp = skipped ? null : current;
     if (!skipped && (Array.isArray(resp) ? !resp.length : !A.normalize(resp))) return;
     locked = true;
@@ -212,7 +212,7 @@
     meter.setScore(score().p); meter.kick(correct ? 1 : -1);
     updateProgress();
     setTimeout(() => {
-      if (S.index >= DATA.questions.length - 1) return finish(false);
+      if (S.index >= QS().length - 1) return finish(false);
       S.index++; save(); renderQuestion();
     }, 850);
   }
@@ -221,7 +221,7 @@
 
   document.addEventListener("keydown", (e) => {
     if ($("scrTest").hidden || locked) return;
-    const q = DATA.questions[S.index];
+    const q = QS()[S.index];
     if (e.key === "Enter") { e.preventDefault(); if (!$("submitBtn").disabled) submit(false); return; }
     if ((q.type === "single" || q.type === "multi") && !e.ctrlKey && !e.metaKey && !e.altKey) {
       const k = LETTERS.indexOf(e.key.toUpperCase());
@@ -233,15 +233,15 @@
   // ---------- finish & results ----------
   function finish(timedOut) {
     clearInterval(tick);
-    DATA.questions.forEach((q) => { if (!S.responses[q.id]) S.responses[q.id] = { response: null, correct: false, skipped: true, timedOut: !!timedOut }; });
+    QS().forEach((q) => { if (!S.responses[q.id]) S.responses[q.id] = { response: null, correct: false, skipped: true, timedOut: !!timedOut }; });
     S.finished = true; S.finishedAt = Math.min(Date.now(), S.startedAt + S.limitMs); S.timedOut = !!timedOut;
     save();
     const sc = score();
     try {
       fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         email: S.email, assessment: DATA.settings.assessmentCode, startedAt: new Date(S.startedAt).toISOString(), finishedAt: new Date(S.finishedAt).toISOString(),
-        correct: sc.c, total: DATA.questions.length, timedOut: S.timedOut,
-        responses: DATA.questions.map((q) => ({ id: q.id, prompt: q.prompt, given: A.responseText(q, S.responses[q.id].response), correct: S.responses[q.id].correct })),
+        name: S.name, correct: sc.c, total: QS().length, timedOut: S.timedOut,
+        responses: QS().map((q) => ({ id: q.id, prompt: q.prompt, given: A.responseText(q, S.responses[q.id].response), correct: S.responses[q.id].correct })),
       }) }).catch(() => {});
     } catch (e) { /* results logging is best effort */ }
     showResults();
@@ -249,10 +249,10 @@
 
   function showResults() {
     if (meter) meter.stop();
-    const st = DATA.settings || {}, n = DATA.questions.length;
+    const st = DATA.settings || {}, n = QS().length;
     const sc = score(), pct = Math.round((100 * sc.c) / n);
-    const zone = (meter || new Meter($("meter"), null, Object.assign({ left: "Back to Day 1", middle: "Probation", right: "Welcome to the team" }, st.gauge || {}))).zone(sc.p);
-    const name = st.candidateName || "";
+    const zone = (meter || new Meter($("meter"), null, LABELS())).zone(sc.p);
+    const name = S.name || "";
     const distinction = pct >= (st.confettiThreshold || 95);
     $("resTitle").textContent = distinction ? `Outstanding, ${name}. Welcome to the team.` : `Congratulations, ${name}. You've completed your onboarding.`;
     $("resMsg").textContent = distinction
@@ -268,7 +268,7 @@
     $("sDate").textContent = new Date(S.finishedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
 
     const list = $("reviewList"); list.innerHTML = "";
-    const wrong = DATA.questions.map((q, i) => [q, i]).filter(([q]) => !S.responses[q.id] || !S.responses[q.id].correct);
+    const wrong = QS().map((q, i) => [q, i]).filter(([q]) => !S.responses[q.id] || !S.responses[q.id].correct);
     if (!wrong.length) list.innerHTML = '<p class="flawless">Nothing to revisit. Flawless.</p>';
     for (const [q, i] of wrong) {
       const r = S.responses[q.id] || {};

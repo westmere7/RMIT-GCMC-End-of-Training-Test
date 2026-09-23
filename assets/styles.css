@@ -178,7 +178,7 @@ button { cursor: pointer; }
 .timer svg circle { fill: none; stroke-width: 7; }
 .timer svg .track { stroke: rgba(255, 255, 255, 0.14); }
 .timer svg .bar { stroke: #fff; stroke-linecap: butt; transition: stroke-dashoffset 0.25s linear, stroke 0.3s; }
-.timer .digits { font-family: var(--display); font-size: 62px; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.timer .digits { font-family: var(--display); font-size: 84px; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .timer .sub { font-size: 13px; color: var(--navy-30); margin-top: 12px; }
 .timer.warn { background: var(--red); }
 .timer.warn .eyebrow { color: #fff; }

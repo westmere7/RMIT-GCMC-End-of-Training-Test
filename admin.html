@@ -29,6 +29,15 @@
     </div>
   </div>
 
+  <div class="container" id="conflict" hidden>
+    <div class="conflict">
+      <b>Someone else saved changes after you opened the editor.</b>
+      <span>Load their version (your unsaved edits here will be lost), or overwrite theirs with yours.</span>
+      <button class="btn ghost small" id="reloadLatest" type="button">Load latest</button>
+      <button class="btn small" id="overwrite" type="button">Overwrite with mine</button>
+    </div>
+  </div>
+
   <main class="container admin">
     <section class="card">
       <p class="eyebrow">Settings</p>
@@ -36,25 +45,26 @@
         <div class="field"><label for="sTitle">Title</label><input class="input" id="sTitle"></div>
         <div class="field"><label for="sSubtitle">Subtitle</label><input class="input" id="sSubtitle"></div>
         <div class="field"><label for="sCode">Assessment code</label><input class="input" id="sCode"></div>
-        <div class="field"><label for="sName">Candidate first name</label><input class="input" id="sName"></div>
+        <div class="field"><label for="sPer">Questions per attempt</label><input class="input" id="sPer" type="number" min="1"></div>
         <div class="field"><label for="sMins">Time limit (minutes)</label><input class="input" id="sMins" type="number" min="1" max="120"></div>
         <div class="field"><label for="sConf">Confetti from (%)</label><input class="input" id="sConf" type="number" min="0" max="100"></div>
-        <div class="field"><label for="gLeft">Meter · left label</label><input class="input" id="gLeft"></div>
-        <div class="field"><label for="gMid">Meter · middle label</label><input class="input" id="gMid"></div>
-        <div class="field"><label for="gRight">Meter · right label</label><input class="input" id="gRight"></div>
+        <div class="field"><label for="gLeft">Meter · red side label</label><input class="input" id="gLeft"></div>
+        <div class="field"><label for="gRight">Meter · navy side label</label><input class="input" id="gRight"></div>
+        <div class="field"><label>Question bank</label><p class="help" id="bankInfo" style="margin-top:12px"></p></div>
       </div>
       <label class="confirm"><input type="checkbox" id="sShuffle"> Shuffle answer options for each attempt</label>
     </section>
 
     <section class="card">
-      <p class="eyebrow">Sign-in gate</p>
+      <p class="eyebrow">People</p>
       <p class="help" id="gateState"></p>
-      <div class="grid-3">
-        <div class="field"><label for="aEmail">Candidate email</label><input class="input" id="aEmail" type="email" placeholder="Leave blank to keep the current one"></div>
-        <div class="field"><label for="aId">Staff ID</label><input class="input" id="aId" placeholder="Leave blank to keep the current one"></div>
-        <div class="field gate-actions"><button class="btn ghost small" id="clearGate" type="button">Remove gate (accept anyone)</button></div>
+      <div id="candList" class="cand-list"></div>
+      <div class="cand-row new">
+        <input class="input" id="cName" placeholder="First name (shown in the test)" aria-label="First name">
+        <input class="input" id="cEmail" type="email" placeholder="Their email" aria-label="Their email">
+        <button class="btn ghost small" id="cAdd" type="button">Add person</button>
       </div>
-      <p class="help">Stored as SHA-256 fingerprints, so the JSON never shows the actual email or ID. Email case doesn't matter, and spaces in the ID are ignored.</p>
+      <p class="help">Sign-in accepts any email and any staff ID (testing build, no real authentication). Add someone here only so the test greets them by name. Emails are stored as SHA-256 fingerprints.</p>
     </section>
 
     <section>
