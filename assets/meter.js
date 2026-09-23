@@ -47,15 +47,22 @@
     if (!this.running) return;
     const dt = Math.min(0.05, this.last ? (ts - this.last) / 1000 : 0.016); this.last = ts; this.t += dt;
     const S = this.span, k = S / 0.52, amp = this.reduced ? 0.12 : 1;
-    // the "signal": a gentle layered wobble plus the odd soft transient, like programme audio on a VU
-    const sig = amp * k * (0.009 * Math.sin(this.t * 5.3) + 0.005 * Math.sin(this.t * 9.7 + 1.3) + 0.004 * Math.sin(this.t * 2.1 + 2));
-    if (!this.reduced && Math.random() < dt * 0.7) this.vel += (Math.random() - 0.5) * 0.25 * k;
+    // how close the needle is to either end: 0 in the middle, 1 at the stops (eased, so the middle stays calm)
+    const e = Math.min(1, Math.abs(this.theta) / S), edge = e * e;
+    // the "signal": a slow, relaxed wobble in the middle that turns into a quicker, finer vibration towards the ends
+    // (a phase accumulator, so changing speed never makes the wobble jump)
+    this.ph = (this.ph || 0) + dt * (1 + 2.4 * edge);
+    const ph = this.ph, calm = 1 - 0.55 * edge;
+    const sig = amp * k * (calm * (0.009 * Math.sin(ph * 5.3) + 0.005 * Math.sin(ph * 9.7 + 1.3) + 0.004 * Math.sin(ph * 2.1 + 2))
+      + edge * 0.0035 * Math.sin(this.t * 31 + Math.sin(this.t * 3.1)));
+    if (!this.reduced && Math.random() < dt * (0.7 + 1.6 * edge)) this.vel += (Math.random() - 0.5) * 0.25 * k * calm;
     const target = this.p * S * 0.9 + sig;
-    // normally stiff and well damped; after a jolt, softer and barely damped, easing back over a few seconds
-    // (fully loose for the first second, then it tightens up over the next two or three)
+    // stiffer (so quicker to bounce back) towards the ends, relaxed in the middle; damping scales with it so the feel stays the same.
+    // After a jolt the spring goes soft and barely damped for about a second, then tightens up over the next two or three.
     let L = 0;
     if (this.looseT != null) { this.looseT += dt; L = this.looseT < 1.1 ? 1 : Math.exp(-(this.looseT - 1.1) / 1.2); if (L < 0.01) this.looseT = null; }
-    const K = 110 - 54 * L, D = 13 - 11 * L;
+    const Kn = 90 * (1 + 1.6 * edge), Dn = 11.8 * Math.sqrt(1 + 1.6 * edge);
+    const K = Kn - (Kn - 56) * L, D = Dn - (Dn - 2) * L;
     const acc = K * (target - this.theta) - D * this.vel;
     this.vel += acc * dt; this.theta += this.vel * dt;
     const lim = S + 0.04;
