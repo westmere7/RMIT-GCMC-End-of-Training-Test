@@ -36,6 +36,25 @@
     </div>
   </div>
 
+  <div class="ed-loading" id="edLoading" role="status" aria-live="polite">
+    <div class="ed-loading-in">
+      <span class="spinner" aria-hidden="true"></span>
+      <b id="edLoadTitle">Loading the question bank…</b>
+      <p id="edLoadMsg">Fetching the latest questions and settings.</p>
+      <button class="btn small" id="edRetry" type="button" hidden>Try again</button>
+    </div>
+  </div>
+  <script>
+    // if a script fails before the editor starts, say so instead of loading forever
+    addEventListener("error", function (e) {
+      var el = document.getElementById("edLoading"); if (!el || el.hidden) return;
+      el.classList.add("failed");
+      document.getElementById("edLoadTitle").textContent = "The editor couldn't start.";
+      document.getElementById("edLoadMsg").textContent = (e && e.message) || "A script failed to load.";
+      document.getElementById("edRetry").hidden = false;
+    });
+  </script>
+
   <main class="container admin">
     <section class="card">
       <p class="eyebrow">Settings</p>

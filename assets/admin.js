@@ -29,10 +29,8 @@
     s.categories = A.categoriesOf(s);
     $("sCats").value = s.categories.join(", ");
     $("sCats").oninput = (e) => { s.categories = e.target.value.split(",").map((x) => x.trim()).filter(Boolean); markDirty(); renderList(); };
-    $("sExam").value = (s.examiners && s.examiners.length ? s.examiners : Examiners.DEFAULT).join("
-");
-    $("sExam").oninput = (e) => { s.examiners = e.target.value.split("
-").map((x) => x.trim()).filter(Boolean); markDirty(); };
+    $("sExam").value = (s.examiners && s.examiners.length ? s.examiners : Examiners.DEFAULT).join("\n");
+    $("sExam").oninput = (e) => { s.examiners = e.target.value.split("\n").map((x) => x.trim()).filter(Boolean); markDirty(); };
     delete s.gauge.middle;
     for (const [id, key, def] of [["gLeft", "left", "HR would like a word"], ["gRight", "right", "Welcome to the team"]]) {
       $(id).value = s.gauge[key] || def; $(id).oninput = (e) => { s.gauge[key] = e.target.value; markDirty(); };
@@ -236,6 +234,7 @@
   $("saveBtn").onclick = () => save(false);
   $("reloadLatest").onclick = async () => { D = await A.loadData(); renderAll(); setBaseline(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
   $("overwrite").onclick = () => save(true);
+  $("edRetry").onclick = () => location.reload();
 
   function renderAll() { renderSettings(); renderList(); }
   (async () => {
@@ -249,6 +248,14 @@
       }
       loadPeople();
     }
-    catch (e) { setState(e.message, "dirty"); }
+    catch (e) {
+      setState(e.message, "dirty");
+      $("edLoading").classList.add("failed");
+      $("edLoadTitle").textContent = "Couldn't load the question bank.";
+      $("edLoadMsg").textContent = e.message || "Check your connection and try again.";
+      $("edRetry").hidden = false;
+      return;
+    }
+    $("edLoading").hidden = true;
   })();
 })();

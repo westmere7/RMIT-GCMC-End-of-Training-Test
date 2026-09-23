@@ -25,7 +25,7 @@
       $("whoEmail").textContent = S.name ? `${S.name} · ${S.email}` : S.email;
       const today = new Date().toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
       $("dCand").textContent = $("dSign").textContent = S.name || "—";
-      $("dEmail").textContent = S.email; $("dDate").textContent = $("dSignDate").textContent = today;
+      $("dDate").textContent = $("dSignDate").textContent = today;
     }
     scrollTo(0, 0);
   }
@@ -51,7 +51,7 @@
     $("dQ").textContent = n; $("dT").textContent = mins;
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
-    $("briefLead").textContent = `This assessment covers every part of your onboarding: ${[...cats].join(", ")}. Read the conditions and the declaration before you start.`;
+    $("briefLead").textContent = "Covers every part of your onboarding. Read the conditions, then start.";
 
     S = load();
     if (S && S.started && !S.qids) S = null;
