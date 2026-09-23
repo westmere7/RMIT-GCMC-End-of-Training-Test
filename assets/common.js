@@ -62,5 +62,42 @@
 
   const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer" };
 
-  global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL };
+  // ---------- categories ----------
+  const DEFAULT_CATEGORIES = ["Team", "Culture", "Work", "Platforms", "Brand", "RMIT", "Glossary", "Aussie English"];
+  // Used only for questions saved before categories existed: their old topic decides the category.
+  const TOPIC_CATEGORY = {
+    "team structure": "Team", "squads": "Team",
+    "team culture": "Culture", "meetings": "Culture", "working with melbourne": "Culture",
+    "workflow": "Work", "definition of done": "Work", "quality control": "Work", "stakeholders": "Work",
+    "asset trackers": "Work", "workload dashboard": "Work", "digital display": "Work",
+    "platforms": "Platforms", "communication": "Platforms",
+    "rmit history": "RMIT", "melbourne campuses": "RMIT", "rmit melbourne": "RMIT", "academic calendar": "RMIT",
+    "glossary": "Glossary", "aussie english": "Aussie English",
+  };
+  function categoriesOf(settings) {
+    const c = settings && Array.isArray(settings.categories) && settings.categories.filter(Boolean);
+    return c && c.length ? c : DEFAULT_CATEGORIES.slice();
+  }
+  function categoryOf(q) {
+    if (q.category) return q.category;
+    const t = String(q.topic || "").toLowerCase();
+    if (TOPIC_CATEGORY[t]) return TOPIC_CATEGORY[t];
+    if (/brand|inton style|mascot|photograph|indigenous/.test(t)) return "Brand";
+    return "Other";
+  }
+
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  /** Draw n questions: at least one from every category (when n allows), the rest at random, in random order. */
+  function drawQuestions(questions, n) {
+    const pool = shuffle(questions.slice()), byCat = new Map();
+    for (const q of pool) { const c = categoryOf(q); if (!byCat.has(c)) byCat.set(c, []); byCat.get(c).push(q); }
+    const picked = new Set();
+    if (n >= byCat.size) for (const list of byCat.values()) picked.add(list[0].id);
+    for (const q of pool) { if (picked.size >= n) break; picked.add(q.id); }
+    return shuffle([...picked]).slice(0, n);
+  }
+
+  global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL,
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, shuffle };
 })(window);

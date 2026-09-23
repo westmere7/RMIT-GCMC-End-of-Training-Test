@@ -11,7 +11,17 @@
       "left": "HR would like a word",
       "right": "Welcome to the team"
     },
-    "questionsPerAttempt": 30
+    "questionsPerAttempt": 30,
+    "categories": [
+      "Team",
+      "Culture",
+      "Work",
+      "Platforms",
+      "Brand",
+      "RMIT",
+      "Glossary",
+      "Aussie English"
+    ]
   },
   "questions": [
     {
@@ -27,7 +37,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Team"
     },
     {
       "id": "q02",
@@ -37,7 +48,8 @@
       "answers": [
         "INTON",
         "International"
-      ]
+      ],
+      "category": "Team"
     },
     {
       "id": "q03",
@@ -52,7 +64,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Team"
     },
     {
       "id": "q04",
@@ -67,7 +80,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Team"
     },
     {
       "id": "q05",
@@ -77,7 +91,8 @@
       "answers": [
         "order",
         "sequence"
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q06",
@@ -92,7 +107,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q07",
@@ -112,7 +128,8 @@
         1,
         2,
         3
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q08",
@@ -127,7 +144,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q09",
@@ -142,7 +160,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q10",
@@ -154,7 +173,8 @@
         "Thursdays",
         "Thu",
         "Thurs"
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q11",
@@ -169,7 +189,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q12",
@@ -179,7 +200,8 @@
       "answers": [
         "00122A",
         "CRICOS 00122A"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q13",
@@ -194,7 +216,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q14",
@@ -214,7 +237,8 @@
         1,
         2,
         3
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q15",
@@ -229,7 +253,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q16",
@@ -244,7 +269,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q17",
@@ -253,7 +279,8 @@
       "prompt": "Which typeface is used for RMIT headlines?",
       "answers": [
         "Museo"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q18",
@@ -268,7 +295,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q19",
@@ -277,7 +305,8 @@
       "prompt": "Roy is a platypus and Milo is a ___.",
       "answers": [
         "wombat"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q20",
@@ -292,7 +321,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q21",
@@ -307,7 +337,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q22",
@@ -327,7 +358,8 @@
         1,
         2,
         3
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q23",
@@ -342,7 +374,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q24",
@@ -357,7 +390,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q25",
@@ -366,7 +400,8 @@
       "prompt": "RMIT opened in Melbourne in ___ as the Working Men's College.",
       "answers": [
         "1887"
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q26",
@@ -381,7 +416,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q27",
@@ -392,7 +428,8 @@
         "afternoon",
         "the afternoon",
         "this afternoon"
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q28",
@@ -407,7 +444,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q29",
@@ -418,7 +456,8 @@
         "Friday",
         "Fridays",
         "Fri"
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q30",
@@ -433,7 +472,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q31",
@@ -448,7 +488,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q32",
@@ -458,7 +499,8 @@
       "answers": [
         "Preference",
         "Preferences"
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q33",
@@ -473,7 +515,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q34",
@@ -488,7 +531,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q35",
@@ -497,7 +541,8 @@
       "prompt": "Which Melbourne campus is home to fashion and textiles?",
       "answers": [
         "Brunswick"
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q36",
@@ -512,7 +557,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q37",
@@ -521,7 +567,8 @@
       "prompt": "RMIT became RMIT University in ___.",
       "answers": [
         "1992"
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q38",
@@ -536,7 +583,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q39",
@@ -551,7 +599,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q40",
@@ -566,7 +615,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q41",
@@ -584,7 +634,8 @@
         0,
         1,
         2
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q42",
@@ -599,7 +650,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q43",
@@ -614,7 +666,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q44",
@@ -629,7 +682,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q45",
@@ -644,7 +698,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q46",
@@ -653,7 +708,8 @@
       "prompt": "In an asset tracker, the Prospecting stage is also called ___, and Remarketing is called convert.",
       "answers": [
         "connect"
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q47",
@@ -668,7 +724,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Glossary"
     },
     {
       "id": "q48",
@@ -678,7 +735,8 @@
       "answers": [
         "3046",
         "RTO 3046"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q49",
@@ -693,7 +751,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q50",
@@ -708,7 +767,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q51",
@@ -717,7 +777,8 @@
       "prompt": "\"Womin djeka\" means ___.",
       "answers": [
         "welcome"
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q52",
@@ -732,7 +793,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q53",
@@ -747,7 +809,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q54",
@@ -762,7 +825,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Brand"
     },
     {
       "id": "q55",
@@ -777,7 +841,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q56",
@@ -792,7 +857,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q57",
@@ -803,7 +869,8 @@
         "Google Web Designer",
         "GWD",
         "Web Designer"
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q58",
@@ -818,7 +885,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q59",
@@ -830,7 +898,8 @@
         "very busy",
         "swamped",
         "slammed"
-      ]
+      ],
+      "category": "Aussie English"
     },
     {
       "id": "q60",
@@ -845,7 +914,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q61",
@@ -860,7 +930,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Work"
     },
     {
       "id": "q62",
@@ -875,7 +946,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Culture"
     },
     {
       "id": "q63",
@@ -890,7 +962,8 @@
       ],
       "correct": [
         0
-      ]
+      ],
+      "category": "Platforms"
     }
   ],
   "candidates": []

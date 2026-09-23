@@ -1,6 +1,10 @@
 server.py
+dev-server.js
 Start Test.bat
+.env
+.env.example
 data/results/
 data/backups/
+data/people.json
 supabase/
 README.md

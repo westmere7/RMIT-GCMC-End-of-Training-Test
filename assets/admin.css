@@ -1,6 +1,6 @@
 /* Editor-only styles (layered on styles.css). */
 .btn.small { padding: 9px 16px; font-size: 14px; }
-.savebar { position: sticky; top: 68px; z-index: 15; background: #fff; border-bottom: 1px solid var(--line); }
+.savebar { position: sticky; top: 68px; z-index: 15; background: #fff; border-bottom: 1px solid var(--line); box-shadow: 0 2px 8px rgba(0, 0, 84, 0.06); }
 .savebar-in { display: flex; align-items: center; gap: 10px; padding-top: 12px; padding-bottom: 12px; }
 .savebar .spacer { flex: 1; }
 .save-state { font-size: 14px; color: var(--muted); font-weight: 700; }
@@ -27,6 +27,7 @@
 .qe-head { display: flex; align-items: center; gap: 12px; }
 .qe-head .n { font-family: var(--display); color: var(--red); font-size: 22px; width: 42px; }
 .qe-head select, .qe-head .topic { width: auto; }
+.qe-head select.cat { min-width: 150px; }
 .qe-head .topic { flex: 1; }
 .qe-head .tools { display: flex; gap: 4px; }
 .icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 3px; width: 34px; height: 34px; color: var(--navy); font-size: 15px; }

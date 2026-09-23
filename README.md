@@ -1,18 +1,18 @@
 # End-of-Training Assessment
 
-A timed, 30-question onboarding test for GCMC Creative Services, drawn at random from a shared question bank. The team edits the bank through the editor page.
+A timed onboarding test for GCMC Creative Services. Each attempt draws 30 questions at random from a shared bank, with at least one from every category. The team edits the bank through the editor page.
 
 - **Test:** `/`
 - **Editor:** `/admin.html` (not linked anywhere; share the link with the team. There's no sign-in, so anyone with the link can edit)
 
-Sign-in is a testing build: any email and any staff ID get in. Add people in the editor only so the test greets them by name.
+Sign-in is a testing build: any email and any staff ID get in. The first time someone signs in, they're asked for their first name, and it's remembered for next time. The name rides on the meter's needle and appears in the results.
 
 ## Deploy (Vercel + Supabase)
 
 1. **Supabase:** create a project. In **SQL Editor**, run [`supabase/schema.sql`](supabase/schema.sql). It creates:
-   - `assessment_config`: the live question bank, one row
-   - `assessment_config_history`: every previous version
-   - `assessment_results`: finished attempts, plus the `assessment_leaderboard` view
+   - `assessment_config`: row `main` is the live question bank, row `people` holds first names
+   - `assessment_config_history`: every previous version of the bank
+   - `assessment_results`: finished attempts (scores, per-category breakdown, every answer), plus the `assessment_leaderboard` view
 
    Row-level security is on with no policies, so only the server can touch the tables.
 2. **Vercel:** import this GitHub repo. Framework preset **Other**, no build command, output directory left as is. Add these environment variables:
@@ -26,17 +26,34 @@ Sign-in is a testing build: any email and any staff ID get in. Add people in the
 - Until someone saves in the editor, the site serves the bundled `data/questions.json`.
 - The first save copies it into Supabase. From then on Supabase is the source of truth, and editing `data/questions.json` in git no longer changes the live test.
 - Every save bumps a revision number. If two people edit at once, the second one to save is asked to load the latest version or overwrite it, so nobody's changes vanish silently.
+- First names are saved straight away, from the sign-in page or the editor's People list. They live in their own row, so adding one never clashes with someone editing questions.
 - Each finished attempt is stored in `assessment_results`. Check the `assessment_leaderboard` view in Supabase to see everyone's scores.
+
+## Categories
+
+- **Every question has a category.** Pick it in the editor. The category list itself is a setting: comma-separated, in display order.
+- **The random draw takes at least one question from each category** whenever the number of questions per attempt is at least the number of categories. The rest are drawn at random.
+- **Results break the score down by category**, with the strongest and weakest named.
 
 ## Run it locally
 
-Double-click `Start Test.bat` (needs Python). It opens http://localhost:8765/. The local server reads and writes `data/questions.json`, keeps backups in `data/backups/` and saves attempts to `data/results/`. Both folders are git-ignored.
+Double-click `Start Test.bat`. It opens http://localhost:8765/.
+
+- **With live data (recommended):**
+  - copy `.env.example` to `.env`
+  - paste the same `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` you gave Vercel
+  - make sure Node is installed
+
+  `Start Test.bat` then runs `dev-server.js`, which uses the same `api/*.js` functions as Vercel against the same database. Anything you see or save locally is live.
+- **Auto-refresh:** with the dev server, open pages refresh by themselves when a file changes. CSS changes swap in without a reload. A test in progress survives a reload.
+- **Offline:** without a `.env` or without Node, it falls back to `server.py` (Python), which reads and writes `data/questions.json` and keeps everything in local files.
 
 ## Files
 
 - `index.html`, `assets/app.js`, `assets/meter.js`: the test
 - `admin.html`, `assets/admin.js`: the editor
-- `assets/common.js`: shared helpers (answer matching, loading)
-- `api/questions.js`, `api/results.js`, `api/_store.js`: Vercel functions that talk to Supabase
-- `server.py`: local server with the same API, file-based
+- `assets/common.js`: shared helpers (answer matching, categories, the random draw)
+- `api/questions.js`, `api/results.js`, `api/people.js`, `api/_store.js`: Vercel functions that talk to Supabase
+- `dev-server.js`: local server running those same functions, with auto-refresh
+- `server.py`: offline local server, file-based
 - `data/questions.json`: the seed question bank and settings

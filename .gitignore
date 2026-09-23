@@ -1,4 +1,6 @@
 data/results/
 data/backups/
+data/people.json
+.env
 .vercel/
 node_modules/

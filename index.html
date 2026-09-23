@@ -50,6 +50,11 @@
             <label for="staffId">Staff ID</label>
             <input class="input" id="staffId" type="password" autocomplete="current-password" placeholder="Your staff ID" required>
           </div>
+          <div class="field name-step" id="nameStep" hidden>
+            <label for="firstName">First name</label>
+            <input class="input" id="firstName" autocomplete="given-name" maxlength="40" placeholder="What should we call you?">
+            <p class="hint">We don't have your name on file yet. We'll remember it for next time.</p>
+          </div>
           <p class="error-msg" id="loginError" role="alert"></p>
           <button class="btn navy" type="submit" id="loginBtn">Sign in</button>
           <p class="fineprint">This assessment is for authorised RMIT staff only. Your responses, score and completion time are recorded for your training record.</p>
@@ -91,15 +96,15 @@
   <!-- test -->
   <section class="screen" id="scrTest" hidden>
     <div class="container test">
-      <main>
-        <div class="card meter-card">
-          <div class="head"><span class="eyebrow">Performance meter</span><span class="reading" id="meterReading">Live reading</span></div>
-          <div class="meter-face">
-            <span class="brandmark">RMIT · GCMC</span>
-            <span class="lamp" id="lamp"><i></i>SIGNAL</span>
-            <canvas id="meter" aria-label="Performance meter" role="img"></canvas>
-          </div>
+      <div class="card meter-card">
+        <div class="head"><span class="eyebrow">Performance meter</span></div>
+        <div class="meter-face">
+          <span class="brandmark">RMIT · GCMC</span>
+          <span class="lamp" id="lamp"><i></i>SIGNAL</span>
+          <canvas id="meter" aria-label="Performance meter" role="img"></canvas>
         </div>
+      </div>
+      <main>
         <div class="card q-card" id="qCard">
           <div class="q-meta"><span class="num" id="qNum">Question 1</span><span class="chip type" id="qType">Single choice</span><span class="chip" id="qTopic">Topic</span></div>
           <div id="qBody"></div>
@@ -130,33 +135,56 @@
 
   <!-- results -->
   <section class="screen" id="scrResults" hidden>
-    <div class="container">
-      <div class="results-top">
-        <div class="score-card">
+    <div class="container results">
+      <!-- hero -->
+      <div class="res-hero">
+        <div class="res-hero-text">
           <p class="eyebrow">Assessment complete</p>
           <h1 id="resTitle">Congratulations.</h1>
           <p id="resMsg"></p>
-          <div class="big"><span class="pct" id="resPct">0%</span><span class="of" id="resOf">0 of 30 correct<span>Final meter reading</span></span></div>
-          <span class="badge" id="resBadge" hidden>Distinction</span>
+          <div class="res-tags"><span class="badge" id="resBadge" hidden>Distinction</span><span class="zone-tag" id="resZone">Too close to call</span></div>
         </div>
-        <div class="card">
-          <p class="eyebrow">Your record</p>
-          <dl class="stats">
-            <div><dt>Correct</dt><dd id="sCorrect">0</dd></div>
-            <div><dt>To revisit</dt><dd id="sWrong">0</dd></div>
-            <div><dt>Time used</dt><dd id="sTime">0:00</dd></div>
-            <div><dt>Meter reading</dt><dd id="sZone">Probation</dd></div>
-            <div><dt>Completed</dt><dd id="sDate">—</dd></div>
-            <div><dt>Status</dt><dd>Onboarded</dd></div>
-            <div class="wide"><dt>Candidate</dt><dd class="email" id="sEmail">—</dd></div>
-          </dl>
+        <div class="res-score">
+          <span class="pct"><span id="resPct">0</span><small>%</small></span>
+          <span class="of" id="resOf">0 of 30 correct</span>
+          <div class="res-strip" id="resStrip" aria-label="Every answer, in order"></div>
+          <span class="strip-legend"><i class="ok"></i>Right <i class="no"></i>Wrong <i class="skip"></i>Skipped</span>
         </div>
       </div>
+
+      <!-- quick stats -->
+      <div class="res-stats">
+        <div class="stat"><span class="k">Time used</span><span class="v" id="sTime">0:00</span><span class="s" id="sTimeSub"></span></div>
+        <div class="stat"><span class="k">Per question</span><span class="v" id="sAvg">0s</span><span class="s">average</span></div>
+        <div class="stat"><span class="k">Longest streak</span><span class="v" id="sStreak">0</span><span class="s">correct in a row</span></div>
+        <div class="stat"><span class="k">Categories aced</span><span class="v" id="sAced">0</span><span class="s" id="sAcedSub">of 0 at 100%</span></div>
+      </div>
+
+      <!-- per category -->
+      <div class="res-grid">
+        <div class="card cat-card">
+          <div class="card-head"><h2>By category</h2><span class="sub">Correct answers in each part of your onboarding</span></div>
+          <div id="catList" class="cat-list"></div>
+        </div>
+        <div class="card insight-card">
+          <div class="insight best"><span class="k">Strongest</span><span class="v" id="bestCat">—</span><span class="s" id="bestSub"></span></div>
+          <div class="insight worst"><span class="k">Worth a refresher</span><span class="v" id="worstCat">—</span><span class="s" id="worstSub"></span></div>
+          <div class="insight who"><span class="k">Candidate</span><span class="v" id="sName">—</span><span class="s" id="sEmail">—</span><span class="s" id="sDate"></span></div>
+        </div>
+      </div>
+
+      <!-- review -->
       <div class="card review">
-        <h2>Questions to revisit</h2>
-        <p class="sub">What you answered, and what we were looking for.</p>
+        <div class="card-head">
+          <h2>Your answers</h2>
+          <div class="tabs" role="tablist">
+            <button role="tab" class="tab" id="tabWrong" aria-selected="true">To revisit <b id="nWrong">0</b></button>
+            <button role="tab" class="tab" id="tabAll" aria-selected="false">All <b id="nAll">0</b></button>
+          </div>
+        </div>
         <div id="reviewList"></div>
       </div>
+      <div class="res-actions"><button class="btn ghost" id="againBtn">Sign out</button></div>
     </div>
   </section>
 

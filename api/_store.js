@@ -63,6 +63,41 @@ async function insertResult(r) {
   });
 }
 
+// First names live in their own row of assessment_config (id "people"), so no extra table is needed:
+// { entries: { <sha256 of email>: { name, updated_at } } }. Kept apart from the question bank so that
+// adding a name never bumps the bank's revision or clashes with someone editing questions.
+const PEOPLE_ID = "people";
+const people = {
+  async all() {
+    const rows = await rest(`assessment_config?id=eq.${PEOPLE_ID}&select=data`);
+    return (rows && rows[0] && rows[0].data && rows[0].data.entries) || {};
+  },
+  async save(entries) {
+    await rest("assessment_config?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({ id: PEOPLE_ID, data: { entries }, revision: 1, updated_at: new Date().toISOString() }),
+    });
+  },
+  async list() {
+    const e = await people.all();
+    return Object.entries(e).map(([email_sha256, v]) => ({ email_sha256, ...v })).sort((a, b) => a.name.localeCompare(b.name));
+  },
+  async get(h) {
+    return (await people.all())[h] || null;
+  },
+  async upsert(h, name) {
+    const e = await people.all();
+    e[h] = { name, updated_at: new Date().toISOString() };
+    await people.save(e);
+  },
+  async remove(h) {
+    const e = await people.all();
+    delete e[h];
+    await people.save(e);
+  },
+};
+
 function readJson(req) {
   if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
@@ -80,4 +115,4 @@ function send(res, code, payload) {
   res.end(JSON.stringify(payload));
 }
 
-module.exports = { configured, readDoc, writeDoc, insertResult, readJson, send };
+module.exports = { configured, readDoc, writeDoc, insertResult, people, readJson, send };

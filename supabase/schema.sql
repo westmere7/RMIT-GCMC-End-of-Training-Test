@@ -31,6 +31,7 @@ create table if not exists public.assessment_results (
   created_at  timestamptz not null default now()
 );
 
+-- Rows in assessment_config: "main" = the question bank; "people" = first names keyed by email fingerprint.
 alter table public.assessment_config         enable row level security;
 alter table public.assessment_config_history enable row level security;
 alter table public.assessment_results        enable row level security;

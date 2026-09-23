@@ -6,7 +6,15 @@
   let D = null, dirty = false;
 
   function setState(text, cls) { const el = $("saveState"); el.textContent = text; el.className = "save-state " + (cls || ""); }
-  function markDirty() { dirty = true; setState("Unsaved changes", "dirty"); }
+  let baseline = "";
+  const snapshot = () => JSON.stringify(D, (k, v) => (k === "revision" || k === "updatedAt" ? undefined : v));
+  function setBaseline() { baseline = snapshot(); dirty = false; $("saveBtn").disabled = true; }
+  function markDirty() {
+    dirty = snapshot() !== baseline;
+    $("saveBtn").disabled = !dirty;
+    if (dirty) setState("Unsaved changes", "dirty");
+    else setState("No changes since the last save · revision " + (D.revision || 0), "ok");
+  }
   addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   // ---------- settings ----------
@@ -18,6 +26,9 @@
     $("sPer").value = s.questionsPerAttempt || 30; $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(1, +e.target.value || 30); markDirty(); renderBank(); };
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };
+    s.categories = A.categoriesOf(s);
+    $("sCats").value = s.categories.join(", ");
+    $("sCats").oninput = (e) => { s.categories = e.target.value.split(",").map((x) => x.trim()).filter(Boolean); markDirty(); renderList(); };
     delete s.gauge.middle;
     for (const [id, key, def] of [["gLeft", "left", "HR would like a word"], ["gRight", "right", "Welcome to the team"]]) {
       $(id).value = s.gauge[key] || def; $(id).oninput = (e) => { s.gauge[key] = e.target.value; markDirty(); };
@@ -26,31 +37,51 @@
   }
   function renderBank() {
     const n = D.questions.length, per = Math.min((D.settings || {}).questionsPerAttempt || 30, n);
-    $("bankInfo").innerHTML = "<b>" + n + "</b> questions in the bank. Each attempt draws <b>" + per + "</b> at random.";
+    const cats = new Set(D.questions.map(A.categoryOf));
+    $("bankInfo").innerHTML = "<b>" + n + "</b> questions in <b>" + cats.size + "</b> categories. Each attempt draws <b>" + per + "</b> at random" + (per >= cats.size ? ", with at least one from every category." : ".");
   }
-  function renderGate() {
-    // migrate the old single gate into the candidate list
-    delete D.auth;
-    const list = (D.candidates = D.candidates || []);
+  // ---------- people (first names, saved straight to the live API) ----------
+  let peopleApi = true;
+  async function peopleCall(method, body, h) {
+    const res = await fetch("/api/people" + (h ? "?h=" + h : ""), { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("no api");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "People request failed (" + res.status + ").");
+    return data;
+  }
+  function renderGate() { delete D.auth; if (D.candidates && !D.candidates.filter((c) => c.name && c.emailSha256).length) delete D.candidates; }
+  async function loadPeople() {
+    const box = $("candList");
+    let list = [];
+    try {
+      // one-off: names kept in the old question document move to the people list
+      const legacy = (D.candidates || []).filter((c) => c.name && c.emailSha256);
+      for (const c of legacy) await peopleCall("POST", { name: c.name, email_sha256: c.emailSha256 });
+      if (D.candidates) { delete D.candidates; markDirty(); }
+      list = await peopleCall("GET");
+    } catch (e) {
+      peopleApi = false;
+      $("gateState").innerHTML = e.message === "no api" ? "<b>People can only be managed where the live API runs</b> (the Vercel site, or the local dev server)." : A.escapeHtml(e.message);
+      $("cAdd").disabled = true; box.innerHTML = ""; return;
+    }
     $("gateState").innerHTML = list.length
-      ? "<b>" + list.length + " " + (list.length > 1 ? "people" : "person") + " listed.</b> Anyone can still sign in; listed people are greeted by name."
-      : "<b>Nobody listed.</b> Anyone can sign in, and is greeted by the first part of their email.";
-    const box = $("candList"); box.innerHTML = "";
-    list.forEach((c, i) => {
+      ? "<b>" + list.length + " " + (list.length > 1 ? "people" : "person") + " saved.</b> Anyone can sign in; saved people are greeted by name."
+      : "<b>Nobody saved yet.</b> Anyone can sign in, and is asked for their first name the first time.";
+    box.innerHTML = "";
+    list.forEach((c) => {
       const row = document.createElement("div"); row.className = "cand-item";
-      row.innerHTML = "<b>" + A.escapeHtml(c.name || "Unnamed") + "</b><span class=\"set\">" + (c.emailSha256 ? "Email set" : "No email") + "</span>";
+      row.innerHTML = "<b>" + A.escapeHtml(c.name || "Unnamed") + "</b><span class=\"set\">" + (c.updated_at ? "Saved " + new Date(c.updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "") + "</span>";
       const del = document.createElement("button"); del.type = "button"; del.className = "icon-btn danger"; del.textContent = "✕";
-      del.title = "Remove candidate"; del.setAttribute("aria-label", "Remove " + (c.name || "candidate"));
-      del.onclick = () => { list.splice(i, 1); markDirty(); renderGate(); };
+      del.title = "Remove " + (c.name || "person"); del.setAttribute("aria-label", "Remove " + (c.name || "person"));
+      del.onclick = async () => { try { await peopleCall("DELETE", null, c.email_sha256); loadPeople(); } catch (e) { setState(e.message, "dirty"); } };
       row.append(del); box.append(row);
     });
   }
   $("cAdd").onclick = async () => {
     const name = $("cName").value.trim(), email = A.normEmail($("cEmail").value);
     if (!name || !email) { setState("Enter a first name and an email.", "dirty"); return; }
-    D.candidates.push({ name, emailSha256: await A.sha256(email) });
-    $("cName").value = ""; $("cEmail").value = "";
-    markDirty(); renderGate();
+    try { await peopleCall("POST", { name, email_sha256: await A.sha256(email) }); } catch (e) { setState(e.message, "dirty"); return; }
+    $("cName").value = ""; $("cEmail").value = ""; loadPeople();
   };
 
   // ---------- questions ----------
@@ -74,7 +105,7 @@
 
   function newId() { let n = D.questions.length + 1, id; do { id = "q" + String(n++).padStart(2, "0"); } while (D.questions.some((q) => q.id === id)); return id; }
   function blank(type) {
-    const q = { id: newId(), type, topic: "", prompt: type === "fill" ? "Our stand-up is on ___." : "" };
+    const q = { id: newId(), type, category: A.categoriesOf(D.settings)[0], topic: "", prompt: type === "fill" ? "Our stand-up is on ___." : "" };
     if (isChoice(type)) { q.options = ["", "", "", ""]; q.correct = []; } else q.answers = [];
     return q;
   }
@@ -98,6 +129,10 @@
       if (t === "single" && q.correct && q.correct.length > 1) q.correct = q.correct.slice(0, 1);
       q.type = t; markDirty(); renderList();
     };
+    const cat = document.createElement("select"); cat.className = "input cat"; cat.id = "cat-" + q.id; cat.setAttribute("aria-label", "Category");
+    const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
+    for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
+    cat.onchange = () => { q.category = cat.value; markDirty(); renderBank(); };
     const topic = document.createElement("input"); topic.className = "input topic"; topic.id = "topic-" + q.id; topic.placeholder = "Topic (e.g. Workflow)"; topic.value = q.topic || "";
     topic.oninput = () => { q.topic = topic.value; markDirty(); };
     const tools = document.createElement("div"); tools.className = "tools";
@@ -106,7 +141,7 @@
     tool("↓", "Move down", () => { if (i < D.questions.length - 1) { [D.questions[i + 1], D.questions[i]] = [D.questions[i], D.questions[i + 1]]; markDirty(); renderList(); } });
     tool("⧉", "Duplicate", () => { const c = JSON.parse(JSON.stringify(q)); c.id = newId(); D.questions.splice(i + 1, 0, c); markDirty(); renderList(); });
     tool("✕", "Delete question", () => { D.questions.splice(i, 1); markDirty(); renderList(); }, true);
-    head.append(sel, topic, tools); el.append(head);
+    head.append(sel, cat, topic, tools); el.append(head);
 
     const prompt = document.createElement("textarea"); prompt.className = "input"; prompt.id = "prompt-" + q.id; prompt.value = q.prompt || "";
     prompt.placeholder = q.type === "fill" ? "Sentence with ___ where the blank goes" : "Question text";
@@ -173,6 +208,7 @@
   async function save(force) {
     let data;
     try { data = await collect(); } catch (e) { setState(e.message, "dirty"); return; }
+    $("saveBtn").disabled = true; setState("Saving…");
     let res;
     try {
       res = await fetch("/api/questions" + (force ? "?force=1" : ""), {
@@ -180,14 +216,14 @@
       });
     } catch (e) { res = null; }
     if (!res || res.status === 404 || res.status === 405 || !(res.headers.get("content-type") || "").includes("json")) {
-      download(data); dirty = false;
+      download(data); setBaseline();
       setState("There's no save API on this host, so questions.json was downloaded. Replace data/questions.json with it.", "dirty");
       return;
     }
     const body = await res.json().catch(() => ({}));
-    if (res.status === 409) { showConflict(); return; }
-    if (!res.ok) { setState(body.error || "Save failed (" + res.status + ").", "dirty"); return; }
-    D.revision = body.revision; dirty = false; hideConflict();
+    if (res.status === 409) { showConflict(); $("saveBtn").disabled = false; return; }
+    if (!res.ok) { setState(body.error || "Save failed (" + res.status + ").", "dirty"); $("saveBtn").disabled = false; return; }
+    D.revision = body.revision; setBaseline(); hideConflict();
     setState(`Saved · revision ${body.revision} · ${new Date().toLocaleTimeString()}`, "ok");
   }
   function showConflict() {
@@ -196,19 +232,21 @@
   }
   function hideConflict() { $("conflict").hidden = true; }
   $("saveBtn").onclick = () => save(false);
-  $("reloadLatest").onclick = async () => { dirty = false; D = await A.loadData(); renderAll(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
+  $("reloadLatest").onclick = async () => { D = await A.loadData(); renderAll(); setBaseline(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
   $("overwrite").onclick = () => save(true);
-  $("downloadBtn").onclick = async () => { try { download(await collect()); } catch (e) { setState(e.message, "dirty"); } };
-  $("importFile").onchange = async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    try { const d = JSON.parse(await f.text()); if (!Array.isArray(d.questions)) throw new Error(); D = d; renderAll(); markDirty(); }
-    catch (err) { setState("That file isn't a valid questions.json.", "dirty"); }
-    e.target.value = "";
-  };
 
   function renderAll() { renderSettings(); renderList(); }
   (async () => {
-    try { D = await A.loadData(); renderAll(); setState("Up to date · revision " + (D.revision || 0), "ok"); }
+    try {
+      D = await A.loadData(); renderAll(); setBaseline(); setState("Up to date · revision " + (D.revision || 0), "ok");
+      const missing = D.questions.filter((q) => !q.category);
+      if (missing.length) {
+        missing.forEach((q) => { q.category = A.categoryOf(q); });
+        renderList(); markDirty();
+        setState(`${missing.length} questions were given a category from their topic. Check them, then save to keep them.`, "dirty");
+      }
+      loadPeople();
+    }
     catch (e) { setState(e.message, "dirty"); }
   })();
 })();

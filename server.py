@@ -5,6 +5,7 @@ Serves the site from this folder and adds a tiny API:
   PUT  /api/questions   -> overwrite data/questions.json (previous copy kept in data/backups/);
                            409 if someone saved since you loaded (send ?force=1 to overwrite)
   POST /api/results     -> save an attempt to data/results/
+  GET/POST/DELETE /api/people -> first names by email fingerprint (data/people.json)
 
 Standard library only. Run:  python server.py   (then open http://localhost:8765/)
 """
@@ -19,6 +20,25 @@ HOST, PORT = "127.0.0.1", int(os.environ.get("PORT", "8765"))
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(ROOT, "data")
 QUESTIONS = os.path.join(DATA, "questions.json")
+PEOPLE = os.path.join(DATA, "people.json")
+HEX64 = set("0123456789abcdef")
+
+
+def load_people():
+    try:
+        with open(PEOPLE, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_people(p):
+    with open(PEOPLE, "w", encoding="utf-8") as f:
+        json.dump(p, f, ensure_ascii=False, indent=2)
+
+
+def is_hash(h):
+    return isinstance(h, str) and len(h) == 64 and set(h) <= HEX64
 
 
 def stamp():
@@ -45,7 +65,16 @@ class Handler(SimpleHTTPRequestHandler):
         length = int(self.headers.get("Content-Length") or 0)
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
+    def _query(self, key):
+        from urllib.parse import parse_qs, urlparse
+        return (parse_qs(urlparse(self.path).query).get(key) or [""])[0]
+
     def do_GET(self):
+        if self.path.split("?")[0] == "/api/people":
+            people, h = load_people(), self._query("h")
+            if not h:
+                return self._json(200, [{"email_sha256": k, **v} for k, v in sorted(people.items(), key=lambda kv: kv[1].get("name", ""))])
+            return self._json(200, {"name": people[h]["name"] if h in people else None})
         if self.path.split("?")[0] == "/api/questions":
             with open(QUESTIONS, encoding="utf-8") as f:
                 return self._json(200, json.load(f))
@@ -77,7 +106,24 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception as e:  # noqa: BLE001 - report any failure back to the editor
             return self._json(500, {"error": str(e)})
 
+    def do_DELETE(self):
+        if self.path.split("?")[0] != "/api/people":
+            return self._json(404, {"error": "Not found"})
+        people = load_people()
+        people.pop(self._query("h"), None)
+        save_people(people)
+        return self._json(200, {"ok": True})
+
     def do_POST(self):
+        if self.path.split("?")[0] == "/api/people":
+            body = self._read_body()
+            name, h = str(body.get("name") or "").strip()[:40], body.get("email_sha256")
+            if not name or not is_hash(h):
+                return self._json(400, {"error": "Need a first name and an email fingerprint."})
+            people = load_people()
+            people[h] = {"name": name, "updated_at": datetime.now().isoformat(timespec="seconds")}
+            save_people(people)
+            return self._json(200, {"ok": True, "name": name})
         if self.path.split("?")[0] != "/api/results":
             return self._json(404, {"error": "Not found"})
         try:
