@@ -121,7 +121,7 @@
     show("scrTest");
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
-    sessionStrip(); startExaminers();
+    startExaminers();
     buildDots(); renderQuestion(); runClock();
   }
 
@@ -148,15 +148,7 @@
     upd(); tick = setInterval(upd, 250);
   }
 
-  // ---------- session strip & examiners ----------
-  function sessionStrip() {
-    const st = DATA.settings || {}, d = new Date(S.startedAt), p2 = (x) => String(x).padStart(2, "0");
-    let h = 0; for (const ch of S.email + S.startedAt) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-    $("ssPaper").textContent = st.assessmentCode || "—";
-    $("ssCand").textContent = S.name || S.email;
-    $("ssRef").textContent = `${String(d.getFullYear()).slice(2)}.${p2(d.getMonth() + 1)}${p2(d.getDate())}.${String.fromCharCode(65 + (h % 26))}${p2(h % 100)}`;
-    $("ssStart").textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
-  }
+  // ---------- examiners ----------
   let examiners = null;
   function startExaminers() {
     if (examiners) examiners.stop();
