@@ -71,7 +71,7 @@
     .sig .line { border-bottom: .3mm solid var(--navy); height: 12mm; }
     .sig b { display: block; font-size: 9.5pt; color: var(--navy); margin-top: 2mm; }
     .sig span { display: block; font-size: 7.5pt; color: var(--muted); letter-spacing: .04em; }
-    .seal { width: 38mm; height: 38mm; justify-self: center; margin-bottom: -2mm; }
+    .seal { width: 38mm; height: 39.3mm; justify-self: center; margin-bottom: -2mm; }
     .witness { font-size: 7.8pt; color: var(--muted); margin-top: 3mm; display: flex; align-items: center; gap: 2.5mm; justify-content: center; }
     .witness svg { width: 5mm; height: 5mm; }
 
@@ -163,19 +163,27 @@
 
         <div class="signs">
           <div class="sig"><div class="line"></div><b>Nguyễn Tuấn Danh</b><span>Creative Services Lead</span></div>
-          <svg class="seal" viewBox="0 0 120 120" aria-hidden="true">
-            <defs><path id="ring" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0"/></defs>
+          <svg class="seal" viewBox="0 0 120 124" aria-hidden="true">
+            <defs>
+              <path id="arcTop" d="M16 60 A44 44 0 0 1 104 60"/>
+              <path id="arcBot" d="M10.5 60 A49.5 49.5 0 0 0 109.5 60"/>
+            </defs>
             <g fill="#e61e2a">
-              <path d="M40 96 L30 118 L40 112 L46 120 L52 98 Z"/><path d="M80 96 L90 118 L80 112 L74 120 L68 98 Z"/>
+              <path d="M38 98 L29 122 L38.5 117 L44 124 L51 102 Z"/>
+              <path d="M82 98 L91 122 L81.5 117 L76 124 L69 102 Z"/>
             </g>
             <circle cx="60" cy="60" r="56" fill="#000054"/>
-            <circle cx="60" cy="60" r="52" fill="none" stroke="#fff" stroke-width=".8" stroke-dasharray="1.2 1.6"/>
-            <circle cx="60" cy="60" r="36" fill="none" stroke="#fff" stroke-width=".8"/>
-            <text font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="7.2" fill="#fff">
-              <textPath href="#ring" startOffset="0" textLength="274" lengthAdjust="spacing">GCMC · CREATIVE SERVICES · VIETNAM · CERTIFIED ·</textPath>
-            </text>
-            <rect x="49" y="40" width="22" height="22" fill="#e61e2a"/>
-            <text x="60" y="76" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="6.2" letter-spacing="1" fill="#fff" id="sealYear">MMXXVI</text>
+            <circle cx="60" cy="60" r="53" fill="none" stroke="#fff" stroke-width=".6"/>
+            <circle cx="60" cy="60" r="41" fill="none" stroke="#fff" stroke-width=".6"/>
+            <circle cx="60" cy="60" r="39" fill="none" stroke="#fff" stroke-width=".3" stroke-dasharray=".9 1.3"/>
+            <g font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="6.6" letter-spacing="1.3" fill="#fff" text-anchor="middle">
+              <text><textPath href="#arcTop" startOffset="50%">GCMC · CREATIVE SERVICES</textPath></text>
+              <text><textPath href="#arcBot" startOffset="50%">VIETNAM · CERTIFIED</textPath></text>
+            </g>
+            <g fill="#e61e2a"><circle cx="13" cy="60" r="1.6"/><circle cx="107" cy="60" r="1.6"/></g>
+            <text x="60" y="44" text-anchor="middle" font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="4.6" letter-spacing="1.4" fill="#b2b2cb">ONBOARDED</text>
+            <image href="assets/pixel.png" x="48.5" y="48" width="23" height="21.5"/>
+            <text x="60" y="80" text-anchor="middle" font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="5.4" letter-spacing="1.2" fill="#fff" id="sealYear">MMXXVI</text>
           </svg>
           <div class="sig"><div class="line"></div><b>Nguyễn Anh Đức</b><span>Creative &amp; Production Manager</span></div>
         </div>
