@@ -21,6 +21,11 @@
 
   <div class="savebar">
     <div class="container savebar-in">
+      <nav class="tabs ed-tabs" role="tablist" aria-label="Editor sections">
+        <button class="tab" role="tab" id="tabBtnQuestions" data-tab="questions" aria-selected="true">Questions <b id="tabQCount"></b></button>
+        <button class="tab" role="tab" id="tabBtnSettings" data-tab="settings" aria-selected="false">Settings</button>
+        <button class="tab" role="tab" id="tabBtnPeople" data-tab="people" aria-selected="false">People</button>
+      </nav>
       <span id="saveState" class="save-state">Loading…</span>
       <span class="spacer"></span>
       <button class="btn small" id="saveBtn" disabled>Save changes</button>
@@ -56,7 +61,7 @@
   </script>
 
   <main class="container admin">
-    <section class="card">
+    <section class="card" data-panel="settings" role="tabpanel" hidden>
       <p class="eyebrow">Settings</p>
       <div class="grid-3">
         <div class="field"><label for="sTitle">Title</label><input class="input" id="sTitle"></div>
@@ -74,7 +79,7 @@
       <label class="confirm"><input type="checkbox" id="sShuffle"> Shuffle answer options for each attempt</label>
     </section>
 
-    <section class="card">
+    <section class="card" data-panel="people" role="tabpanel" hidden>
       <p class="eyebrow">People</p>
       <p class="help" id="gateState"></p>
       <div id="candList" class="cand-list"></div>
@@ -86,7 +91,7 @@
       <p class="help">Sign-in accepts any email and any staff ID (testing build, no real authentication). Anyone without a saved name is asked for their first name when they sign in, and it's saved here. Changes to people save straight away. Emails are stored as SHA-256 fingerprints.</p>
     </section>
 
-    <section>
+    <section data-panel="questions" role="tabpanel">
       <div class="list-head">
         <h2>Questions <span id="qCount" class="muted"></span></h2>
         <p class="help">Written answers ignore capitals, accents, spaces and punctuation, so “Thursday.”, “thursday” and “THURSDAY” all match. For fill-in questions, put <b>___</b> (three underscores) where the blank goes.</p>

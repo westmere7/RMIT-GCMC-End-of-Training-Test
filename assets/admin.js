@@ -114,7 +114,7 @@
 
   function renderList() {
     const box = $("qList"); box.innerHTML = "";
-    $("qCount").textContent = `· ${D.questions.length}`; renderBank();
+    $("qCount").textContent = `· ${D.questions.length}`; $("tabQCount").textContent = D.questions.length; renderBank();
     D.questions.forEach((q, i) => box.append(renderQuestion(q, i)));
   }
 
@@ -235,6 +235,13 @@
   $("reloadLatest").onclick = async () => { D = await A.loadData(); renderAll(); setBaseline(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
   $("overwrite").onclick = () => save(true);
   $("edRetry").onclick = () => location.reload();
+  // ---------- tabs: Questions is always the default ----------
+  function setTab(name) {
+    document.querySelectorAll(".ed-tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+    document.querySelectorAll("[data-panel]").forEach((el) => { el.hidden = el.dataset.panel !== name; });
+    scrollTo(0, 0);
+  }
+  document.querySelectorAll(".ed-tabs .tab").forEach((b) => { b.onclick = () => setTab(b.dataset.tab); });
 
   function renderAll() { renderSettings(); renderList(); }
   (async () => {
