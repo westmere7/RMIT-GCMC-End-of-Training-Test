@@ -65,30 +65,56 @@
 
   <!-- briefing -->
   <section class="screen" id="scrBrief" hidden>
-    <div class="container brief">
-      <div class="card">
-        <p class="eyebrow" id="briefCode">Assessment</p>
-        <h1 id="briefTitle">Before you begin</h1>
-        <p class="lead" id="briefLead"></p>
-        <dl class="details">
-          <div><dt>Questions</dt><dd id="dQ">30</dd></div>
-          <div><dt>Time limit</dt><dd id="dT">10:00</dd></div>
-          <div><dt>Question types</dt><dd>Choice, fill-in, short answer</dd></div>
+    <div class="container sheet">
+      <header class="sheet-head">
+        <div class="sheet-title">
+          <p class="eyebrow" id="briefCode">Assessment</p>
+          <h1 id="briefTitle">Before you begin</h1>
+          <p class="lead" id="briefLead"></p>
+        </div>
+        <dl class="sheet-cand">
           <div><dt>Candidate</dt><dd id="dCand">—</dd></div>
+          <div><dt>Staff email</dt><dd id="dEmail">—</dd></div>
+          <div><dt>Date of sitting</dt><dd id="dDate">—</dd></div>
         </dl>
-        <label class="confirm"><input type="checkbox" id="agree"> I confirm I am completing this assessment on my own, without the onboarding deck open.</label>
-        <button class="btn" id="startBtn" disabled>Start assessment</button>
-      </div>
-      <div class="card">
-        <p class="eyebrow">Conditions</p>
-        <ul class="rules">
-          <li><span class="n">1</span><span>The timer starts when you press Start and cannot be paused. At 00:00 your assessment is submitted automatically.</span></li>
-          <li><span class="n">2</span><span>Answers are final once submitted. You can skip a question, but it will be marked incorrect.</span></li>
-          <li><span class="n">3</span><span>Written answers are one word or a short phrase. Capitals, accents and punctuation don't matter.</span></li>
-          <li><span class="n">4</span><span>Each attempt draws its questions at random from the full question bank, so no two attempts are the same.</span></li>
-          <li><span class="n">5</span><span>The performance meter responds to every answer you submit. Keep an eye on it.</span></li>
-          <li><span class="n">6</span><span>Use a desktop browser. Keyboard: <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</span></li>
-        </ul>
+      </header>
+
+      <dl class="particulars">
+        <div><dt>Questions</dt><dd id="dQ">30</dd><small>drawn at random</small></div>
+        <div><dt>Time limit</dt><dd id="dT">10:00</dd><small>minutes, no pause</small></div>
+        <div><dt>Categories</dt><dd id="dCats">9</dd><small>every one covered</small></div>
+        <div><dt>Attempt</dt><dd>1</dd><small>recorded on submission</small></div>
+      </dl>
+
+      <div class="sheet-body">
+        <section class="conditions">
+          <h2>Conditions of assessment</h2>
+          <ol class="rules">
+            <li><span class="n">01</span><p><b>Timing.</b> The timer starts when you press Start and cannot be paused. At 00:00 your answers are submitted automatically.</p></li>
+            <li><span class="n">02</span><p><b>Answers.</b> Answers are final once submitted. You may skip a question, but it will be marked incorrect.</p></li>
+            <li><span class="n">03</span><p><b>Written responses.</b> One word or a short phrase. Capitals, accents and punctuation are disregarded.</p></li>
+            <li><span class="n">04</span><p><b>Question selection.</b> Questions are drawn at random from the full bank, so no two attempts are the same.</p></li>
+            <li><span class="n">05</span><p><b>Performance meter.</b> The meter responds to every answer you submit.</p></li>
+            <li><span class="n">06</span><p><b>Equipment.</b> Use a desktop browser. Press <span class="kbd"><b>A</b>–<b>F</b></span> to choose and <span class="kbd"><b>Enter</b></span> to submit.</p></li>
+          </ol>
+        </section>
+
+        <aside class="declaration">
+          <h2>Candidate declaration</h2>
+          <p>By starting, I declare that:</p>
+          <ul>
+            <li>I am the person named on this sheet</li>
+            <li>I will complete the assessment on my own</li>
+            <li>I will not have the onboarding deck or notes open</li>
+          </ul>
+          <label class="confirm"><input type="checkbox" id="agree"> <span>I have read the conditions and accept this declaration.</span></label>
+          <div class="signature">
+            <div><span id="dSign">—</span><small>Candidate</small></div>
+            <div><span id="dSignDate">—</span><small>Date</small></div>
+          </div>
+          <button class="btn" id="startBtn" disabled>Start assessment <span aria-hidden="true">→</span></button>
+          <p class="fineprint">Your responses, score and completion time form part of your training record with RMIT GCMC Creative Services.</p>
+        </aside>
       </div>
     </div>
   </section>

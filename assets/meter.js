@@ -4,7 +4,6 @@
 (function (global) {
   "use strict";
   const C = { red: "#e61e2a", navy: "#000054", grey: "#cfd1c9", muted: "#6b6b8a", tick: "#000054" };
-  const DISPLAY = "'Museo-RMITVN 700', 'Museo 700', 'Museo', 'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
 
   function Meter(canvas, lamp, labels) {
@@ -73,9 +72,9 @@
     g.textAlign = "center"; g.textBaseline = "middle";
     let x, y;
     // zone labels, beside the arc ends (wrapped to the space available)
-    const size = Math.round(Math.max(20, Math.min(38, w * 0.026))), lh = size * 1.05;
-    const room = Math.min(cx - this.half - 36, size * 5.6); // narrow column: up to four lines
-    g.font = `700 ${size}px ` + DISPLAY; g.textBaseline = "alphabetic";
+    const size = Math.round(Math.max(15, Math.min(24, w * 0.017))), lh = size * 1.2;
+    const room = Math.min(cx - this.half - 36, size * 8); // narrow column: up to four lines
+    g.font = `700 ${size}px ` + TEXT; g.textBaseline = "alphabetic";
     const wrap = (text) => {
       const words = String(text || "").toUpperCase().split(/\s+/).filter(Boolean), lines = [];
       for (const wd of words) { const last = lines[lines.length - 1]; if (last && g.measureText(last + " " + wd).width <= room) lines[lines.length - 1] = last + " " + wd; else lines.push(wd); }
