@@ -29,6 +29,10 @@
     s.categories = A.categoriesOf(s);
     $("sCats").value = s.categories.join(", ");
     $("sCats").oninput = (e) => { s.categories = e.target.value.split(",").map((x) => x.trim()).filter(Boolean); markDirty(); renderList(); };
+    $("sExam").value = (s.examiners && s.examiners.length ? s.examiners : Examiners.DEFAULT).join("
+");
+    $("sExam").oninput = (e) => { s.examiners = e.target.value.split("
+").map((x) => x.trim()).filter(Boolean); markDirty(); };
     delete s.gauge.middle;
     for (const [id, key, def] of [["gLeft", "left", "HR would like a word"], ["gRight", "right", "Welcome to the team"]]) {
       $(id).value = s.gauge[key] || def; $(id).oninput = (e) => { s.gauge[key] = e.target.value; markDirty(); };

@@ -121,6 +121,7 @@
     show("scrTest");
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
+    sessionStrip(); startExaminers();
     buildDots(); renderQuestion(); runClock();
   }
 
@@ -139,6 +140,7 @@
     const upd = () => {
       const ms = remaining(), s = Math.ceil(ms / 1000);
       $("digits").textContent = `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+      $("tFill").style.width = Math.max(0, (100 * ms) / S.limitMs) + "%";
       $("timer").classList.toggle("warn", s <= 60); $("timer").classList.toggle("critical", s <= 30);
       $("timerSub").textContent = s <= 60 ? "Final minute. Unanswered questions will be marked incorrect." : "Submits automatically at 00:00";
       if (ms <= 0) { clearInterval(tick); finish(true); }
@@ -146,10 +148,26 @@
     upd(); tick = setInterval(upd, 250);
   }
 
+  // ---------- session strip & examiners ----------
+  function sessionStrip() {
+    const st = DATA.settings || {}, d = new Date(S.startedAt), p2 = (x) => String(x).padStart(2, "0");
+    let h = 0; for (const ch of S.email + S.startedAt) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    $("ssPaper").textContent = st.assessmentCode || "—";
+    $("ssCand").textContent = S.name || S.email;
+    $("ssRef").textContent = `${String(d.getFullYear()).slice(2)}.${p2(d.getMonth() + 1)}${p2(d.getDate())}.${String.fromCharCode(65 + (h % 26))}${p2(h % 100)}`;
+    $("ssStart").textContent = `${p2(d.getHours())}:${p2(d.getMinutes())}`;
+  }
+  let examiners = null;
+  function startExaminers() {
+    if (examiners) examiners.stop();
+    examiners = new Examiners($("exList"), $("exCount"), (DATA.settings || {}).examiners, S.examiners, (state) => { S.examiners = state; save(); });
+    S.examiners = examiners.s; save(); examiners.start();
+  }
+
   // ---------- progress ----------
   function buildDots() {
     const box = $("dots"); box.innerHTML = "";
-    QS().forEach(() => box.appendChild(document.createElement("span")));
+    QS().forEach((_, i) => { const d = document.createElement("span"); d.textContent = i + 1; box.appendChild(d); });
     updateProgress();
   }
   function updateProgress() {
@@ -168,7 +186,7 @@
     locked = false;
     const q = QS()[S.index], n = QS().length;
     $("qCard").classList.remove("locked");
-    $("qNum").textContent = `Question ${S.index + 1} of ${n}`;
+    $("qNo").textContent = String(S.index + 1).padStart(2, "0"); $("qOfN").textContent = `of ${n}`;
     $("qType").textContent = A.TYPE_LABEL[q.type] || "Question";
     $("qTopic").textContent = A.categoryOf(q);
     $("qStatus").className = "status"; $("qStatus").innerHTML = '<span class="kbd">Press <b>Enter</b> to submit</span>';
@@ -278,7 +296,7 @@
 
   // ---------- finish & results ----------
   function finish(timedOut) {
-    clearInterval(tick);
+    clearInterval(tick); if (examiners) examiners.stop();
     QS().forEach((q) => { if (!S.responses[q.id]) S.responses[q.id] = { response: null, correct: false, skipped: true, timedOut: !!timedOut }; });
     S.finished = true; S.finishedAt = Math.min(Date.now(), S.startedAt + S.limitMs); S.timedOut = !!timedOut;
     save();

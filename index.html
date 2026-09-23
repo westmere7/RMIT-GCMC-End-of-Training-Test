@@ -129,9 +129,21 @@
           <canvas id="meter" aria-label="Performance meter" role="img"></canvas>
         </div>
       </div>
+      <dl class="session-strip">
+        <div><dt>Paper</dt><dd id="ssPaper">GCMC-VN-ONB-2026</dd></div>
+        <div><dt>Candidate</dt><dd id="ssCand">—</dd></div>
+        <div><dt>Session</dt><dd id="ssRef">—</dd></div>
+        <div><dt>Started</dt><dd id="ssStart">—</dd></div>
+        <div class="live"><dt>Status</dt><dd><i></i>Invigilated</dd></div>
+      </dl>
       <main>
         <div class="card q-card" id="qCard">
-          <div class="q-meta"><span class="num" id="qNum">Question 1</span><span class="chip type" id="qType">Single choice</span><span class="chip" id="qTopic">Topic</span></div>
+          <div class="q-head">
+            <div class="q-no"><span id="qNo">01</span><small id="qOfN">of 30</small></div>
+            <div class="q-info"><span class="k">Section</span><b id="qTopic">Topic</b></div>
+            <div class="q-info"><span class="k">Format</span><b id="qType">Single choice</b></div>
+            <div class="q-marks">1 mark</div>
+          </div>
           <div id="qBody"></div>
           <div class="q-actions">
             <button class="btn" id="submitBtn" disabled>Submit answer</button>
@@ -144,14 +156,20 @@
         <div class="timer" id="timer">
           <p class="eyebrow">Time remaining</p>
           <div class="clock"><span class="digits" id="digits">10:00</span></div>
+          <div class="t-track"><i id="tFill"></i></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
         </div>
         <div class="card progress-card">
-          <p class="eyebrow">Progress</p>
+          <p class="eyebrow">Answer sheet</p>
           <p class="count" id="count">0 <small>of 30 answered</small></p>
           <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
           <div class="dots" id="dots"></div>
           <div class="legend"><span><i style="background:var(--navy)"></i>Answered</span><span><i style="background:var(--navy-30)"></i>Skipped</span><span><i style="box-shadow:inset 0 0 0 2px var(--red)"></i>Current</span></div>
+        </div>
+        <div class="card examiners" id="examiners">
+          <div class="ex-head"><p class="eyebrow">Examiners online</p><span class="ex-live"><i></i><b id="exCount">1</b> live</span></div>
+          <ul class="ex-list" id="exList"></ul>
+          <p class="ex-foot">This session is observed for quality assurance.</p>
         </div>
         <p class="note">Your answers are saved as you go. Refreshing the page won't stop the clock.</p>
       </aside>
@@ -218,6 +236,7 @@
 
   <script src="assets/common.js"></script>
   <script src="assets/meter.js"></script>
+  <script src="assets/examiners.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>
