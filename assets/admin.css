@@ -25,7 +25,7 @@
 .qe { background: #fff; border-radius: var(--radius); padding: 22px 26px; margin-bottom: 14px; border: 1px solid transparent; }
 .qe.invalid { border-color: var(--red); }
 .qe-head { display: flex; align-items: center; gap: 12px; }
-.qe-head .n { font-family: var(--display); color: var(--red); font-size: 22px; width: 42px; }
+.qe-head .n { font-family: var(--text); font-weight: 700; color: var(--red); font-size: 22px; width: 42px; }
 .qe-head select, .qe-head .topic { width: auto; }
 .qe-head select.cat { min-width: 180px; }
 .qe-head .tools { margin-left: auto; }

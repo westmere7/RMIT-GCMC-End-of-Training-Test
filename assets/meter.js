@@ -19,8 +19,9 @@
     this.w = Math.max(300, r.width); this.h = Math.max(140, r.height);
     this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // arc through three points: apex at `top`, ends at ±half-chord near the bottom
-    this.top = 60; const ends = this.h - 44, half = this.w * 0.4, sag = Math.max(40, ends - this.top);
+    // arc through three points: apex at `top`, ends at ±half-chord near the bottom; the sides hold the zone labels
+    this.top = 64; this.ends = this.h - 46; const half = this.w * 0.33, sag = Math.max(40, this.ends - this.top);
+    this.half = half;
     this.R = (half * half + sag * sag) / (2 * sag);
     this.span = Math.asin(Math.min(0.99, half / this.R));
     this.cx = this.w / 2; this.cy = this.top + this.R;
@@ -60,33 +61,41 @@
     const pt = (a, r) => [cx + r * Math.cos(ang(a)), cy + r * Math.sin(ang(a))];
     // zone bands
     const bands = [[-S, -S / 3, C.red], [-S / 3, S / 3, C.grey], [S / 3, S, C.navy]];
-    g.lineWidth = 9; g.lineCap = "butt";
-    for (const [a, b, col] of bands) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, R - 4, ang(a), ang(b)); g.stroke(); }
+    g.lineWidth = 12; g.lineCap = "butt";
+    for (const [a, b, col] of bands) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, R - 5, ang(a), ang(b)); g.stroke(); }
     // ticks
     g.strokeStyle = C.tick;
     for (let i = 0; i <= 40; i++) {
       const a = -S + (2 * S * i) / 40, major = i % 5 === 0;
-      const [x1, y1] = pt(a, R + 3), [x2, y2] = pt(a, R + (major ? 17 : 9));
+      const [x1, y1] = pt(a, R + 3), [x2, y2] = pt(a, R + (major ? 20 : 10));
       g.lineWidth = major ? 2 : 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
     g.textAlign = "center"; g.textBaseline = "middle";
-    // end marks
-    g.font = "700 18px " + DISPLAY;
-    let [x, y] = pt(-S, R + 10); g.fillStyle = C.red; g.fillText("–", x - 14, y);
-    [x, y] = pt(S, R + 10); g.fillStyle = C.navy; g.fillText("+", x + 14, y);
-    // zone labels, under the arc
-    g.font = "700 14px " + DISPLAY;
-    for (const [a, text, col] of [[-S * 0.5, this.labels.left, C.red], [S * 0.5, this.labels.right, C.navy]]) {
-      if (!text) continue; [x, y] = pt(a, R - 44); g.fillStyle = col; g.fillText(text.toUpperCase(), x, y);
+    let x, y;
+    // zone labels, beside the arc ends (wrapped to the space available)
+    const size = Math.round(Math.max(20, Math.min(38, w * 0.026))), lh = size * 1.05;
+    const room = Math.min(cx - this.half - 36, size * 5.6); // narrow column: up to four lines
+    g.font = `700 ${size}px ` + DISPLAY; g.textBaseline = "alphabetic";
+    const wrap = (text) => {
+      const words = String(text || "").toUpperCase().split(/\s+/).filter(Boolean), lines = [];
+      for (const wd of words) { const last = lines[lines.length - 1]; if (last && g.measureText(last + " " + wd).width <= room) lines[lines.length - 1] = last + " " + wd; else lines.push(wd); }
+      return lines;
+    };
+    for (const [side, text, col] of [[-1, this.labels.left, C.red], [1, this.labels.right, C.navy]]) {
+      const lines = wrap(text).slice(0, 4); if (!lines.length) continue;
+      g.fillStyle = col; g.textAlign = side < 0 ? "right" : "left";
+      const lx = side < 0 ? cx - this.half - 26 : cx + this.half + 26, y0 = this.ends - (lines.length - 1) * lh + 6;
+      lines.forEach((ln, i) => g.fillText(ln, lx, y0 + i * lh));
     }
+    g.textAlign = "center"; g.textBaseline = "middle";
     // needle
-    const [nx, ny] = pt(this.theta, R + 20), [bx, by] = pt(this.theta, R - 110);
+    const [nx, ny] = pt(this.theta, R + 20), [bx, by] = pt(this.theta, R - (this.h - 34 - this.top));
     g.save(); g.shadowColor = "rgba(0,0,84,0.25)"; g.shadowBlur = 3; g.shadowOffsetX = 1.5; g.shadowOffsetY = 1;
     g.strokeStyle = C.red; g.lineWidth = 2.6; g.lineCap = "round";
     g.beginPath(); g.moveTo(bx, by); g.lineTo(nx, ny); g.stroke(); g.restore();
     // the candidate's first name, riding on the needle tip
     if (this.name) {
-      g.font = "700 13px " + DISPLAY;
+      g.font = "700 13px " + TEXT;
       const tw = g.measureText(this.name).width, pw = tw + 22, ph = 24;
       const [tx, ty] = pt(this.theta, R + 22);
       const px = Math.max(pw / 2 + 4, Math.min(w - pw / 2 - 4, tx)), py = Math.max(ph / 2 + 2, ty - 18);

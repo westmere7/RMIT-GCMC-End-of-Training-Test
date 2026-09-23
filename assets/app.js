@@ -20,7 +20,7 @@
   function show(id) {
     for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id;
     const signedIn = S && S.email;
-    $("whoBox").hidden = !signedIn; $("signOut").hidden = !signedIn || id === "scrTest";
+    $("whoBox").hidden = !signedIn; $("signOut").hidden = !signedIn;
     if (signedIn) { $("whoEmail").textContent = S.name ? `${S.name} · ${S.email}` : S.email; $("dCand").textContent = S.name || "—"; }
     scrollTo(0, 0);
   }
@@ -93,7 +93,11 @@
   });
   $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
   function enter(email, name) { S = { email, name, started: false, finished: false }; save(); show("scrBrief"); }
-  $("signOut").addEventListener("click", signOut);
+  $("signOut").addEventListener("click", () => {
+    const midTest = S && S.started && !S.finished;
+    if (midTest && !confirm("Sign out now? This attempt will be discarded and won't be recorded.")) return;
+    clearInterval(tick); signOut();
+  });
 
   // ---------- briefing ----------
   $("agree").addEventListener("change", (e) => { $("startBtn").disabled = !e.target.checked; });
