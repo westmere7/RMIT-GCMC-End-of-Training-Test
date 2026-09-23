@@ -372,7 +372,7 @@
         const row = document.createElement("div"); row.className = "review-item" + (r.correct ? " ok" : "");
         const given = r.timedOut ? "Not reached (time ran out)" : A.responseText(q, r.response);
         row.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span>
-          <div class="q"><small>${A.escapeHtml(q.topic || "")}</small>${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}</div>
+          <div class="q">${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}</div>
           <div class="ans">${r.correct
             ? `<div><label>Your answer</label><span class="right plain">${A.escapeHtml(given)} ✓</span></div>`
             : `<div><label>Your answer</label><span class="yours${r.response == null ? " none" : ""}">${A.escapeHtml(given)}</span></div>

@@ -10,9 +10,12 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 ## Deploy (Vercel + Supabase)
 
 1. **Supabase:** create a project. In **SQL Editor**, run [`supabase/schema.sql`](supabase/schema.sql). It creates:
-   - `assessment_config`: row `main` is the live question bank, row `people` holds first names
+   - `assessment_config`: row `main` is the live question bank
    - `assessment_config_history`: every previous version of the bank
-   - `assessment_results`: finished attempts (scores, per-category breakdown, every answer), plus the `assessment_leaderboard` view
+   - `assessment_people`: first names, keyed by email fingerprint
+   - `assessment_results`: finished attempts (score, `by_category`, every answer)
+   - views `assessment_leaderboard` (score, time, strongest and weakest category) and `assessment_category_scores` (one row per attempt per category)
+   - `assessment_migrations`: which files in `supabase/migrations/` have been applied
 
    Row-level security is on with no policies, so only the server can touch the tables.
 2. **Vercel:** import this GitHub repo. Framework preset **Other**, no build command, output directory left as is. Add these environment variables:
@@ -26,7 +29,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 - Until someone saves in the editor, the site serves the bundled `data/questions.json`.
 - The first save copies it into Supabase. From then on Supabase is the source of truth, and editing `data/questions.json` in git no longer changes the live test.
 - Every save bumps a revision number. If two people edit at once, the second one to save is asked to load the latest version or overwrite it, so nobody's changes vanish silently.
-- First names are saved straight away, from the sign-in page or the editor's People list. They live in their own row, so adding one never clashes with someone editing questions.
+- First names are saved straight away, from the sign-in page or the editor's People list. They're in their own table, so adding one never clashes with someone editing questions.
 - Each finished attempt is stored in `assessment_results`. Check the `assessment_leaderboard` view in Supabase to see everyone's scores.
 
 ## Categories
@@ -47,6 +50,10 @@ Double-click `Start Test.bat`. It opens http://localhost:8765/.
   `Start Test.bat` then runs `dev-server.js`, which uses the same `api/*.js` functions as Vercel against the same database. Anything you see or save locally is live.
 - **Auto-refresh:** with the dev server, open pages refresh by themselves when a file changes. CSS changes swap in without a reload. A test in progress survives a reload.
 - **Offline:** without a `.env` or without Node, it falls back to `server.py` (Python), which reads and writes `data/questions.json` and keeps everything in local files.
+
+## Database changes
+
+Schema changes go in a new numbered file in `supabase/migrations/`, which is then applied to the live project. `schema.sql` is always the complete current state, for fresh installs. Applying a migration needs `SUPABASE_DB_URL` in `.env`; use the **session pooler** URI, because the direct `db.<ref>` host is IPv6-only.
 
 ## Files
 

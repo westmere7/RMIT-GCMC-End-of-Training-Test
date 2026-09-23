@@ -27,7 +27,8 @@
 .qe-head { display: flex; align-items: center; gap: 12px; }
 .qe-head .n { font-family: var(--display); color: var(--red); font-size: 22px; width: 42px; }
 .qe-head select, .qe-head .topic { width: auto; }
-.qe-head select.cat { min-width: 150px; }
+.qe-head select.cat { min-width: 180px; }
+.qe-head .tools { margin-left: auto; }
 .qe-head .topic { flex: 1; }
 .qe-head .tools { display: flex; gap: 4px; }
 .icon-btn { border: 1px solid var(--line); background: #fff; border-radius: 3px; width: 34px; height: 34px; color: var(--navy); font-size: 15px; }

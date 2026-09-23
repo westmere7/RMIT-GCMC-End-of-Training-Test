@@ -63,7 +63,7 @@
   const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer" };
 
   // ---------- categories ----------
-  const DEFAULT_CATEGORIES = ["Team", "Culture", "Work", "Platforms", "Brand", "RMIT", "Glossary", "Aussie English"];
+  const DEFAULT_CATEGORIES = ["Team", "Culture", "Work", "Platforms", "Brand", "RMIT", "Glossary", "Aussie English", "Misc"];
   // Used only for questions saved before categories existed: their old topic decides the category.
   const TOPIC_CATEGORY = {
     "team structure": "Team", "squads": "Team",
@@ -83,7 +83,7 @@
     const t = String(q.topic || "").toLowerCase();
     if (TOPIC_CATEGORY[t]) return TOPIC_CATEGORY[t];
     if (/brand|inton style|mascot|photograph|indigenous/.test(t)) return "Brand";
-    return "Other";
+    return "Misc";
   }
 
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }

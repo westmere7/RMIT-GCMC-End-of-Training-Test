@@ -105,7 +105,7 @@
 
   function newId() { let n = D.questions.length + 1, id; do { id = "q" + String(n++).padStart(2, "0"); } while (D.questions.some((q) => q.id === id)); return id; }
   function blank(type) {
-    const q = { id: newId(), type, category: A.categoriesOf(D.settings)[0], topic: "", prompt: type === "fill" ? "Our stand-up is on ___." : "" };
+    const q = { id: newId(), type, category: A.categoriesOf(D.settings)[0], prompt: type === "fill" ? "Our stand-up is on ___." : "" };
     if (isChoice(type)) { q.options = ["", "", "", ""]; q.correct = []; } else q.answers = [];
     return q;
   }
@@ -133,15 +133,13 @@
     const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
     for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
     cat.onchange = () => { q.category = cat.value; markDirty(); renderBank(); };
-    const topic = document.createElement("input"); topic.className = "input topic"; topic.id = "topic-" + q.id; topic.placeholder = "Topic (e.g. Workflow)"; topic.value = q.topic || "";
-    topic.oninput = () => { q.topic = topic.value; markDirty(); };
     const tools = document.createElement("div"); tools.className = "tools";
     const tool = (label, title, fn, danger) => { const b = document.createElement("button"); b.type = "button"; b.className = "icon-btn" + (danger ? " danger" : ""); b.textContent = label; b.title = title; b.setAttribute("aria-label", title); b.onclick = fn; tools.append(b); };
     tool("↑", "Move up", () => { if (i > 0) { [D.questions[i - 1], D.questions[i]] = [D.questions[i], D.questions[i - 1]]; markDirty(); renderList(); } });
     tool("↓", "Move down", () => { if (i < D.questions.length - 1) { [D.questions[i + 1], D.questions[i]] = [D.questions[i], D.questions[i + 1]]; markDirty(); renderList(); } });
     tool("⧉", "Duplicate", () => { const c = JSON.parse(JSON.stringify(q)); c.id = newId(); D.questions.splice(i + 1, 0, c); markDirty(); renderList(); });
     tool("✕", "Delete question", () => { D.questions.splice(i, 1); markDirty(); renderList(); }, true);
-    head.append(sel, cat, topic, tools); el.append(head);
+    head.append(sel, cat, tools); el.append(head);
 
     const prompt = document.createElement("textarea"); prompt.className = "input"; prompt.id = "prompt-" + q.id; prompt.value = q.prompt || "";
     prompt.placeholder = q.type === "fill" ? "Sentence with ___ where the blank goes" : "Question text";
