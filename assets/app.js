@@ -246,7 +246,11 @@
     save();
     $("qCard").classList.add("locked"); $("submitBtn").disabled = true;
     $("qStatus").className = "status recorded"; $("qStatus").textContent = skipped ? "Skipped" : "Answer recorded";
-    meter.setScore(score().p); meter.kick(correct ? 1 : -1);
+    meter.setScore(score().p);
+    // roughly one answer in four gets a harder bounce, never two in a row
+    const hard = !S.lastJolt && Math.random() < 0.25;
+    S.lastJolt = hard; save();
+    if (hard) meter.jolt(correct ? 1 : -1); else meter.kick(correct ? 1 : -1);
     updateProgress();
     setTimeout(() => {
       if (S.index >= QS().length - 1) return finish(false);

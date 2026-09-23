@@ -28,6 +28,13 @@
   Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
   Meter.prototype.setName = function (n) { this.name = String(n || "").trim(); };
   Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6; };
+  // a harder bounce now and then: a big flick, a rebound the other way, then the spring settles it as usual
+  Meter.prototype.jolt = function (dir) {
+    if (this.reduced) return this.kick(dir);
+    const k = this.span / 0.52;
+    this.vel += dir * k * (4.2 + Math.random() * 1.6);
+    setTimeout(() => { this.vel -= dir * k * (2.2 + Math.random() * 1.2); }, 260 + Math.random() * 120);
+  };
   Meter.prototype.zone = function (p) {
     const v = p == null ? this.p : p;
     return v <= -1 / 3 ? this.labels.left : v >= 1 / 3 ? this.labels.right : "Too close to call";
