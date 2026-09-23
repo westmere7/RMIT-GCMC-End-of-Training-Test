@@ -1,5 +1,5 @@
 // GET  /api/questions  -> the question document (from Supabase; falls back to the bundled data/questions.json)
-// PUT  /api/questions  -> save it. Needs the editor key (x-admin-key header) when ADMIN_KEY is set.
+// PUT  /api/questions  -> save it (no sign-in: anyone with the editor page can save).
 //      Send the revision you loaded; if someone saved in between you get 409 (add ?force=1 to overwrite).
 const { configured, readDoc, writeDoc, readJson, send } = require("./_store");
 
@@ -26,8 +26,6 @@ module.exports = async (req, res) => {
       return send(res, 200, (await readDoc()) || (await seed(req)));
     }
     if (req.method === "PUT") {
-      const need = process.env.ADMIN_KEY;
-      if (need && req.headers["x-admin-key"] !== need) return send(res, 401, { error: "This editor link is missing its key, or the key is wrong." });
       if (!configured()) return send(res, 503, { error: "Supabase isn't set up yet (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)." });
       const doc = await readJson(req);
       if (!doc || !Array.isArray(doc.questions)) return send(res, 400, { error: "Expected an object with a 'questions' list." });

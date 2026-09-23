@@ -4,12 +4,6 @@
   const A = window.Assess;
   const $ = (id) => document.getElementById(id);
   let D = null, dirty = false;
-  // The editor link carries the key: /admin.html?key=… (only checked when ADMIN_KEY is set on the server).
-  const KEY_STORE = "gcmc-admin-key";
-  const adminKey = (() => {
-    const k = new URLSearchParams(location.search).get("key");
-    try { if (k) sessionStorage.setItem(KEY_STORE, k); return k || sessionStorage.getItem(KEY_STORE) || ""; } catch (e) { return k || ""; }
-  })();
 
   function setState(text, cls) { const el = $("saveState"); el.textContent = text; el.className = "save-state " + (cls || ""); }
   function markDirty() { dirty = true; setState("Unsaved changes", "dirty"); }
@@ -182,7 +176,7 @@
     let res;
     try {
       res = await fetch("/api/questions" + (force ? "?force=1" : ""), {
-        method: "PUT", headers: { "Content-Type": "application/json", "x-admin-key": adminKey }, body: JSON.stringify(data),
+        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
       });
     } catch (e) { res = null; }
     if (!res || res.status === 404 || res.status === 405 || !(res.headers.get("content-type") || "").includes("json")) {

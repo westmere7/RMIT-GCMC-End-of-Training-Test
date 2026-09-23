@@ -1,9 +1,9 @@
 # End-of-Training Assessment
 
-A timed, 30-question onboarding test for GCMC Creative Services, drawn at random from a shared question bank. The team edits the bank through a private editor link.
+A timed, 30-question onboarding test for GCMC Creative Services, drawn at random from a shared question bank. The team edits the bank through the editor page.
 
 - **Test:** `/`
-- **Editor:** `/admin.html?key=YOUR_ADMIN_KEY` (not linked anywhere; share the full link with the team)
+- **Editor:** `/admin.html` (not linked anywhere; share the link with the team. There's no sign-in, so anyone with the link can edit)
 
 Sign-in is a testing build: any email and any staff ID get in. Add people in the editor only so the test greets them by name.
 
@@ -20,8 +20,7 @@ Sign-in is a testing build: any email and any staff ID get in. Add people in the
    | --- | --- |
    | `SUPABASE_URL` | Project Settings → API → Project URL |
    | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → `service_role` key. Keep it server-side only. |
-   | `ADMIN_KEY` | Any long random string. It goes in the editor link. Leave it unset to let anyone with `/admin.html` save. |
-3. Deploy, then share `https://<your-project>.vercel.app/` for the test and `https://<your-project>.vercel.app/admin.html?key=<ADMIN_KEY>` for the editor.
+3. Deploy, then share `https://<your-project>.vercel.app/` for the test and `https://<your-project>.vercel.app/admin.html` for the editor.
 
 **How the data flows:**
 - Until someone saves in the editor, the site serves the bundled `data/questions.json`.

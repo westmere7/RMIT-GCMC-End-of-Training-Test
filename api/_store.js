@@ -1,5 +1,5 @@
 // Shared Supabase access for the Vercel functions. Uses the REST API directly (no SDK, no build step).
-// Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_KEY (the secret in the editor link).
+// Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
 
 const URL_ = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
