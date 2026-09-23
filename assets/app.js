@@ -57,7 +57,7 @@
     if (S && S.started && !S.qids) S = null;
     if (S && S.finished) return showResults();
     if (S && S.started) return startTest(true);
-    if (S && S.email && S.name) return show("scrBrief");
+    if (S && S.email && S.name) { $("dAttempt").textContent = S.attempt || 1; return show("scrBrief"); }
     S = null; show("scrLogin"); $("email").focus();
   }
 
@@ -98,7 +98,11 @@
     btn.textContent = "Continue";
   });
   $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
-  function enter(email, name) { S = { email, name, started: false, finished: false }; save(); show("scrBrief"); }
+  function enter(email, name, attempt) {
+    S = { email, name, attempt: attempt || 1, started: false, finished: false }; save();
+    $("agree").checked = false; $("startBtn").disabled = true; $("dAttempt").textContent = S.attempt;
+    show("scrBrief");
+  }
   $("signOut").addEventListener("click", () => {
     const midTest = S && S.started && !S.finished;
     if (midTest && !confirm("Sign out now? This attempt will be discarded and won't be recorded.")) return;
@@ -299,7 +303,7 @@
     const sc = score(), an = analyse();
     try {
       fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-        email: S.email, name: S.name, assessment: DATA.settings.assessmentCode,
+        email: S.email, name: S.name, assessment: DATA.settings.assessmentCode, attempt: S.attempt || 1,
         startedAt: new Date(S.startedAt).toISOString(), finishedAt: new Date(S.finishedAt).toISOString(),
         correct: sc.c, total: QS().length, timedOut: S.timedOut, longestStreak: an.streak,
         byCategory: an.byCat.map(({ name, correct, total }) => ({ name, correct, total })),
@@ -411,6 +415,11 @@
   $("tabWrong").addEventListener("click", () => renderReview("wrong"));
   $("tabAll").addEventListener("click", () => renderReview("all"));
   $("againBtn").addEventListener("click", signOut);
+  // same person, fresh draw: back to the briefing with the attempt number bumped (every attempt is recorded)
+  $("retakeBtn").addEventListener("click", () => {
+    $("confetti").hidden = true;
+    enter(S.email, S.name, (S.attempt || 1) + 1);
+  });
 
   // ---------- confetti (hand-rolled, brand colours) ----------
   function confetti() {
