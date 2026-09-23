@@ -127,6 +127,8 @@
     }
     show("scrTest");
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
+    meter.setThreshold((DATA.settings || {}).confettiThreshold); meter.greenLit = score().p >= (meter.pg || 0.9);
+    meter.onGreen = (pt) => confetti({ x: pt.x, y: pt.y, n: 90, life: 2.6 });
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
     buildDots(); renderQuestion(); runClock();
   }
@@ -418,31 +420,39 @@
   $("againBtn").addEventListener("click", signOut);
   // same person, fresh draw: back to the briefing with the attempt number bumped (every attempt is recorded)
   $("retakeBtn").addEventListener("click", () => {
-    $("confetti").hidden = true;
+    $("confetti").hidden = true; pieces = [];
     enter(S.email, S.name, (S.attempt || 1) + 1);
   });
 
-  // ---------- confetti (hand-rolled, brand colours) ----------
-  function confetti() {
+  // ---------- confetti (hand-rolled, brand colours; one shared loop, so bursts can overlap) ----------
+  // confetti() = the full celebration; confetti({x, y, n, life}) = a smaller burst from a point (the meter's green end)
+  let pieces = [], confettiRunning = false;
+  function confetti(o) {
     if (reduced) return;
-    const cv = $("confetti"), g = cv.getContext("2d"), dpr = devicePixelRatio || 1;
-    cv.hidden = false; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; g.scale(dpr, dpr);
-    const cols = ["#e61e2a", "#000054", "#fac800", "#e3e5e0", "#ffffff"];
-    const P = Array.from({ length: 260 }, () => ({
-      x: innerWidth / 2 + (Math.random() - 0.5) * 240, y: innerHeight * 0.35, vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 16 - 4,
-      w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, c: cols[(Math.random() * cols.length) | 0],
-    }));
-    const t0 = performance.now();
+    o = o || {};
+    const cv = $("confetti"), burst = o.x != null, now = performance.now();
+    const cols = burst ? ["#1f9d55", "#1f9d55", "#fac800", "#e61e2a", "#000054"] : ["#e61e2a", "#000054", "#fac800", "#e3e5e0", "#ffffff"];
+    for (let i = 0; i < (o.n || 260); i++) pieces.push({
+      x: burst ? o.x : innerWidth / 2 + (Math.random() - 0.5) * 240, y: burst ? o.y : innerHeight * 0.35,
+      vx: (Math.random() - 0.5) * (burst ? 10 : 16), vy: -Math.random() * (burst ? 10 : 16) - (burst ? 3 : 4),
+      w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4,
+      c: cols[(Math.random() * cols.length) | 0], born: now, life: o.life || 5,
+    });
+    if (confettiRunning) return;
+    confettiRunning = true;
+    const g = cv.getContext("2d"), dpr = devicePixelRatio || 1;
+    cv.hidden = false; cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
     (function step(t) {
-      const age = (t - t0) / 1000;
       g.clearRect(0, 0, innerWidth, innerHeight);
-      for (const p of P) {
+      pieces = pieces.filter((p) => (t - p.born) / 1000 < p.life);
+      for (const p of pieces) {
+        const age = (t - p.born) / 1000;
         p.vy += 0.35; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
-        g.save(); g.globalAlpha = Math.max(0, 1 - Math.max(0, age - 3.5) / 1.5);
+        g.save(); g.globalAlpha = Math.max(0, 1 - Math.max(0, age - (p.life - 1.5)) / 1.5);
         g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); g.restore();
       }
-      if (age < 5) requestAnimationFrame(step); else cv.hidden = true;
-    })(t0);
+      if (pieces.length) requestAnimationFrame(step); else { confettiRunning = false; cv.hidden = true; }
+    })(now);
   }
 
   boot();

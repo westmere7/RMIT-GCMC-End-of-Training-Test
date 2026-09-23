@@ -3,7 +3,7 @@
    The candidate's first name rides on the needle tip. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
-  const C = { red: "#e61e2a", navy: "#000054", grey: "#d3d5cd", muted: "#6b6b8a", tick: "#000054", minor: "#a9a9c4" };
+  const C = { red: "#e61e2a", navy: "#000054", green: "#1f9d55", grey: "#d3d5cd", muted: "#6b6b8a", tick: "#000054", minor: "#a9a9c4" };
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
 
   const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -28,15 +28,32 @@
     this.cx = this.w / 2; this.cy = this.top + this.R;
   };
   Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
+  // The last 5% of the arc is green: the confetti zone. `pct` is the confetti threshold (e.g. 95), so the reading that
+  // earns confetti lands exactly on the green's edge, and a perfect run parks the needle in the middle of the green.
+  const GREEN = 0.9; // green starts at 90% of the half-span, i.e. the last 5% of the whole arc
+  Meter.prototype.setThreshold = function (pct) { this.pg = Math.max(0.05, Math.min(0.99, 2 * (pct == null ? 95 : pct) / 100 - 1)); };
+  Meter.prototype.aim = function (p) { // reading (-1…1) → share of the half-span
+    const pg = this.pg || 0.9;
+    if (p <= 0) return p * GREEN;
+    if (p < pg) return (p / pg) * GREEN;
+    return GREEN + ((p - pg) / (1 - pg)) * 0.055;
+  };
+  Meter.prototype.greenPoint = function () { // page coordinates of the middle of the green band
+    const a = this.span * 0.95, r = this.c.getBoundingClientRect();
+    return { x: r.left + this.cx + (this.R - 5) * Math.sin(a), y: r.top + this.cy - (this.R - 5) * Math.cos(a) };
+  };
+  Meter.prototype.inGreen = function () { return this.theta >= this.span * GREEN; };
   Meter.prototype.setName = function (n) { this.name = String(n || "").trim(); };
-  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6; };
+  // flicks towards the end the needle is already near are softened, so it can hold the green (or the red) instead of rattling off the stop
+  Meter.prototype.soften = function (dir) { const e = Math.abs(this.theta) / this.span; return dir * this.theta > 0 ? 1 - 0.75 * smooth(0.6, 0.9, e) : 1; };
+  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6 * this.soften(dir); };
   // a harder bounce now and then: a big flick while the spring goes loose, so the needle swings through
   // a few decaying oscillations; the looseness then fades and the needle is back to its usual steady self
   Meter.prototype.jolt = function (dir) {
     if (this.reduced) return this.kick(dir);
     const k = this.span / 0.52;
     this.looseT = 0;
-    this.vel += dir * k * (2.0 + Math.random() * 0.7);
+    this.vel += dir * k * (2.0 + Math.random() * 0.7) * this.soften(dir);
   };
   Meter.prototype.zone = function (p) {
     const v = p == null ? this.p : p;
@@ -60,7 +77,7 @@
     const sig = amp * k * (calm * (0.009 * Math.sin(ph * 5.3) + 0.005 * Math.sin(ph * 9.7 + 1.3) + 0.004 * Math.sin(ph * 2.1 + 2))
       + edge * (1 - 0.55 * near) * 0.0035 * Math.sin(this.bz + Math.sin(this.t * 3.1)));
     if (!this.reduced && Math.random() < dt * (0.7 + 1.6 * edge) * (1 - 0.85 * near)) this.vel += (Math.random() - 0.5) * 0.25 * k * calm;
-    const target = this.p * S * 0.9 + sig;
+    const target = this.aim(this.p) * S + sig;
     // stiffer (so quicker to bounce back) towards the ends and stiffer still right at them; damping scales with it.
     // After a jolt the spring goes soft and barely damped for about a second, then tightens up over the next two or three.
     let L = 0;
@@ -74,6 +91,9 @@
     if (this.theta > lim) { this.theta = lim; this.vel *= -0.35; }
     if (this.theta < -lim) { this.theta = -lim; this.vel *= -0.35; }
     if (this.lamp) this.lamp.classList.toggle("on", Math.abs(this.vel) > 0.55 * k);
+    const earned = this.p >= (this.pg || 0.9);
+    if (earned && this.inGreen() && !this.greenLit) { this.greenLit = true; if (this.onGreen) this.onGreen(this.greenPoint()); }
+    if (!earned) this.greenLit = false;
     this.draw();
     requestAnimationFrame(this.frame);
   };
@@ -85,7 +105,7 @@
     const pt = (a, r) => [cx + r * Math.cos(ang(a)), cy + r * Math.sin(ang(a))];
     // zone bands
     const gap = 3 / R; // a hairline break between the zones
-    const bands = [[-S, -S / 3 - gap, C.red], [-S / 3 + gap, S / 3 - gap, C.grey], [S / 3 + gap, S, C.navy]];
+    const bands = [[-S, -S / 3 - gap, C.red], [-S / 3 + gap, S / 3 - gap, C.grey], [S / 3 + gap, S * GREEN - gap, C.navy], [S * GREEN + gap, S, C.green]];
     g.lineWidth = 10; g.lineCap = "butt";
     for (const [a, b, col] of bands) { g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, R - 5, ang(a), ang(b)); g.stroke(); }
     // ticks
