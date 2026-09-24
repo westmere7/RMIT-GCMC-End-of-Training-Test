@@ -72,7 +72,7 @@
           <button class="btn small" id="newQ" type="button" title="New question (Alt+N)"><span aria-hidden="true">+</span> New question</button>
         </div>
         <div class="qx-filters">
-          <input class="input" id="qSearch" type="search" placeholder="Search questions, options, answers or ID" aria-label="Search questions" autocomplete="off">
+          <input class="input" id="qSearch" type="search" placeholder="Search text, answers, ID, or a number like 183" aria-label="Search questions" autocomplete="off">
           <div class="qx-filter-row">
             <select class="input" id="fCat" aria-label="Filter by category"></select>
             <select class="input" id="fType" aria-label="Filter by type"></select>
@@ -81,6 +81,11 @@
             <button class="fchip crit" id="fCrit" type="button" aria-pressed="false">Critical <b></b></button>
             <button class="fchip bad" id="fBad" type="button" aria-pressed="false">Needs fixing <b></b></button>
             <button class="fchip clear" id="fClear" type="button" hidden>Clear filters</button>
+          </div>
+          <div class="qx-view" role="radiogroup" aria-label="List order">
+            <span>List</span>
+            <button type="button" role="radio" data-view="cat" aria-checked="true">By category</button>
+            <button type="button" role="radio" data-view="order" aria-checked="false">In order, 1 to <b id="qLast"></b></button>
           </div>
         </div>
         <div class="qx-list" id="qList"></div>

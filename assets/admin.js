@@ -167,6 +167,9 @@
   // ----- state: selection, filters, and fields set aside when a question changes type -----
   let selId = null, lastType = "single", ansRows = null;
   const F = { q: "", cat: "", type: "", crit: false, bad: false };
+  // the list: grouped by category, or the whole bank in number order (remembered in this browser)
+  let view = "cat";
+  try { view = localStorage.getItem("gcmc-editor-view") === "order" ? "order" : "cat"; } catch (e) { /* storage blocked: default */ }
   const stash = new Map(); // id → { options, correct, pairs, answers } kept while editing, so switching back restores them
   const byId = (id) => D.questions.find((q) => q.id === id);
   const numOf = (q) => D.questions.indexOf(q) + 1;
@@ -176,6 +179,7 @@
     if (F.type && q.type !== F.type) return false;
     if (F.crit && !q.critical) return false;
     if (F.bad && !problems(q).length) return false;
+    if (/^#?\d+$/.test(F.q)) return numOf(q) === +F.q.replace("#", ""); // a number finds that question
     if (F.q) {
       const hay = [q.id, q.prompt, ...(q.options || []), ...(q.answers || []), ...(q.pairs || []).flatMap((x) => [x.left, x.right])].join(" ").toLowerCase();
       if (!F.q.split(/\s+/).every((w) => hay.includes(w))) return false;
@@ -211,16 +215,25 @@
     $("tabQCount").textContent = n; $("qCount").textContent = n;
     renderBank(); renderFilters();
     const box = $("qList"); box.innerHTML = "";
-    const cats = A.categoriesOf(D.settings), groups = new Map(cats.map((c) => [c, []]));
-    D.questions.forEach((q) => { if (!matches(q)) return; const c = A.categoryOf(q); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(q); });
+    $("qLast").textContent = n;
+    document.querySelectorAll(".qx-view [data-view]").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.view === view)));
+    box.classList.toggle("in-order", view === "order");
     let shown = 0;
-    for (const [c, list] of groups) {
-      if (!list.length) continue;
-      shown += list.length;
-      const g = el("div.qgroup", { role: "group", "aria-label": c });
-      g.append(el("div.qgroup-h", { html: `<span>${esc(c)}</span><b>${list.length}</b>` }));
-      list.forEach((q) => g.append(renderRow(q)));
-      box.append(g);
+    if (view === "order") {
+      const g = el("div.qgroup", { role: "group", "aria-label": "All questions, in order" });
+      D.questions.forEach((q) => { if (matches(q)) { shown++; g.append(renderRow(q)); } });
+      if (shown) box.append(g);
+    } else {
+      const cats = A.categoriesOf(D.settings), groups = new Map(cats.map((c) => [c, []]));
+      D.questions.forEach((q) => { if (!matches(q)) return; const c = A.categoryOf(q); if (!groups.has(c)) groups.set(c, []); groups.get(c).push(q); });
+      for (const [c, list] of groups) {
+        if (!list.length) continue;
+        shown += list.length;
+        const g = el("div.qgroup", { role: "group", "aria-label": c });
+        g.append(el("div.qgroup-h", { html: `<span>${esc(c)}</span><b>${list.length}</b>` }));
+        list.forEach((q) => g.append(renderRow(q)));
+        box.append(g);
+      }
     }
     if (!shown) box.append(el("div.qx-empty", {}, el("p", { text: n ? "No questions match these filters." : "The bank is empty." }),
       n ? el("button.btn.ghost.small", { type: "button", text: "Clear filters", onclick: clearFilters }) : null));
@@ -238,7 +251,7 @@
     b.setAttribute("aria-current", q.id === selId ? "true" : "false");
     b.innerHTML = `<span class="qrow-n">${numOf(q)}</span>
       <span class="qrow-body"><span class="qrow-text${text ? "" : " empty"}">${esc(text || "New question")}</span>
-      <span class="qrow-meta"><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
+      <span class="qrow-meta"><span class="qrow-cat">${esc(A.categoryOf(q))}</span><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
   }
   function refreshRow(q) { const b = rowOf(q.id); if (b) paintRow(b, q); renderFilterCounts(); }
   const rowOf = (id) => $("qList").querySelector(`.qrow[data-id="${CSS.escape(id)}"]`);
@@ -272,6 +285,10 @@
   $("fCrit").onclick = () => { F.crit = !F.crit; renderList(); };
   $("fBad").onclick = () => { F.bad = !F.bad; renderList(); };
   $("fClear").onclick = clearFilters;
+  document.querySelectorAll(".qx-view [data-view]").forEach((b) => { b.onclick = () => {
+    view = b.dataset.view; try { localStorage.setItem("gcmc-editor-view", view); } catch (e) { /* not remembered */ }
+    renderList(); const r = selId && rowOf(selId); if (r) r.scrollIntoView({ block: "center" });
+  }; });
 
   // ----- adding, duplicating, deleting -----
   function newQuestion(o) {
