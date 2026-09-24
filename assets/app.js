@@ -139,8 +139,10 @@
     let c = 0, w = 0, crit = 0;
     QS().forEach((q) => { const r = S.responses[q.id]; if (!r) return; if (r.correct) c++; else { w++; if (q.critical) crit++; } });
     const pen = PENALTY(), marks = c - pen * crit;
-    // tracks accuracy once a few answers are in; early answers nudge it in small steps (critical misses weigh extra)
-    return { c, w, crit, pen, marks, p: Math.max(-1, Math.min(1, (c - w - pen * crit) / Math.max(c + w, 8))) };
+    // each answer moves it a fixed step until half the attempt is in, then it tracks accuracy (critical misses weigh extra);
+    // the step is sized to the attempt so a run of correct answers climbs steadily instead of pinning the needle early
+    const steps = Math.max(8, Math.round(QS().length / 2));
+    return { c, w, crit, pen, marks, p: Math.max(-1, Math.min(1, (c - w - pen * crit) / Math.max(c + w, steps))) };
   }
   const pctOf = (sc, n) => Math.max(0, Math.round((100 * sc.marks) / n));
 
