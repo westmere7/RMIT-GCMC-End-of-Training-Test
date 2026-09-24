@@ -97,7 +97,7 @@
 .qed-nav { display: flex; gap: 4px; margin-right: 8px; }
 .qed-sec { padding: 22px 30px; }
 .qed-sec + .qed-sec { border-top: 1px solid #efefeb; }
-.qed-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; background: var(--tint); }
+.qed-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1.2fr); gap: 20px; background: var(--tint); }
 .qed-details .input { padding: 10px 12px; font-size: 15px; }
 .lbl, .field label { font-size: 13px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
 .qed-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
@@ -105,11 +105,18 @@
 .qed-prompt::placeholder { color: #a8a8bd; }
 .qed-hint { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 13px; color: var(--muted); }
 
-.crit-toggle { display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; height: 44px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; font-size: 14px; color: var(--muted); cursor: pointer; }
-.crit-toggle b { color: var(--ink); }
-.crit-toggle input { width: 18px; height: 18px; accent-color: var(--red); margin: 0; }
-.crit-toggle:has(input:checked) { border-color: var(--red); background: #fff5f5; color: var(--red-dark); }
-.crit-toggle:has(input:checked) b { color: var(--red); }
+.flags { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.flag { display: flex; align-items: center; gap: 8px; min-width: 0; height: 44px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; overflow: hidden; }
+.flag span { overflow: hidden; text-overflow: ellipsis; }
+.flag b { color: var(--ink); }
+.flag input { width: 17px; height: 17px; margin: 0; flex: none; }
+.flag.crit input { accent-color: var(--red); }
+.flag.always input { accent-color: var(--navy); }
+.flag.crit:has(input:checked) { border-color: var(--red); background: #fff5f5; color: var(--red-dark); }
+.flag.crit:has(input:checked) b { color: var(--red); }
+.flag.always:has(input:checked) { border-color: var(--navy); background: var(--sel); color: var(--navy); }
+.qrow-always { color: var(--navy); letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
+.fchip.always[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
 .qed-details .field { gap: 6px; }
 
 .qed-how { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--body); padding: 11px 14px; border-radius: var(--radius); background: var(--grey-50); margin-bottom: 14px; }

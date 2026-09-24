@@ -42,7 +42,9 @@
     const s = (D.settings = D.settings || {}); s.gauge = s.gauge || {};
     for (const [id, key] of SETTINGS) { $(id).value = s[key] || ""; $(id).oninput = (e) => { s[key] = e.target.value; markDirty(); }; }
     $("sMins").value = s.timeLimitMinutes || 10; $("sMins").oninput = (e) => { s.timeLimitMinutes = Math.max(1, +e.target.value || 10); markDirty(); };
-    $("sPer").value = s.questionsPerAttempt || 30; $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(1, +e.target.value || 30); markDirty(); renderBank(); };
+    $("sPer").value = Math.max(A.MIN_PER_ATTEMPT, s.questionsPerAttempt || 30);
+    $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(A.MIN_PER_ATTEMPT, +e.target.value || 30); markDirty(); renderBank(); };
+    $("sPer").onchange = (e) => { e.target.value = s.questionsPerAttempt; }; // below 10 snaps back to 10
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
     $("sPen").value = s.criticalPenalty == null ? 3 : s.criticalPenalty; $("sPen").oninput = (e) => { s.criticalPenalty = Math.max(0, +e.target.value || 0); markDirty(); renderBank(); };
     $("sCritShare").value = A.criticalShareOf(s);
@@ -58,7 +60,7 @@
     renderGate();
   }
   function renderBank() {
-    const n = D.questions.length, per = Math.min((D.settings || {}).questionsPerAttempt || 30, n);
+    const n = D.questions.length, per = A.perAttemptOf(D.settings, n), na = D.questions.filter((q) => q.always).length;
     const cats = new Set(D.questions.map(A.categoryOf));
     const nc = D.questions.filter((q) => q.critical).length, pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
     const stat = (v, k, sub) => `<div class="bstat"><b>${v}</b><span>${k}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
@@ -66,7 +68,9 @@
       + stat(nc, "Critical", "−" + pen + " marks each if wrong");
     const share = A.criticalShareOf(D.settings), want = Math.round((per * share) / 100), k = Math.min(nc, want);
     $("critShareHelp").textContent = `About ${k} of ${per} questions` + (want > nc ? `. Only ${nc} critical ${nc === 1 ? "question is" : "questions are"} in the bank, so that's the most an attempt can have.` : `, picked from the ${nc} critical ones in the bank.`);
-    $("perHelp").textContent = per >= cats.size ? "At least one from every category, the rest at random." : `Fewer than the ${cats.size} categories, so some categories won't appear.`;
+    $("perHelp").textContent = `At least ${A.MIN_PER_ATTEMPT}. `
+      + (na ? (na > per ? `${na} questions are marked "Always include", more than an attempt holds, so a random ${per} of them are drawn. ` : `Includes the ${na} marked "Always include". `) : "")
+      + (per >= cats.size ? "At least one from every category, the rest at random." : `Fewer than the ${cats.size} categories, so some categories won't appear.`);
     const counts = new Map(); D.questions.forEach((q) => { const c = A.categoryOf(q); counts.set(c, (counts.get(c) || 0) + 1); });
     const listed = A.categoriesOf(D.settings);
     $("catCounts").innerHTML = [...listed, ...[...counts.keys()].filter((c) => !listed.includes(c))].map((c) =>
@@ -166,7 +170,7 @@
 
   // ----- state: selection, filters, and fields set aside when a question changes type -----
   let selId = null, lastType = "single", ansRows = null;
-  const F = { q: "", cat: "", type: "", crit: false, bad: false };
+  const F = { q: "", cat: "", type: "", crit: false, always: false, bad: false };
   // the list: grouped by category, or the whole bank in number order (remembered in this browser)
   let view = "cat";
   try { view = localStorage.getItem("gcmc-editor-view") === "order" ? "order" : "cat"; } catch (e) { /* storage blocked: default */ }
@@ -178,6 +182,7 @@
     if (F.cat && A.categoryOf(q) !== F.cat) return false;
     if (F.type && q.type !== F.type) return false;
     if (F.crit && !q.critical) return false;
+    if (F.always && !q.always) return false;
     if (F.bad && !problems(q).length) return false;
     if (/^#?\d+$/.test(F.q)) return numOf(q) === +F.q.replace("#", ""); // a number finds that question
     if (F.q) {
@@ -186,7 +191,7 @@
     }
     return true;
   }
-  const filtering = () => !!(F.q || F.cat || F.type || F.crit || F.bad);
+  const filtering = () => !!(F.q || F.cat || F.type || F.crit || F.always || F.bad);
 
   // ----- the list -----
   function renderFilters() {
@@ -206,6 +211,9 @@
     const nc = D.questions.filter((q) => q.critical).length, nb = D.questions.filter((q) => problems(q).length).length;
     $("fCrit").querySelector("b").textContent = nc; $("fCrit").setAttribute("aria-pressed", String(F.crit));
     $("fBad").querySelector("b").textContent = nb; $("fBad").setAttribute("aria-pressed", String(F.bad));
+    const na = D.questions.filter((q) => q.always).length;
+    $("fAlways").querySelector("b").textContent = na; $("fAlways").setAttribute("aria-pressed", String(F.always));
+    $("fAlways").hidden = !na && !F.always;
     $("fBad").hidden = !nb && !F.bad;
     $("fClear").hidden = !filtering();
   }
@@ -251,7 +259,7 @@
     b.setAttribute("aria-current", q.id === selId ? "true" : "false");
     b.innerHTML = `<span class="qrow-n">${numOf(q)}</span>
       <span class="qrow-body"><span class="qrow-text${text ? "" : " empty"}">${esc(text || "New question")}</span>
-      <span class="qrow-meta"><span class="qrow-cat">${esc(A.categoryOf(q))}</span><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
+      <span class="qrow-meta"><span class="qrow-cat">${esc(A.categoryOf(q))}</span><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${q.always ? '<span class="qrow-always">Always</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
   }
   function refreshRow(q) { const b = rowOf(q.id); if (b) paintRow(b, q); renderFilterCounts(); }
   const rowOf = (id) => $("qList").querySelector(`.qrow[data-id="${CSS.escape(id)}"]`);
@@ -275,7 +283,7 @@
   }
 
   function clearFilters() {
-    Object.assign(F, { q: "", cat: "", type: "", crit: false, bad: false });
+    Object.assign(F, { q: "", cat: "", type: "", crit: false, always: false, bad: false });
     $("qSearch").value = ""; renderList();
     const row = selId && rowOf(selId); if (row) row.scrollIntoView({ block: "nearest" });
   }
@@ -284,6 +292,7 @@
   $("fType").onchange = (e) => { F.type = e.target.value; renderList(); };
   $("fCrit").onclick = () => { F.crit = !F.crit; renderList(); };
   $("fBad").onclick = () => { F.bad = !F.bad; renderList(); };
+  $("fAlways").onclick = () => { F.always = !F.always; renderList(); };
   $("fClear").onclick = clearFilters;
   document.querySelectorAll(".qx-view [data-view]").forEach((b) => { b.onclick = () => {
     view = b.dataset.view; try { localStorage.setItem("gcmc-editor-view", view); } catch (e) { /* not remembered */ }
@@ -298,7 +307,7 @@
     const q = blank(o.type || lastType, cat);
     D.questions.push(q);
     // make sure the new question is visible in the list: keep the category filter only if it matches
-    Object.assign(F, { q: "", type: "", crit: false, bad: false, cat: F.cat === cat ? F.cat : "" }); $("qSearch").value = "";
+    Object.assign(F, { q: "", type: "", crit: false, always: false, bad: false, cat: F.cat === cat ? F.cat : "" }); $("qSearch").value = "";
     markDirty(); renderList(); select(q.id, { focus: true });
     toast(`Added question ${numOf(q)} to ${cat}.`);
   }
@@ -374,17 +383,22 @@
     const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
     for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
     cat.onchange = () => { q.category = cat.value; markDirty(); renderList(); $("addAnother").textContent = `+ Add another to ${q.category}`; const r = rowOf(q.id); if (r) r.scrollIntoView({ block: "nearest" }); };
-    const crit = el("label.crit-toggle", { title: "A wrong or skipped answer on a critical question loses extra marks" });
-    const cb = el("input", { type: "checkbox", checked: !!q.critical });
-    crit.append(cb, el("span", { html: "<b>Critical</b> · −" + (D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty) + " marks if wrong" }));
-    cb.onchange = () => { if (cb.checked) q.critical = true; else delete q.critical; card.classList.toggle("critical", cb.checked); markDirty(); refreshRow(q); renderBank(); };
+    const flag = (cls, key, html, title, after) => {
+      const box = el("input", { type: "checkbox", checked: !!q[key] });
+      box.onchange = () => { if (box.checked) q[key] = true; else delete q[key]; if (after) after(box.checked); markDirty(); refreshRow(q); renderBank(); };
+      return el("label.flag." + cls, { title }, box, el("span", { html }));
+    };
+    const pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
+    const flags = el("div.flags", {},
+      flag("crit", "critical", `<b>Critical</b> −${pen}`, `A wrong or skipped answer loses ${pen} extra marks`, (on) => card.classList.toggle("critical", on)),
+      flag("always", "always", "<b>Always in</b>", "Always include: this question is in every attempt, whatever the random draw picks"));
     const type = el("select.input", { id: "qType" });
     for (const [v, l] of TYPES) type.add(new Option(l, v, false, v === q.type));
     type.onchange = () => { setType(q, type.value); const t = $("qType"); if (t) t.focus(); };
     card.append(el("div.qed-sec.qed-details", {},
       el("div.field", {}, el("label", { for: "qCat", text: "Category" }), cat),
       el("div.field", {}, el("label", { for: "qType", text: "Type" }), type),
-      el("div.field", {}, el("span.lbl", { text: "Weighting" }), crit)));
+      el("div.field", {}, el("span.lbl", { text: "In the test" }), flags)));
 
     // the question itself
     const prompt = el("textarea.input.qed-prompt", { id: "qPrompt", rows: 2, value: q.prompt || "",
@@ -681,7 +695,7 @@
   async function collect() {
     const bad = D.questions.filter((q) => problems(q).length);
     if (bad.length) {
-      Object.assign(F, { q: "", cat: "", type: "", crit: false, bad: true }); $("qSearch").value = "";
+      Object.assign(F, { q: "", cat: "", type: "", crit: false, always: false, bad: true }); $("qSearch").value = "";
       setTab("questions"); renderList(); select(bad[0].id);
       throw new Error(`${bad.length} ${bad.length > 1 ? "questions need" : "question needs"} fixing before saving. They're listed on the left.`);
     }

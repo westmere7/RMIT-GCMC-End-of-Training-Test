@@ -8,7 +8,7 @@
 
   let DATA = null, S = null, meter = null, tick = null, locked = false, BYID = {};
   const QS = () => (S && S.qids ? S.qids.map((id) => BYID[id]).filter(Boolean) : []);
-  const perAttempt = () => Math.min((DATA.settings || {}).questionsPerAttempt || DATA.questions.length, DATA.questions.length);
+  const perAttempt = () => A.perAttemptOf(DATA.settings, DATA.questions.length);
   const LABELS = () => Object.assign({ left: "HR would like a word", right: "Welcome to the team" }, (DATA.settings || {}).gauge || {});
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 

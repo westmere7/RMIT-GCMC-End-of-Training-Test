@@ -109,8 +109,16 @@
     return v == null || v === "" || isNaN(+v) ? 15 : Math.max(0, Math.min(100, +v));
   }
 
-  /** Draw n questions: at least one from every category (when n allows), with about `criticalShare`% of them critical
-      (as many as the bank has), the rest at random, in random order. */
+  /** Questions per attempt from the settings: at least 10, and never more than the bank holds. */
+  const MIN_PER_ATTEMPT = 10;
+  function perAttemptOf(settings, bankSize) {
+    const v = +(settings && settings.questionsPerAttempt) || 30;
+    return Math.min(bankSize, Math.max(MIN_PER_ATTEMPT, v));
+  }
+
+  /** Draw n questions: every "always include" one first (a random n of them if there are more), then at least one from
+      every category (when n allows), with about `criticalShare`% critical (as many as the bank has), the rest at random,
+      in random order. */
   function drawQuestions(questions, n, criticalShare) {
     const pool = shuffle(questions.slice());
     n = Math.min(n, pool.length);
@@ -120,21 +128,24 @@
     const k = Math.max(n - plain.length, Math.min(crit.length, Math.round((n * share) / 100)));
     const picked = new Set(), taken = { crit: 0, plain: 0 };
     const take = (q) => { picked.add(q.id); taken[q.critical ? "crit" : "plain"]++; };
+    const room = () => picked.size < n;
+    for (const q of pool) { if (!room()) break; if (q.always) take(q); }
     const byCat = new Map();
     for (const q of pool) { const c = categoryOf(q); if (!byCat.has(c)) byCat.set(c, []); byCat.get(c).push(q); }
     if (n >= byCat.size) {
       for (const list of byCat.values()) {
+        if (!room() || list.some((q) => picked.has(q.id))) continue; // already covered (by an always-included question)
         // cover the category with whichever kind still has room, so the critical count stays on target
         const wantCrit = taken.crit < k && (taken.plain >= n - k || !list.some((q) => !q.critical));
         take(list.find((q) => !!q.critical === wantCrit) || list[0]);
       }
     }
-    for (const q of crit) { if (taken.crit >= k) break; if (!picked.has(q.id)) take(q); }
+    for (const q of crit) { if (taken.crit >= k || !room()) break; if (!picked.has(q.id)) take(q); }
     for (const q of plain) { if (picked.size >= n) break; if (!picked.has(q.id)) take(q); }
     for (const q of pool) { if (picked.size >= n) break; if (!picked.has(q.id)) take(q); }
     return shuffle([...picked]).slice(0, n);
   }
 
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, shuffle };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle };
 })(window);

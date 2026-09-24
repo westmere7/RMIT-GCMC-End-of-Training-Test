@@ -36,6 +36,8 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 ## Categories
 
 - **Every question has a category.** Pick it in the editor. The category list itself is a setting: comma-separated, in display order.
+- **Each attempt has at least 10 questions** (fewer only if the bank itself is smaller).
+- **"Always in"** on a question puts it in every attempt. Those go in first, and still count towards category coverage and the critical share. If more are marked than an attempt holds, a random selection of them is used, and the editor says so.
 - **The random draw takes at least one question from each category** whenever the number of questions per attempt is at least the number of categories. The rest are drawn at random.
 - **Results break the score down by category**, with the strongest and weakest named.
 
