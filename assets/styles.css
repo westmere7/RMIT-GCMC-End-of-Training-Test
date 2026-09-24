@@ -503,3 +503,25 @@ button { cursor: pointer; }
 .match-board.picking-b .match-item.b:hover, .match-board.picking-a .match-item.a:hover { border-style: solid; border-color: var(--navy); background: #fff; }
 .match-board.dragging, .match-board.dragging .match-item { cursor: grabbing; }
 .q-card.locked .match { pointer-events: none; opacity: 0.75; }
+
+/* ---------- image questions: a picture with the question, or pictures as the options ---------- */
+.q-figure { margin: -8px 0 24px; max-width: 640px; border-radius: var(--radius); overflow: hidden; background: var(--grey-50); border: 1px solid var(--line); }
+.q-figure img { display: block; width: 100%; max-height: 360px; object-fit: contain; }
+.options.pictures { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.opt.pic { position: relative; display: block; padding: 10px; }
+.opt.pic img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: var(--grey-50); border-radius: 2px; pointer-events: none; }
+.opt.pic .key { position: absolute; top: 18px; left: 18px; z-index: 1; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 84, 0.2); }
+.opt.pic::after { position: absolute; top: 20px; right: 20px; z-index: 1; box-shadow: 0 1px 3px rgba(0, 0, 84, 0.2); }
+.opt.pic[aria-checked="true"] img { outline: 3px solid var(--navy); outline-offset: -3px; }
+.rev-pics { display: inline-flex; gap: 6px; flex-wrap: wrap; vertical-align: middle; }
+.rev-pics img { width: 84px; height: 63px; object-fit: contain; background: var(--grey-50); border: 1px solid var(--line); border-radius: 3px; }
+.review-item .ans .yours .rev-pics img { opacity: 0.7; border-color: var(--red); }
+.review-item .ans .right .rev-pics img { border-color: var(--ok); }
+.rev-qpic { display: block; max-width: 220px; max-height: 140px; margin-top: 8px; border-radius: 3px; border: 1px solid var(--line); }
+
+/* ---------- preview (opened from the editor): no desktop-only cover, a clear "nothing is recorded" label ---------- */
+html.preview .desktop-only { display: none !important; }
+html.preview body::before { content: "Preview · nothing is recorded"; position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 40; background: var(--yellow); color: var(--navy); font-size: 13px; font-weight: 700; padding: 6px 14px; border-radius: 999px; box-shadow: 0 4px 14px -6px rgba(0, 0, 84, 0.5); pointer-events: none; }
+.q-actions .status.preview-res { gap: 12px; color: var(--ink); flex-wrap: wrap; justify-content: flex-end; }
+.q-actions .status.preview-res.ok b { color: var(--ok); }
+.q-actions .status.preview-res.no b { color: var(--red-dark); }

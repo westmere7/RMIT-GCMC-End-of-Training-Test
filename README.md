@@ -16,6 +16,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
    - `assessment_results`: finished attempts (score, `by_category`, every answer)
    - views `assessment_leaderboard` (score, time, strongest and weakest category) and `assessment_category_scores` (one row per attempt per category)
    - `assessment_migrations`: which files in `supabase/migrations/` have been applied
+   - Storage bucket `assessment-images`: question pictures (public to read, WebP only, 3 MB each)
 
    Row-level security is on with no policies, so only the server can touch the tables.
 2. **Vercel:** import this GitHub repo. Framework preset **Other**, no build command, output directory left as is. Add these environment variables:
@@ -43,8 +44,11 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 - **Single choice:** one correct option. Candidates see round keys and "Choose one answer".
 - **Multi choice:** several correct options; candidates must pick exactly those. They see square tick boxes, a yellow "Select all that apply" badge and a running count.
 - **Match pairs:** each row in the editor is one pair (Column A → Column B), 2 to 8 pairs. Candidates see Column A on the left and Column B (shuffled) on the right, and link each pair by clicking one item then its match, or dragging between them. Each link is drawn as a coloured line, with the same number on both ends; clicking a pair again undoes it. Every pair must be right for the mark. Stored as `"pairs": [{ "left": "...", "right": "..." }]`.
+- **Image question:** either a picture with the question (with text options below it), or pictures as the options (no text allowed on them). "More than one correct" turns it into select-all-that-apply. Pictures are converted to WebP in the editor (longest side 1600 px for the question, 1000 px for options) and must come out under 3 MB; they're stored in Supabase Storage, and the question keeps only their links. Offline (`server.py`) they go to `data/images/`.
 - **Fill in the blank:** the prompt has `___` where the gap goes; answers are typed.
 - **Short answer:** a typed answer. For both typed types, capitals, accents, spaces and punctuation are ignored, and the first accepted answer is the one shown as correct.
+
+**Preview:** every question has a Preview button (Alt+P) in the editor. It opens the real test page with that question, including unsaved edits. Answer it to check the marking; nothing is saved or sent.
 
 ## Critical questions
 
@@ -75,7 +79,7 @@ Schema changes go in a new numbered file in `supabase/migrations/`, which is the
 - `index.html`, `assets/app.js`, `assets/meter.js`: the test
 - `admin.html`, `assets/admin.js`: the editor
 - `assets/common.js`: shared helpers (answer matching, categories, the random draw)
-- `api/questions.js`, `api/results.js`, `api/people.js`, `api/_store.js`: Vercel functions that talk to Supabase
+- `api/questions.js`, `api/results.js`, `api/people.js`, `api/images.js`, `api/_store.js`: Vercel functions that talk to Supabase
 - `dev-server.js`: local server running those same functions, with auto-refresh
 - `server.py`: offline local server, file-based
 - `data/questions.json`: the seed question bank and settings

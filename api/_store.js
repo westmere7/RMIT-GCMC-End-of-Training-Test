@@ -85,6 +85,42 @@ const people = {
   },
 };
 
+// Question images: WebP files in a public Storage bucket, named by their SHA-256 (the same image is stored once).
+const BUCKET = "assessment-images";
+const MAX_IMAGE = 3 * 1024 * 1024;
+async function storeImage(buf) {
+  const name = require("crypto").createHash("sha256").update(buf).digest("hex").slice(0, 32) + ".webp";
+  const upload = () => fetch(`${URL_}/storage/v1/object/${BUCKET}/${name}`, {
+    method: "POST",
+    headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "image/webp", "x-upsert": "true", "Cache-Control": "max-age=31536000" },
+    body: buf,
+  });
+  let res = await upload();
+  if (!res.ok && /bucket not found/i.test(await res.clone().text())) {
+    // first image ever: make the bucket (public to read; WebP only, 3 MB each)
+    const made = await fetch(`${URL_}/storage/v1/bucket`, {
+      method: "POST",
+      headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true, file_size_limit: MAX_IMAGE, allowed_mime_types: ["image/webp"] }),
+    });
+    if (!made.ok && made.status !== 409) throw new Error(`Supabase storage ${made.status}: ${await made.text()}`);
+    res = await upload();
+  }
+  if (!res.ok) throw new Error(`Supabase storage ${res.status}: ${await res.text()}`);
+  return `${URL_}/storage/v1/object/public/${BUCKET}/${name}`;
+}
+
+/** The raw request body as a Buffer (Vercel gives octet-stream bodies as a Buffer already). Rejects past `max` bytes. */
+function readRaw(req, max) {
+  if (Buffer.isBuffer(req.body)) return Promise.resolve(req.body);
+  return new Promise((resolve, reject) => {
+    const chunks = []; let n = 0;
+    req.on("data", (c) => { n += c.length; if (n > max) { reject(Object.assign(new Error("too large"), { code: 413 })); req.destroy(); } else chunks.push(c); });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+}
+
 function readJson(req) {
   if (req.body && typeof req.body === "object") return Promise.resolve(req.body);
   return new Promise((resolve, reject) => {
@@ -102,4 +138,4 @@ function send(res, code, payload) {
   res.end(JSON.stringify(payload));
 }
 
-module.exports = { configured, readDoc, writeDoc, insertResult, people, readJson, send };
+module.exports = { configured, readDoc, writeDoc, insertResult, people, storeImage, MAX_IMAGE, readRaw, readJson, send };

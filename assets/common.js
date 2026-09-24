@@ -36,6 +36,14 @@
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  // Image questions are choice questions: the picture is either with the question (text options) or the options
+  // themselves (mode "answers": each option is an image URL). `multiple` makes them pick-all-that-apply.
+  const isChoiceQ = (q) => q.type === "single" || q.type === "multi" || q.type === "image";
+  const isMultiPick = (q) => q.type === "multi" || (q.type === "image" && !!q.multiple);
+  const imageAnswers = (q) => q.type === "image" && q.mode === "answers";
+  // image options have no text, so they're referred to as Picture 1, 2… (their order in the editor)
+  const optionText = (q, i) => (imageAnswers(q) ? "Picture " + (i + 1) : q.options[i]);
+
   /** Is this response correct for this question? `response` is an array of option indices or a string. */
   function isCorrect(q, response) {
     if (q.type === "match") {
@@ -43,7 +51,7 @@
       const n = (q.pairs || []).length;
       return n > 0 && Array.isArray(response) && response.length === n && response.every((r, i) => r === i);
     }
-    if (q.type === "single" || q.type === "multi") {
+    if (isChoiceQ(q)) {
       if (!Array.isArray(response)) return false;
       const want = [...(q.correct || [])].sort((a, b) => a - b).join(",");
       const got = [...response].sort((a, b) => a - b).join(",");
@@ -56,18 +64,18 @@
 
   function correctText(q) {
     if (q.type === "match") return (q.pairs || []).map((p) => p.left + " → " + p.right).join(" · ");
-    if (q.type === "single" || q.type === "multi") return (q.correct || []).map((i) => q.options[i]).join(" · ");
+    if (isChoiceQ(q)) return (q.correct || []).map((i) => optionText(q, i)).join(" · ");
     return (q.answers || [])[0] || "";
   }
 
   function responseText(q, response) {
     if (response == null || response === "" || (Array.isArray(response) && !response.length)) return "No answer";
     if (q.type === "match") return (q.pairs || []).map((p, i) => p.left + " → " + (q.pairs[response[i]] ? q.pairs[response[i]].right : "—")).join(" · ");
-    if (Array.isArray(response)) return response.map((i) => q.options[i]).join(" · ");
+    if (Array.isArray(response)) return response.map((i) => optionText(q, i)).join(" · ");
     return String(response);
   }
 
-  const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer", match: "Match the pairs" };
+  const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer", match: "Match the pairs", image: "Image question" };
 
   // ---------- categories ----------
   const DEFAULT_CATEGORIES = ["Team", "Culture", "Work", "Platforms", "Brand", "RMIT", "Glossary", "Aussie English", "Misc"];
@@ -127,6 +135,6 @@
     return shuffle([...picked]).slice(0, n);
   }
 
-  global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL,
+  global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
     DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, shuffle };
 })(window);

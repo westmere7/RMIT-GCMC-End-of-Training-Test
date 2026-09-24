@@ -13,7 +13,8 @@
   const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // ---------- state (per browser tab, survives a refresh) ----------
-  const save = () => { try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: carry on in memory */ } };
+  const PREVIEW = new URLSearchParams(location.search).has("preview");
+  const save = () => { if (PREVIEW) return; try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: carry on in memory */ } };
   const load = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (e) { return null; } };
   const signOut = () => { try { sessionStorage.removeItem(KEY); } catch (e) {} location.reload(); };
 
@@ -32,6 +33,7 @@
 
   // ---------- boot ----------
   async function boot() {
+    if (PREVIEW) return startPreview();
     try {
       if (!window.crypto || !crypto.subtle) throw new Error("Open this page through the local server (Start Test.bat) or a secure (https) address.");
       DATA = await A.loadData();
@@ -116,23 +118,58 @@
   $("agree").addEventListener("change", (e) => { $("startBtn").disabled = !e.target.checked; });
   $("startBtn").addEventListener("click", () => startTest(false));
 
+  function orderFor(q, st) {
+    const seq = (n) => [...Array(n).keys()];
+    if (q.type === "match") {
+      // Column B is always shuffled, and never lined up straight across from Column A
+      const n = (q.pairs || []).length, a = st.shuffleOptions ? A.shuffle(seq(n)) : seq(n);
+      let b = A.shuffle(seq(n));
+      for (let t = 0; n > 1 && t < 20 && b.some((x, k) => x === a[k]); t++) b = A.shuffle(seq(n));
+      return { a, b };
+    }
+    return q.options ? (st.shuffleOptions ? A.shuffle(seq(q.options.length)) : seq(q.options.length)) : null;
+  }
+
+  // ---------- preview: the editor shows one question here, exactly as candidates see it. Nothing is saved or sent. ----------
+  function startPreview() {
+    document.documentElement.classList.add("preview");
+    $("bootTitle").textContent = "Loading the preview…"; $("bootMsg").textContent = "";
+    addEventListener("message", (e) => {
+      if (e.origin !== location.origin || !e.data || e.data.type !== "preview") return;
+      const q = e.data.question, st = e.data.settings || {};
+      DATA = { questions: [q], settings: st }; BYID = { [q.id]: q };
+      S = { preview: true, name: e.data.name || "Preview", qids: [q.id], index: 0, responses: {}, order: [orderFor(q, st)],
+        startedAt: Date.now(), limitMs: (st.timeLimitMinutes || 10) * 60000 };
+      show("scrTest");
+      meter = meter || new Meter($("meter"), $("lamp"), LABELS());
+      meter.setThreshold(st.confettiThreshold); meter.onGreen = null;
+      meter.resize(); meter.setName(S.name); meter.setScore(0); meter.start();
+      const mins = st.timeLimitMinutes || 10;
+      $("digits").textContent = String(mins).padStart(2, "0") + ":00"; $("tFill").style.width = "100%";
+      $("timerSub").textContent = "The clock doesn't run in a preview";
+      buildDots(); renderQuestion();
+      requestAnimationFrame(() => scrollTo(0, Math.max(0, $("qCard").getBoundingClientRect().top + scrollY - 90))); // straight to the question
+    });
+    parent.postMessage({ type: "preview-ready" }, location.origin);
+  }
+  function previewResult(q, resp, correct, skipped) {
+    const ord = S.order[0];
+    let right = A.correctText(q);
+    // name options by the letters shown on screen, not their order in the editor
+    if (A.isChoiceQ(q) && Array.isArray(ord)) right = (q.correct || []).map((i) => LETTERS[ord.indexOf(i)] + (A.imageAnswers(q) ? "" : ". " + q.options[i])).join(" · ");
+    const st = $("qStatus"); st.className = "status preview-res " + (correct ? "ok" : "no");
+    st.innerHTML = (correct ? "<b>✓ Correct</b>" : `<b>${skipped ? "Skipped" : "✕ Not quite"}</b><span>Correct answer: ${A.escapeHtml(right)}</span>`)
+      + '<button type="button" class="btn ghost small" id="previewAgain">Try again</button>';
+    $("previewAgain").onclick = () => { S.responses = {}; S.order = [orderFor(q, DATA.settings || {})]; meter.setScore(0); updateProgress(); renderQuestion(); };
+  }
+
   function startTest(resume) {
     const st = DATA.settings || {};
     if (!resume) {
       S.started = true; S.startedAt = Date.now(); S.index = 0; S.responses = {};
       S.limitMs = (st.timeLimitMinutes || 10) * 60000;
       S.qids = A.drawQuestions(DATA.questions, perAttempt(), A.criticalShareOf(st));
-      const seq = (n) => [...Array(n).keys()];
-      S.order = QS().map((q) => {
-        if (q.type === "match") {
-          // Column B is always shuffled, and never lined up straight across from Column A
-          const n = (q.pairs || []).length, a = st.shuffleOptions ? A.shuffle(seq(n)) : seq(n);
-          let b = A.shuffle(seq(n));
-          for (let t = 0; n > 1 && t < 20 && b.some((x, k) => x === a[k]); t++) b = A.shuffle(seq(n));
-          return { a, b };
-        }
-        return q.options ? (st.shuffleOptions ? A.shuffle(seq(q.options.length)) : seq(q.options.length)) : null;
-      });
+      S.order = QS().map((q) => orderFor(q, st));
       save();
     }
     show("scrTest");
@@ -201,7 +238,7 @@
     $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>−${PENALTY()} marks if wrong</small>` : "1 mark";
     $("qStatus").className = "status"; $("qStatus").innerHTML = '<span class="kbd">Press <b>Enter</b> to submit</span>';
     const body = $("qBody"); body.innerHTML = "";
-    current = q.type === "single" || q.type === "multi" ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
+    current = A.isChoiceQ(q) ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
     $("qCard").dataset.type = q.type;
 
     if (q.type === "fill") {
@@ -215,6 +252,11 @@
       body.append(p); setTimeout(() => inp.focus(), 30);
     } else {
       const p = document.createElement("p"); p.className = "q-prompt"; p.textContent = q.prompt; body.append(p);
+      if (q.type === "image" && !A.imageAnswers(q) && q.image) {
+        const fig = document.createElement("figure"); fig.className = "q-figure";
+        const img = new Image(); img.src = q.image; img.alt = "The picture for this question"; img.decoding = "async";
+        fig.append(img); body.append(fig);
+      }
       if (q.type === "short") {
         const wrap = document.createElement("div"); wrap.className = "short-answer";
         wrap.innerHTML = '<input class="input" id="answerInput" maxlength="40" autocomplete="off" spellcheck="false" placeholder="Type your answer" aria-label="Your answer"><small>One word or a short phrase. Capitals and punctuation don\'t matter.</small>';
@@ -226,19 +268,22 @@
         body.append(renderMatch(q));
       } else {
         // say how many to pick, where it can't be missed: one (round keys) or all that apply (square ticks, with a running count)
-        const how = document.createElement("p"); how.className = "pick-how " + q.type; how.id = "pickHow";
-        how.innerHTML = q.type === "multi"
+        const multi = A.isMultiPick(q), pics = A.imageAnswers(q);
+        const how = document.createElement("p"); how.className = "pick-how " + (multi ? "multi" : "single"); how.id = "pickHow";
+        how.innerHTML = multi
           ? '<span class="pick-icon" aria-hidden="true"></span><b>Select all that apply</b><span class="pick-count" id="pickCount">None selected</span>'
-          : '<span class="pick-icon" aria-hidden="true"></span><b>Choose one answer</b>';
+          : `<span class="pick-icon" aria-hidden="true"></span><b>Choose one ${pics ? "picture" : "answer"}</b>`;
         body.append(how);
-        const grid = document.createElement("div"); grid.className = "options"; grid.setAttribute("role", q.type === "single" ? "radiogroup" : "group");
+        const grid = document.createElement("div"); grid.className = "options" + (pics ? " pictures" : ""); grid.setAttribute("role", multi ? "group" : "radiogroup");
         grid.setAttribute("aria-describedby", "pickHow");
         S.order[S.index].forEach((orig, k) => {
           const b = document.createElement("button");
-          b.type = "button"; b.className = "opt" + (q.type === "multi" ? " multi" : "");
-          b.setAttribute("role", q.type === "single" ? "radio" : "checkbox"); b.setAttribute("aria-checked", "false");
+          b.type = "button"; b.className = "opt" + (multi ? " multi" : "") + (pics ? " pic" : "");
+          b.setAttribute("role", multi ? "checkbox" : "radio"); b.setAttribute("aria-checked", "false");
           b.dataset.orig = orig;
-          b.innerHTML = `<span class="key">${LETTERS[k]}</span><span>${A.escapeHtml(q.options[orig])}</span>`;
+          b.innerHTML = pics
+            ? `<span class="key">${LETTERS[k]}</span><img src="${A.escapeHtml(q.options[orig])}" alt="Picture ${LETTERS[k]}" decoding="async" draggable="false">`
+            : `<span class="key">${LETTERS[k]}</span><span>${A.escapeHtml(q.options[orig])}</span>`;
           b.addEventListener("click", () => toggle(q, b));
           grid.append(b);
         });
@@ -252,7 +297,7 @@
   function toggle(q, b) {
     if (locked) return;
     const orig = +b.dataset.orig;
-    if (q.type === "single") {
+    if (!A.isMultiPick(q)) {
       current = [orig];
       for (const o of document.querySelectorAll(".opt")) o.setAttribute("aria-checked", String(+o.dataset.orig === orig));
     } else {
@@ -398,6 +443,11 @@
     const correct = !skipped && A.isCorrect(q, resp);
     S.responses[q.id] = { response: resp, correct, skipped: !!skipped, at: Date.now() };
     save();
+    if (S.preview) {
+      $("qCard").classList.add("locked"); $("submitBtn").disabled = true;
+      meter.setScore(score().p); meter.kick(correct ? 1 : -1); updateProgress();
+      return previewResult(q, resp, correct, skipped);
+    }
     $("qCard").classList.add("locked"); $("submitBtn").disabled = true;
     $("qStatus").className = "status recorded"; $("qStatus").textContent = skipped ? "Skipped" : "Answer recorded";
     meter.setScore(score().p);
@@ -419,7 +469,7 @@
     const q = QS()[S.index];
     if (e.key === "Enter" && e.target.closest && e.target.closest(".match-item")) return; // Enter picks a match item
     if (e.key === "Enter") { e.preventDefault(); if (!$("submitBtn").disabled) submit(false); return; }
-    if ((q.type === "single" || q.type === "multi") && !e.ctrlKey && !e.metaKey && !e.altKey && e.target.tagName !== "INPUT") {
+    if (A.isChoiceQ(q) && !e.ctrlKey && !e.metaKey && !e.altKey && e.target.tagName !== "INPUT") {
       const k = LETTERS.indexOf(e.key.toUpperCase());
       const opts = document.querySelectorAll(".opt");
       if (k >= 0 && k < opts.length) { e.preventDefault(); toggle(q, opts[k]); }
@@ -553,12 +603,18 @@
         const r = S.responses[q.id] || {};
         const row = document.createElement("div"); row.className = "review-item" + (r.correct ? " ok" : "");
         const given = r.timedOut ? "Not reached (time ran out)" : A.responseText(q, r.response);
+        // picture answers show the pictures themselves
+        const pics = (idx) => `<span class="rev-pics">${idx.map((k) => `<img src="${A.escapeHtml(q.options[k])}" alt="Picture ${k + 1}">`).join("")}</span>`;
+        const showPics = A.imageAnswers(q) && !r.timedOut && Array.isArray(r.response) && r.response.length;
+        const givenHtml = showPics ? pics(r.response) : A.escapeHtml(given);
+        const rightHtml = A.imageAnswers(q) ? pics(q.correct || []) : A.escapeHtml(A.correctText(q));
+        const qPic = q.type === "image" && !A.imageAnswers(q) && q.image ? `<img class="rev-qpic" src="${A.escapeHtml(q.image)}" alt="">` : "";
         row.innerHTML = `<span class="n">${String(i + 1).padStart(2, "0")}</span>
-          <div class="q">${q.critical ? `<span class="crit-chip">Critical${r.correct ? "" : ` · −${PENALTY()}`}</span> ` : ""}${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}</div>
+          <div class="q">${q.critical ? `<span class="crit-chip">Critical${r.correct ? "" : ` · −${PENALTY()}`}</span> ` : ""}${A.escapeHtml(q.prompt.replace(/_{3,}/g, "____"))}${qPic}</div>
           <div class="ans">${r.correct
-            ? `<div><label>Your answer</label><span class="right plain">${A.escapeHtml(given)} ✓</span></div>`
-            : `<div><label>Your answer</label><span class="yours${r.response == null ? " none" : ""}">${A.escapeHtml(given)}</span></div>
-               <div><label>Correct answer</label><span class="right">${A.escapeHtml(A.correctText(q))}</span></div>`}</div>`;
+            ? `<div><label>Your answer</label><span class="right plain">${givenHtml} ✓</span></div>`
+            : `<div><label>Your answer</label><span class="yours${r.response == null ? " none" : ""}">${givenHtml}</span></div>
+               <div><label>Correct answer</label><span class="right">${rightHtml}</span></div>`}</div>`;
         g.append(row);
       }
       list.append(g);

@@ -114,7 +114,7 @@
   };
 
   // ---------- questions ----------
-  const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["match", "Match pairs"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
+  const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["match", "Match pairs"], ["image", "Image question"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
   const TYPE_NAME = Object.fromEntries(TYPES.map(([v, l]) => [v, l]));
   const LETTERS = "ABCDEFGHIJ", MAX_OPTS = 8, MAX_PAIRS = 8;
   const isChoice = (t) => t === "single" || t === "multi";
@@ -123,7 +123,19 @@
   function problems(q) {
     const p = [];
     if (!String(q.prompt || "").trim()) p.push("Write the question.");
-    if (isChoice(q.type)) {
+    if (q.type === "image") {
+      const opts = q.options || [], correct = q.correct || [];
+      if (A.imageAnswers(q)) {
+        if (opts.filter(Boolean).length < 2) p.push("Upload at least two picture options.");
+        if (opts.some((o) => !o)) p.push("Every option needs a picture, or remove the empty one.");
+      } else {
+        if (!q.image) p.push("Upload the picture for the question.");
+        if (opts.filter((o) => String(o).trim()).length < 2) p.push("Add at least two options.");
+        if (opts.some((o, k) => !String(o).trim() && correct.includes(k))) p.push("A correct option is empty.");
+      }
+      if (!correct.length) p.push(q.multiple ? "Tick every correct option." : "Mark the correct option.");
+      if (!q.multiple && correct.length > 1) p.push("Only one option can be correct unless “More than one correct” is on.");
+    } else if (isChoice(q.type)) {
       const opts = (q.options || []).filter((o) => String(o).trim());
       if (opts.length < 2) p.push("Add at least two options.");
       if ((q.options || []).some((o, k) => !String(o).trim() && (q.correct || []).includes(k))) p.push("A correct option is empty.");
@@ -146,6 +158,7 @@
   function blank(type, category) {
     const q = { id: newId(), type, category, prompt: "" };
     if (isChoice(type)) { q.options = ["", "", "", ""]; q.correct = []; }
+    else if (type === "image") Object.assign(q, { mode: "question", image: "", options: ["", "", "", ""], correct: [] });
     else if (type === "match") q.pairs = [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }];
     else q.answers = [];
     return q;
@@ -297,13 +310,19 @@
   // ----- changing type, keeping what was typed -----
   function setType(q, t) {
     if (t === q.type) return;
-    const keep = stash.get(q.id) || {};
-    for (const k of ["options", "correct", "pairs", "answers"]) if (q[k] !== undefined) { keep[k] = q[k]; delete q[k]; }
-    if (isChoice(t)) {
+    const keep = stash.get(q.id) || {}, from = q.type;
+    // picture options aren't text, so they're set aside separately from text options
+    if (A.imageAnswers(q)) { keep.picOptions = q.options; keep.picCorrect = q.correct; delete q.options; delete q.correct; }
+    for (const k of ["options", "correct", "pairs", "answers", "image", "mode", "multiple"]) if (q[k] !== undefined) { keep[k] = q[k]; delete q[k]; }
+    if (isChoice(t) || t === "image") {
       q.options = keep.options || ["", "", "", ""];
       q.correct = (keep.correct || []).slice(0, t === "single" ? 1 : undefined);
+    }
+    if (t === "image") {
+      q.mode = "question"; q.image = keep.image || "";
+      if (from === "multi" || (from !== "single" && keep.multiple)) q.multiple = true;
     } else if (t === "match") q.pairs = keep.pairs || [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }];
-    else q.answers = keep.answers || [];
+    else if (!isChoice(t)) q.answers = keep.answers || [];
     stash.set(q.id, keep);
     q.type = t; lastType = t; ansRows = null;
     markDirty(); refreshRow(q); renderEditor();
@@ -329,6 +348,7 @@
     card.append(el("header.qed-head", {},
       el("div.qed-where", {}, el("p.eyebrow", { text: `Question ${numOf(q)} of ${D.questions.length}` }), el("span.qed-id", { text: "ID " + q.id })),
       el("div.qed-tools", {}, nav,
+        el("button.btn.ghost.small", { type: "button", text: "Preview", title: "See it as candidates will (Alt+P)", onclick: () => openPreview(q) }),
         el("button.btn.quiet.small", { type: "button", text: "Duplicate", onclick: () => duplicate(q) }),
         el("button.btn.quiet.small.danger", { type: "button", text: "Delete", onclick: () => remove(q) }))));
 
@@ -362,6 +382,10 @@
         prompt.value = v.slice(0, a) + "___" + v.slice(b); prompt.focus(); prompt.setSelectionRange(a + 3, a + 3); prompt.oninput();
       };
       psec.append(el("div.qed-hint", {}, ins, el("span", { html: "Candidates type into the gap where <b>___</b> sits." })));
+    }
+    if (q.type === "image" && !A.imageAnswers(q)) {
+      psec.append(el("span.qed-label.qed-label-gap", { text: "Picture" }),
+        imageSlot(q.image, (url) => { q.image = url; changed(q); }, { big: true, label: "the question's picture" }));
     }
     card.append(psec);
     requestAnimationFrame(grow);
@@ -401,14 +425,15 @@
 
   function renderAnswers(q, box) {
     box.innerHTML = "";
+    if (q.type === "image") return renderImageAnswers(q, box);
     if (isChoice(q.type)) return renderOptions(q, box);
     if (q.type === "match") return renderPairs(q, box);
     renderAccepted(q, box);
   }
 
   function renderOptions(q, box) {
-    const multi = q.type === "multi", correct = q.correct || [];
-    box.append(el("p.qed-how.t-" + q.type, { html: multi
+    const multi = A.isMultiPick(q), correct = q.correct || [];
+    box.append(el("p.qed-how.t-" + (multi ? "multi" : "single"), { html: multi
       ? `<span><b>Tick every correct option.</b> Candidates see “Select all that apply” and must pick exactly these.</span>`
       : `<span><b>Choose the one correct option.</b> Candidates see “Choose one answer”.</span>` }));
     const list = el("div.opts" + (multi ? ".multi" : ".single"), { role: multi ? "group" : "radiogroup", "aria-label": "Correct option" });
@@ -435,6 +460,122 @@
     box.append(el("div.qed-sub", {},
       el("button.btn.ghost.small", { type: "button", text: "+ Add option", disabled: q.options.length >= MAX_OPTS, onclick: () => add(q.options.length) }),
       el("span", { text: "Click a letter to mark it correct. Press Enter in an option to add another." })));
+  }
+
+  // ----- image questions -----
+  const MAX_IMAGE = 3 * 1024 * 1024;
+  // resize (longest side) and re-encode as WebP, stepping the quality down until it's under 3 MB
+  async function toWebp(file, maxSide) {
+    if (!/^image\//.test(file.type)) throw new Error("That file isn't an image.");
+    if (file.size > 40 * 1024 * 1024) throw new Error("That image is too big to open (over 40 MB).");
+    let bmp;
+    try { bmp = await createImageBitmap(file); } catch (e) { throw new Error("This browser can't open that image. Try a JPG, PNG or WebP."); }
+    const k = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.max(1, Math.round(bmp.width * k)); c.height = Math.max(1, Math.round(bmp.height * k));
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); if (bmp.close) bmp.close();
+    for (const quality of [0.85, 0.75, 0.6, 0.45, 0.3]) {
+      const out = await new Promise((r) => c.toBlob(r, "image/webp", quality));
+      if (!out || out.type !== "image/webp") throw new Error("This browser can't save WebP images. Use Chrome or Edge.");
+      if (out.size <= MAX_IMAGE) return out;
+    }
+    throw new Error("Even compressed, that image is over 3 MB. Try a smaller one.");
+  }
+  async function uploadImage(file, maxSide) {
+    const blob = await toWebp(file, maxSide);
+    let res;
+    try { res = await fetch("/api/images", { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: blob }); }
+    catch (e) { throw new Error("Couldn't reach the server to upload the image."); }
+    if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("Images can only be uploaded where the live API runs (the Vercel site or the local server).");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upload failed (" + res.status + ").");
+    return { url: data.url, bytes: blob.size };
+  }
+  const kb = (n) => (n >= 1024 * 1024 ? (n / 1024 / 1024).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
+
+  // one picture: an empty drop zone, or a preview with Replace / Remove. Click, or drop a file on it.
+  function imageSlot(url, onChange, o) {
+    o = o || {};
+    const slot = el("div.img-slot" + (o.big ? ".big" : ""));
+    const file = el("input", { type: "file", accept: "image/*", hidden: true, "aria-label": "Upload " + (o.label || "a picture") });
+    const note = el("span.img-note", { role: "status" });
+    const pick = () => file.click();
+    async function take(f) {
+      if (!f) return;
+      slot.classList.add("busy"); note.className = "img-note"; note.textContent = "Compressing to WebP and uploading…";
+      try {
+        const up = await uploadImage(f, o.big ? 1600 : 1000);
+        url = up.url; onChange(url); draw(); note.textContent = `Saved as WebP · ${kb(up.bytes)}`;
+      } catch (e) { note.className = "img-note bad"; note.textContent = e.message; }
+      slot.classList.remove("busy");
+    }
+    file.onchange = () => { take(file.files[0]); file.value = ""; };
+    slot.ondragover = (e) => { e.preventDefault(); slot.classList.add("over"); };
+    slot.ondragleave = () => slot.classList.remove("over");
+    slot.ondrop = (e) => { e.preventDefault(); slot.classList.remove("over"); take(e.dataTransfer.files[0]); };
+    function draw() {
+      slot.classList.toggle("has", !!url);
+      [...slot.children].forEach((c) => { if (c !== file && c !== note) c.remove(); });
+      if (url) {
+        slot.prepend(el("img", { src: url, alt: "" }),
+          el("div.img-tools", {},
+            el("button.btn.ghost.small", { type: "button", text: "Replace", onclick: pick }),
+            el("button.btn.quiet.small.danger", { type: "button", text: "Remove", onclick: () => { url = ""; onChange(""); note.textContent = ""; draw(); } })));
+      } else {
+        slot.prepend(el("button.img-drop", { type: "button", onclick: pick,
+          html: "<b>Upload a picture</b><span>or drop one here · JPG, PNG or WebP · saved as WebP under 3 MB</span>" }));
+      }
+    }
+    slot.append(file, note); draw();
+    return slot;
+  }
+
+  function setImageMode(q, mode) {
+    if ((q.mode || "question") === mode) return;
+    const keep = stash.get(q.id) || {};
+    if (mode === "answers") {
+      keep.textOptions = q.options; keep.textCorrect = q.correct; keep.image = q.image; delete q.image;
+      q.options = keep.picOptions || ["", "", "", ""]; q.correct = keep.picCorrect || [];
+    } else {
+      keep.picOptions = q.options; keep.picCorrect = q.correct;
+      q.options = keep.textOptions || ["", "", "", ""]; q.correct = keep.textCorrect || []; q.image = keep.image || "";
+    }
+    stash.set(q.id, keep); q.mode = mode;
+    markDirty(); refreshRow(q); renderEditor();
+  }
+
+  function renderImageAnswers(q, box) {
+    const pics = A.imageAnswers(q);
+    const mode = el("div.mode-seg", { role: "radiogroup", "aria-label": "Where the picture goes" });
+    for (const [v, l, d] of [["question", "Picture with the question", "Text options below it"], ["answers", "Pictures as the answers", "Each option is a picture, no text"]]) {
+      mode.append(el("button.mode-b", { type: "button", role: "radio", "aria-checked": String((q.mode || "question") === v), html: `<b>${l}</b><small>${d}</small>`, onclick: () => setImageMode(q, v) }));
+    }
+    const many = el("label.many-toggle", {}, el("input", { type: "checkbox", checked: !!q.multiple, onchange: (e) => {
+      if (e.target.checked) q.multiple = true; else { delete q.multiple; q.correct = (q.correct || []).slice(0, 1); }
+      redrawAnswers(q);
+    } }), el("span", { html: "<b>More than one correct</b> · candidates select all that apply" }));
+    box.append(el("div.img-controls", {}, mode, many));
+    if (pics) renderPicOptions(q, box); else renderOptions(q, box);
+  }
+
+  function renderPicOptions(q, box) {
+    const multi = A.isMultiPick(q), correct = q.correct || [], MAX_PICS = 6;
+    box.append(el("p.qed-how.t-" + (multi ? "multi" : "single"), { html: `<span><b>Upload a picture for each option, then click ${multi ? "every correct letter" : "the correct letter"}.</b> Picture options can't have text.</span>` }));
+    const grid = el("div.pic-opts" + (multi ? ".multi" : ".single"), { role: multi ? "group" : "radiogroup", "aria-label": "Picture options" });
+    q.options.forEach((url, k) => {
+      const on = correct.includes(k);
+      const mark = el("button.opt-mark", { type: "button", role: multi ? "checkbox" : "radio", "aria-checked": String(on), id: `m-${q.id}-${k}`,
+        title: on ? "Correct answer" : "Mark as correct", "aria-label": `Picture ${LETTERS[k]} is correct`, html: `<span class="l">${LETTERS[k]}</span>` });
+      mark.onclick = () => { q.correct = multi ? (on ? correct.filter((x) => x !== k) : [...correct, k].sort((a, b) => a - b)) : [k]; redrawAnswers(q, mark.id); };
+      const x = el("button.icon-btn.danger", { type: "button", text: "✕", title: "Remove this option", "aria-label": `Remove picture ${LETTERS[k]}`, disabled: q.options.length <= 2 });
+      x.onclick = () => { q.options.splice(k, 1); q.correct = correct.filter((c) => c !== k).map((c) => (c > k ? c - 1 : c)); redrawAnswers(q); };
+      grid.append(el("div.pic-tile" + (on ? ".correct" : ""), {},
+        el("div.pic-top", {}, mark, on ? el("span.opt-tag", { text: "Correct" }) : el("span.opt-tag"), x),
+        imageSlot(url, (u) => { q.options[k] = u; changed(q); }, { label: "picture " + LETTERS[k] })));
+    });
+    box.append(grid);
+    box.append(el("div.qed-sub", {},
+      el("button.btn.ghost.small", { type: "button", text: "+ Add picture option", disabled: q.options.length >= MAX_PICS, onclick: () => { q.options.push(""); redrawAnswers(q); } }),
+      el("span", { text: `Up to ${MAX_PICS} pictures. Candidates see them shuffled when shuffling is on.` })));
   }
 
   function renderPairs(q, box) {
@@ -485,6 +626,40 @@
       el("div.tester", {}, el("label", { for: "tryIt", text: "Try an answer" }), test, res)));
   }
 
+  // ----- preview: the open question in the real test page, unsaved edits included; nothing is recorded -----
+  let closePreview = () => {};
+  function openPreview(q) {
+    closePreview();
+    const W = 1280; // the test's desktop layout, scaled down to fit
+    const frame = el("iframe", { src: "./?preview=1", title: "Preview of question " + numOf(q) });
+    const holder = el("div.pv-frame", {}, frame);
+    const p = problems(q);
+    const shut = el("button.btn.small", { type: "button", text: "Close" });
+    const shell = el("div.pv", { role: "dialog", "aria-modal": "true", "aria-label": "Preview of question " + numOf(q) },
+      el("div.pv-in", {},
+        el("div.pv-bar", {},
+          el("div.pv-title", { html: `<b>Preview · Question ${numOf(q)}</b><span>As candidates see it, with your unsaved changes. Answer it to check the marking; nothing is recorded.</span>` }),
+          shut),
+        p.length ? el("p.pv-warn", { text: "Still needs fixing: " + p.join(" ") }) : null,
+        holder));
+    const fit = () => { const k = Math.min(1, holder.clientWidth / W); frame.style.width = W + "px"; frame.style.height = holder.clientHeight / k + "px"; frame.style.transform = `scale(${k})`; };
+    const onMsg = (e) => {
+      if (e.source !== frame.contentWindow || !e.data || e.data.type !== "preview-ready") return;
+      frame.contentWindow.postMessage({ type: "preview", question: JSON.parse(JSON.stringify(q)), settings: D.settings, name: "Preview" }, location.origin);
+    };
+    const onKey = (e) => { if (e.key === "Escape") closePreview(); };
+    closePreview = () => {
+      shell.remove(); document.body.classList.remove("pv-open");
+      removeEventListener("message", onMsg); removeEventListener("keydown", onKey, true); removeEventListener("resize", fit);
+      closePreview = () => {};
+    };
+    shut.onclick = closePreview;
+    shell.onclick = (e) => { if (e.target === shell) closePreview(); };
+    addEventListener("message", onMsg); addEventListener("keydown", onKey, true); addEventListener("resize", fit);
+    document.body.append(shell); document.body.classList.add("pv-open");
+    fit(); shut.focus();
+  }
+
   // ---------- save / load ----------
   async function collect() {
     const bad = D.questions.filter((q) => problems(q).length);
@@ -494,7 +669,8 @@
       throw new Error(`${bad.length} ${bad.length > 1 ? "questions need" : "question needs"} fixing before saving. They're listed on the left.`);
     }
     D.questions.forEach((q) => {
-      if (isChoice(q.type)) q.options = q.options.map((o) => String(o).trim());
+      if (isChoice(q.type) || (q.type === "image" && !A.imageAnswers(q))) q.options = q.options.map((o) => String(o).trim());
+      if (q.type === "image" && !q.multiple) delete q.multiple;
       if (q.type === "match") q.pairs = q.pairs.map((x) => ({ left: String(x.left).trim(), right: String(x.right).trim() })).filter((x) => x.left && x.right);
     });
     return D;
@@ -538,6 +714,7 @@
   // Ctrl/⌘+S saves; Alt+N starts a new question (same category and type as the open one)
   addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); if (!$("saveBtn").disabled) save(false); }
+    else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyP" && D && byId(selId)) { e.preventDefault(); openPreview(byId(selId)); }
     else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN" && D) {
       e.preventDefault(); setTab("questions"); const q = byId(selId); newQuestion(q ? { cat: A.categoryOf(q), type: q.type } : {});
     }

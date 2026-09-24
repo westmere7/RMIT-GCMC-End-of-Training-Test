@@ -6,9 +6,11 @@ Serves the site from this folder and adds a tiny API:
                            409 if someone saved since you loaded (send ?force=1 to overwrite)
   POST /api/results     -> save an attempt to data/results/
   GET/POST/DELETE /api/people -> first names by email fingerprint (data/people.json)
+  POST /api/images      -> save a WebP (up to 3 MB) to data/images/, returns its path
 
 Standard library only. Run:  python server.py   (then open http://localhost:8765/)
 """
+import hashlib
 import json
 import os
 import shutil
@@ -22,6 +24,7 @@ DATA = os.path.join(ROOT, "data")
 QUESTIONS = os.path.join(DATA, "questions.json")
 PEOPLE = os.path.join(DATA, "people.json")
 HEX64 = set("0123456789abcdef")
+MAX_IMAGE = 3 * 1024 * 1024
 
 
 def load_people():
@@ -46,6 +49,8 @@ def stamp():
 
 
 class Handler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".webp": "image/webp"}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=ROOT, **kwargs)
 
@@ -115,6 +120,18 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(200, {"ok": True})
 
     def do_POST(self):
+        if self.path.split("?")[0] == "/api/images":
+            length = int(self.headers.get("Content-Length") or 0)
+            if length > MAX_IMAGE:
+                return self._json(413, {"error": "Images can be up to 3 MB."})
+            buf = self.rfile.read(length)
+            if len(buf) < 12 or buf[:4] != b"RIFF" or buf[8:12] != b"WEBP":
+                return self._json(415, {"error": "Only WebP images can be uploaded."})
+            name = hashlib.sha256(buf).hexdigest()[:32] + ".webp"
+            os.makedirs(os.path.join(DATA, "images"), exist_ok=True)
+            with open(os.path.join(DATA, "images", name), "wb") as f:
+                f.write(buf)
+            return self._json(200, {"url": "data/images/" + name, "bytes": len(buf)})
         if self.path.split("?")[0] == "/api/people":
             body = self._read_body()
             name, h = str(body.get("name") or "").strip()[:40], body.get("email_sha256")

@@ -17,7 +17,7 @@ try {
 } catch (e) { /* no .env: the API falls back to the bundled questions and can't save */ }
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8", ".png": "image/png", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
+  ".json": "application/json; charset=utf-8", ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".ico": "image/x-icon" };
 
 // ---- live reload: open tabs refresh when a file changes (CSS is swapped in place, no reload)
 const clients = new Set();

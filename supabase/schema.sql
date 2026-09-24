@@ -74,4 +74,9 @@ create or replace view public.assessment_leaderboard with (security_invoker = tr
   from public.assessment_results r
   order by r.created_at desc;
 
-insert into public.assessment_migrations (name) values ('001_initial'), ('002_people_and_category_scores') on conflict do nothing;
+-- Question images: a public bucket, WebP only, up to 3 MB each (api/images.js uploads to it).
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('assessment-images', 'assessment-images', true, 3145728, array['image/webp'])
+on conflict (id) do nothing;
+
+insert into public.assessment_migrations (name) values ('001_initial'), ('002_people_and_category_scores'), ('003_images_bucket') on conflict do nothing;

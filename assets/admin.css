@@ -215,6 +215,58 @@
 .ed-loading.failed .spinner { animation: none; border-color: var(--red); border-top-color: var(--red); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- image questions ---------- */
+.t-image.qrow-type { background: #e3f1f4; color: #0b5c6b; }
+.qed-label-gap { margin-top: 18px; }
+.img-controls { display: grid; gap: 12px; margin-bottom: 16px; }
+.mode-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mode-b { display: grid; gap: 2px; text-align: left; padding: 11px 14px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; color: var(--muted); font-size: 12px; }
+.mode-b b { font-size: 14px; color: var(--ink); }
+.mode-b:hover { border-color: var(--navy-30); }
+.mode-b[aria-checked="true"] { border-color: var(--navy); background: var(--sel); box-shadow: inset 0 0 0 1px var(--navy); }
+.many-toggle { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); cursor: pointer; }
+.many-toggle b { color: var(--ink); }
+.many-toggle input { width: 18px; height: 18px; margin: 0; accent-color: var(--navy); }
+
+.img-slot { position: relative; display: grid; gap: 8px; }
+.img-drop {
+  display: grid; gap: 4px; place-items: center; text-align: center; width: 100%; min-height: 150px; padding: 18px;
+  border: 1.5px dashed var(--navy-30); border-radius: var(--radius); background: var(--grey-50); color: var(--muted); font-size: 12px;
+}
+.img-drop b { font-size: 14px; color: var(--navy); }
+.img-drop:hover, .img-slot.over .img-drop { border-color: var(--navy); background: #eef0fa; }
+.img-slot.big .img-drop { min-height: 190px; }
+.img-slot img { display: block; width: 100%; max-height: 200px; object-fit: contain; background: var(--grey-50); border: 1px solid var(--line); border-radius: var(--radius); }
+.img-slot.big img { max-height: 320px; }
+.img-slot.over img { outline: 2px dashed var(--navy); outline-offset: 2px; }
+.img-tools { display: flex; gap: 6px; }
+.img-slot.busy { opacity: 0.6; pointer-events: none; }
+.img-note { font-size: 12px; color: var(--muted); min-height: 0; }
+.img-note:empty { display: none; }
+.img-note.bad { color: var(--red-dark); font-weight: 700; }
+
+.pic-opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.pic-tile { display: grid; gap: 10px; align-content: start; padding: 12px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; }
+.pic-tile.correct { border-color: var(--ok); background: #f1f8f4; }
+.pic-top { display: grid; grid-template-columns: 40px 1fr 34px; align-items: center; gap: 8px; }
+.pic-opts.multi .opt-mark { border-radius: 4px; }
+.pic-opts.multi .opt-mark[aria-checked="true"]::after {
+  content: ""; position: absolute; right: -6px; top: -6px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--ok);
+  background: #fff no-repeat center / 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8.5l3.5 3.5 7.5-8' fill='none' stroke='%231f7a4d' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.pic-tile .img-drop { min-height: 140px; }
+
+/* ---------- question preview ---------- */
+body.pv-open { overflow: hidden; }
+.pv { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 40, 0.55); display: grid; place-items: center; padding: 24px; animation: rise 0.18s ease both; }
+.pv-in { width: min(1320px, 100%); height: min(900px, 100%); display: flex; flex-direction: column; background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: 0 30px 80px -30px rgba(0, 0, 40, 0.6); }
+.pv-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
+.pv-title { display: grid; gap: 2px; font-size: 13px; color: var(--muted); }
+.pv-title b { font-size: 16px; color: var(--ink); }
+.pv-warn { margin: 0; padding: 10px 20px; background: #fdeaea; color: var(--red-dark); font-size: 13px; font-weight: 700; }
+.pv-frame { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--grey-50); }
+.pv-frame iframe { position: absolute; top: 0; left: 0; border: 0; transform-origin: 0 0; background: var(--grey-50); }
+
 /* ---------- narrower screens ---------- */
 @media (max-width: 1240px) {
   .qx { grid-template-columns: 340px minmax(0, 1fr); }
