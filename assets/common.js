@@ -95,16 +95,38 @@
 
   function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-  /** Draw n questions: at least one from every category (when n allows), the rest at random, in random order. */
-  function drawQuestions(questions, n) {
-    const pool = shuffle(questions.slice()), byCat = new Map();
+  /** Share of each attempt (in %) that is critical questions, from the settings; 15 when unset. */
+  function criticalShareOf(settings) {
+    const v = settings && settings.criticalShare;
+    return v == null || v === "" || isNaN(+v) ? 15 : Math.max(0, Math.min(100, +v));
+  }
+
+  /** Draw n questions: at least one from every category (when n allows), with about `criticalShare`% of them critical
+      (as many as the bank has), the rest at random, in random order. */
+  function drawQuestions(questions, n, criticalShare) {
+    const pool = shuffle(questions.slice());
+    n = Math.min(n, pool.length);
+    const crit = pool.filter((q) => q.critical), plain = pool.filter((q) => !q.critical);
+    const share = criticalShare == null ? 15 : criticalShare;
+    // how many critical: the share of n, but never more than the bank has, and enough to fill n if plain ones run out
+    const k = Math.max(n - plain.length, Math.min(crit.length, Math.round((n * share) / 100)));
+    const picked = new Set(), taken = { crit: 0, plain: 0 };
+    const take = (q) => { picked.add(q.id); taken[q.critical ? "crit" : "plain"]++; };
+    const byCat = new Map();
     for (const q of pool) { const c = categoryOf(q); if (!byCat.has(c)) byCat.set(c, []); byCat.get(c).push(q); }
-    const picked = new Set();
-    if (n >= byCat.size) for (const list of byCat.values()) picked.add(list[0].id);
-    for (const q of pool) { if (picked.size >= n) break; picked.add(q.id); }
+    if (n >= byCat.size) {
+      for (const list of byCat.values()) {
+        // cover the category with whichever kind still has room, so the critical count stays on target
+        const wantCrit = taken.crit < k && (taken.plain >= n - k || !list.some((q) => !q.critical));
+        take(list.find((q) => !!q.critical === wantCrit) || list[0]);
+      }
+    }
+    for (const q of crit) { if (taken.crit >= k) break; if (!picked.has(q.id)) take(q); }
+    for (const q of plain) { if (picked.size >= n) break; if (!picked.has(q.id)) take(q); }
+    for (const q of pool) { if (picked.size >= n) break; if (!picked.has(q.id)) take(q); }
     return shuffle([...picked]).slice(0, n);
   }
 
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, shuffle };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, shuffle };
 })(window);

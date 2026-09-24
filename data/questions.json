@@ -22,7 +22,8 @@
     "criticalPenalty": 3,
     "timeLimitMinutes": 15,
     "confettiThreshold": 95,
-    "questionsPerAttempt": 45
+    "questionsPerAttempt": 45,
+    "criticalShare": 15
   },
   "questions": [
     {
@@ -102,7 +103,7 @@
       "id": "q07",
       "type": "multi",
       "topic": "Definition of Done",
-      "prompt": "A task is only really \"Done\" when… (select all that apply)",
+      "prompt": "A task is only really \"Done\" when…",
       "correct": [
         0,
         1,
@@ -215,7 +216,7 @@
       "id": "q14",
       "type": "multi",
       "topic": "INTON style",
-      "prompt": "Which of these are INTON style rules? (select all that apply)",
+      "prompt": "Which of these are INTON style rules?",
       "correct": [
         0,
         1,
@@ -351,7 +352,7 @@
       "id": "q22",
       "type": "multi",
       "topic": "Quality control",
-      "prompt": "Which checks belong on the quality-control checklist before you send a file? (select all that apply)",
+      "prompt": "Which checks belong on the quality-control checklist before you send a file?",
       "correct": [
         0,
         1,
@@ -1014,7 +1015,7 @@
     {
       "id": "q72",
       "type": "multi",
-      "prompt": "Which of these do you take to Đức rather than Danh? (select all that apply)",
+      "prompt": "Which of these do you take to Đức rather than Danh?",
       "correct": [
         3,
         5
@@ -1103,7 +1104,7 @@
     {
       "id": "q80",
       "type": "multi",
-      "prompt": "Which of these are Victorian public holidays to keep in mind? (select all that apply)",
+      "prompt": "Which of these are Victorian public holidays to keep in mind?",
       "correct": [
         0,
         1
@@ -1209,7 +1210,7 @@
     {
       "id": "q90",
       "type": "multi",
-      "prompt": "Each round of campaign assets, which three places do you update? (select all that apply)",
+      "prompt": "Each round of campaign assets, which three places do you update?",
       "correct": [
         1,
         4,
@@ -1336,7 +1337,7 @@
     {
       "id": "q99",
       "type": "multi",
-      "prompt": "Which belong on the digital display checklist? (select all that apply)",
+      "prompt": "Which belong on the digital display checklist?",
       "correct": [
         1,
         2,
@@ -1809,7 +1810,7 @@
     {
       "id": "q141",
       "type": "multi",
-      "prompt": "Which rules apply to Indigenous artwork? (select all that apply)",
+      "prompt": "Which rules apply to Indigenous artwork?",
       "correct": [
         0,
         3,
@@ -2263,7 +2264,7 @@
     {
       "id": "q173",
       "type": "multi",
-      "prompt": "Which markets does INTON cover? (select all that apply)",
+      "prompt": "Which markets does INTON cover?",
       "correct": [
         0,
         1,
@@ -2342,7 +2343,7 @@
     {
       "id": "q182",
       "type": "multi",
-      "prompt": "Which are China platforms you'll design for on INTON? (select all that apply)",
+      "prompt": "Which are China platforms you'll design for on INTON?",
       "correct": [
         0,
         2,

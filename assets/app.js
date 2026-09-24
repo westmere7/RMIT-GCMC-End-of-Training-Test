@@ -121,7 +121,7 @@
     if (!resume) {
       S.started = true; S.startedAt = Date.now(); S.index = 0; S.responses = {};
       S.limitMs = (st.timeLimitMinutes || 10) * 60000;
-      S.qids = A.drawQuestions(DATA.questions, perAttempt());
+      S.qids = A.drawQuestions(DATA.questions, perAttempt(), A.criticalShareOf(st));
       const seq = (n) => [...Array(n).keys()];
       S.order = QS().map((q) => {
         if (q.type === "match") {

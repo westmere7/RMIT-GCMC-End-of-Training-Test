@@ -49,6 +49,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 ## Critical questions
 
 - **Tick "Critical"** on any question in the editor. The candidate sees it flagged in red, with the penalty.
+- **Each attempt is about 15% critical questions** (7 of 45), changeable in Settings under "Critical questions per attempt". It never goes above the number of critical questions in the bank.
 - **A wrong or skipped critical question loses extra marks**: 3 by default, changeable in Settings. The score is (correct − penalties) ÷ questions, never below 0%.
 - **Results list the critical errors.** Each result row in Supabase also stores `criticalErrors`, `marks` and `percent`.
 

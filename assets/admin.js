@@ -45,6 +45,8 @@
     $("sPer").value = s.questionsPerAttempt || 30; $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(1, +e.target.value || 30); markDirty(); renderBank(); };
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
     $("sPen").value = s.criticalPenalty == null ? 3 : s.criticalPenalty; $("sPen").oninput = (e) => { s.criticalPenalty = Math.max(0, +e.target.value || 0); markDirty(); renderBank(); };
+    $("sCritShare").value = A.criticalShareOf(s);
+    $("sCritShare").oninput = (e) => { const v = e.target.value; s.criticalShare = v === "" ? 15 : Math.max(0, Math.min(100, +v || 0)); markDirty(); renderBank(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };
     s.categories = A.categoriesOf(s);
     $("sCats").value = s.categories.join(", ");
@@ -62,6 +64,8 @@
     const stat = (v, k, sub) => `<div class="bstat"><b>${v}</b><span>${k}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
     $("bankStats").innerHTML = stat(n, "Questions in the bank") + stat(cats.size, "Categories") + stat(per, "Per attempt", Math.round((100 * per) / Math.max(1, n)) + "% of the bank")
       + stat(nc, "Critical", "−" + pen + " marks each if wrong");
+    const share = A.criticalShareOf(D.settings), want = Math.round((per * share) / 100), k = Math.min(nc, want);
+    $("critShareHelp").textContent = `About ${k} of ${per} questions` + (want > nc ? `. Only ${nc} critical ${nc === 1 ? "question is" : "questions are"} in the bank, so that's the most an attempt can have.` : `, picked from the ${nc} critical ones in the bank.`);
     $("perHelp").textContent = per >= cats.size ? "At least one from every category, the rest at random." : `Fewer than the ${cats.size} categories, so some categories won't appear.`;
     const counts = new Map(); D.questions.forEach((q) => { const c = A.categoryOf(q); counts.set(c, (counts.get(c) || 0) + 1); });
     const listed = A.categoriesOf(D.settings);
