@@ -2,8 +2,8 @@
   "version": 1,
   "settings": {
     "gauge": {
-      "left": "HR would like a word...",
-      "right": "Welcome to the team"
+      "left": "Let's talk...",
+      "right": "Welcome to GCMC"
     },
     "title": "End-of-Training Assessment",
     "subtitle": "GCMC Creative Services · Vietnam",
@@ -305,17 +305,29 @@
     },
     {
       "id": "q20",
-      "type": "single",
-      "topic": "Glossary",
-      "prompt": "In our glossary, what does \"FA\" stand for?",
-      "correct": [
-        0
-      ],
-      "options": [
-        "Final Artwork",
-        "Formal Approval",
-        "File Archive",
-        "Full Assets"
+      "type": "match",
+      "prompt": "Match each abbreviation from our glossary to what it stands for.",
+      "pairs": [
+        {
+          "left": "FA",
+          "right": "Final Artwork"
+        },
+        {
+          "left": "SL",
+          "right": "School leavers"
+        },
+        {
+          "left": "NSL",
+          "right": "Non-school leavers"
+        },
+        {
+          "left": "PG",
+          "right": "Postgraduate"
+        },
+        {
+          "left": "IA",
+          "right": "Interest Area"
+        }
       ],
       "category": "Glossary"
     },
@@ -500,17 +512,21 @@
     },
     {
       "id": "q33",
-      "type": "single",
-      "topic": "Glossary",
-      "prompt": "What is VTAC?",
-      "correct": [
-        0
-      ],
-      "options": [
-        "The Victorian Tertiary Admissions Centre",
-        "The Vietnam Tertiary Admissions Council",
-        "The Victorian Teaching Accreditation Committee",
-        "The Visa and Travel Advisory Centre"
+      "type": "match",
+      "prompt": "Match each admissions term to what it means.",
+      "pairs": [
+        {
+          "left": "ATAR",
+          "right": "A rank showing a Year 12 student's position for university admission"
+        },
+        {
+          "left": "VTAC",
+          "right": "The Victorian Tertiary Admissions Centre"
+        },
+        {
+          "left": "COP",
+          "right": "Change of Preference"
+        }
       ],
       "category": "Glossary"
     },
@@ -616,20 +632,29 @@
     },
     {
       "id": "q41",
-      "type": "multi",
-      "topic": "Platforms",
-      "prompt": "Which tool-and-job pairings are correct? (select all that apply)",
-      "correct": [
-        0,
-        1,
-        2
-      ],
-      "options": [
-        "Monday.com: manage",
-        "Frame.io: review",
-        "SharePoint: archive",
-        "Teams: store FAs",
-        "Email: archive working files"
+      "type": "match",
+      "prompt": "Match each tool to its job.",
+      "pairs": [
+        {
+          "left": "Monday.com",
+          "right": "Managing the work and logging decisions"
+        },
+        {
+          "left": "Frame.io",
+          "right": "Reviewing designs with stakeholders"
+        },
+        {
+          "left": "SharePoint",
+          "right": "Archiving FAs and working files"
+        },
+        {
+          "left": "ServiceNow",
+          "right": "Raising IT issues"
+        },
+        {
+          "left": "Workday",
+          "right": "Requesting leave and finding payslips"
+        }
       ],
       "category": "Platforms"
     },
@@ -934,16 +959,25 @@
     },
     {
       "id": "q65",
-      "type": "single",
-      "prompt": "A brief you've been assigned is unclear. Who do you ask first?",
-      "correct": [
-        2
-      ],
-      "options": [
-        "Another squad's designer",
-        "Đức",
-        "Danh",
-        "The Account Manager"
+      "type": "match",
+      "prompt": "Match each situation to the right person.",
+      "pairs": [
+        {
+          "left": "A brief you've been assigned is unclear",
+          "right": "Danh"
+        },
+        {
+          "left": "Your growth and wellbeing",
+          "right": "Đức"
+        },
+        {
+          "left": "Checking a new request, picking the team and coding the ticket",
+          "right": "The Account Manager"
+        },
+        {
+          "left": "Running the fortnightly GCMC planning meeting",
+          "right": "Liv, the GCMC Coordinator"
+        }
       ],
       "category": "Team"
     },
@@ -1265,7 +1299,8 @@
         "A verbal OK in a call",
         "Written, named and dated, like 'Approved JT 19/05'"
       ],
-      "category": "Work"
+      "category": "Work",
+      "critical": true
     },
     {
       "id": "q97",
@@ -1379,16 +1414,21 @@
     },
     {
       "id": "q108",
-      "type": "single",
-      "prompt": "Which channel typically gets a reply in 1–3 hours and suits urgent quick questions?",
-      "correct": [
-        2
-      ],
-      "options": [
-        "Email",
-        "Monday.com",
-        "Teams",
-        "The asset tracker"
+      "type": "match",
+      "prompt": "Match each channel to the job it's for.",
+      "pairs": [
+        {
+          "left": "Teams",
+          "right": "Urgent, quick questions (a reply in 1–3 hours)"
+        },
+        {
+          "left": "Email",
+          "right": "INTON design rounds, feedback and approvals"
+        },
+        {
+          "left": "Monday.com",
+          "right": "Domestic's main channel"
+        }
       ],
       "category": "Platforms"
     },
@@ -2190,16 +2230,33 @@
     },
     {
       "id": "q172",
-      "type": "single",
-      "prompt": "What does \"brekkie\" mean?",
-      "correct": [
-        2
-      ],
-      "options": [
-        "A short break",
-        "A broken file",
-        "Breakfast",
-        "A brief"
+      "type": "match",
+      "prompt": "Match each phrase to what your Melbourne stakeholder means.",
+      "pairs": [
+        {
+          "left": "\"This arvo\"",
+          "right": "This afternoon"
+        },
+        {
+          "left": "\"Take a squiz\"",
+          "right": "Have a quick look"
+        },
+        {
+          "left": "\"Flat out\"",
+          "right": "Very busy"
+        },
+        {
+          "left": "\"Stoked\"",
+          "right": "Very happy"
+        },
+        {
+          "left": "\"Too easy\"",
+          "right": "Sure, no problem"
+        },
+        {
+          "left": "\"Brekkie\"",
+          "right": "Breakfast"
+        }
       ],
       "category": "Aussie English"
     },
@@ -2344,111 +2401,6 @@
         "Semester 1 intake"
       ],
       "category": "RMIT"
-    },
-    {
-      "id": "q186",
-      "type": "match",
-      "category": "Platforms",
-      "prompt": "Match each platform to what we use it for.",
-      "pairs": [
-        {
-          "left": "Monday.com",
-          "right": "Managing requests and logging decisions"
-        },
-        {
-          "left": "Frame.io",
-          "right": "Reviewing designs with stakeholders"
-        },
-        {
-          "left": "SharePoint",
-          "right": "Archiving FAs and working files"
-        },
-        {
-          "left": "ServiceNow",
-          "right": "Raising IT issues"
-        },
-        {
-          "left": "Workday",
-          "right": "Requesting leave and finding payslips"
-        }
-      ]
-    },
-    {
-      "id": "q187",
-      "type": "match",
-      "category": "Platforms",
-      "prompt": "Match each channel to the job it's for.",
-      "pairs": [
-        {
-          "left": "Teams",
-          "right": "An urgent, quick question"
-        },
-        {
-          "left": "Email",
-          "right": "INTON design rounds, feedback and approvals"
-        },
-        {
-          "left": "Monday.com",
-          "right": "Domestic's main channel"
-        }
-      ]
-    },
-    {
-      "id": "q188",
-      "type": "match",
-      "category": "Glossary",
-      "prompt": "Match each abbreviation to what it stands for.",
-      "pairs": [
-        {
-          "left": "FA",
-          "right": "Final Artwork"
-        },
-        {
-          "left": "SL",
-          "right": "School leavers"
-        },
-        {
-          "left": "NSL",
-          "right": "Non-school leavers"
-        },
-        {
-          "left": "PG",
-          "right": "Postgraduate"
-        },
-        {
-          "left": "IA",
-          "right": "Interest Area"
-        }
-      ]
-    },
-    {
-      "id": "q189",
-      "type": "match",
-      "category": "Aussie English",
-      "prompt": "Match each phrase to what your stakeholder means.",
-      "pairs": [
-        {
-          "left": "\"This arvo\"",
-          "right": "This afternoon"
-        },
-        {
-          "left": "\"Take a squiz\"",
-          "right": "Have a quick look"
-        },
-        {
-          "left": "\"Flat out\"",
-          "right": "Very busy"
-        },
-        {
-          "left": "\"Stoked\"",
-          "right": "Very happy"
-        },
-        {
-          "left": "\"Too easy\"",
-          "right": "Sure, no problem"
-        }
-      ]
     }
-  ],
-  "candidates": []
+  ]
 }

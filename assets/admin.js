@@ -110,20 +110,11 @@
   };
 
   // ---------- questions ----------
-  // [value, name, what the candidate does]
-  const TYPES = [
-    ["single", "Single choice", "Picks one"],
-    ["multi", "Multi choice", "Ticks all that apply"],
-    ["match", "Match pairs", "Links A to B"],
-    ["fill", "Fill in the blank", "Types the gap"],
-    ["short", "Short answer", "Types a reply"],
-  ];
+  const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["match", "Match pairs"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
   const TYPE_NAME = Object.fromEntries(TYPES.map(([v, l]) => [v, l]));
   const LETTERS = "ABCDEFGHIJ", MAX_OPTS = 8, MAX_PAIRS = 8;
   const isChoice = (t) => t === "single" || t === "multi";
   const isText = (t) => t === "fill" || t === "short";
-  // a small glyph per type, so single and multi (and the rest) read differently at a glance
-  const typeIcon = (t) => `<i class="ti ti-${t}" aria-hidden="true"></i>`;
 
   function problems(q) {
     const p = [];
@@ -230,7 +221,7 @@
     b.setAttribute("aria-current", q.id === selId ? "true" : "false");
     b.innerHTML = `<span class="qrow-n">${numOf(q)}</span>
       <span class="qrow-body"><span class="qrow-text${text ? "" : " empty"}">${esc(text || "New question")}</span>
-      <span class="qrow-meta"><span class="qrow-type t-${q.type}">${typeIcon(q.type)}${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
+      <span class="qrow-meta"><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
   }
   function refreshRow(q) { const b = rowOf(q.id); if (b) paintRow(b, q); renderFilterCounts(); }
   const rowOf = (id) => $("qList").querySelector(`.qrow[data-id="${CSS.escape(id)}"]`);
@@ -337,17 +328,21 @@
         el("button.btn.quiet.small", { type: "button", text: "Duplicate", onclick: () => duplicate(q) }),
         el("button.btn.quiet.small.danger", { type: "button", text: "Delete", onclick: () => remove(q) }))));
 
-    // details: category and critical
+    // details: category, type and critical on one row
     const cat = el("select.input", { id: "qCat" });
     const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
     for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
     cat.onchange = () => { q.category = cat.value; markDirty(); renderList(); $("addAnother").textContent = `+ Add another to ${q.category}`; const r = rowOf(q.id); if (r) r.scrollIntoView({ block: "nearest" }); };
     const crit = el("label.crit-toggle", { title: "A wrong or skipped answer on a critical question loses extra marks" });
     const cb = el("input", { type: "checkbox", checked: !!q.critical });
-    crit.append(cb, el("span", { html: "<b>Critical</b> · loses " + (D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty) + " marks if wrong" }));
+    crit.append(cb, el("span", { html: "<b>Critical</b> · −" + (D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty) + " marks if wrong" }));
     cb.onchange = () => { if (cb.checked) q.critical = true; else delete q.critical; card.classList.toggle("critical", cb.checked); markDirty(); refreshRow(q); renderBank(); };
+    const type = el("select.input", { id: "qType" });
+    for (const [v, l] of TYPES) type.add(new Option(l, v, false, v === q.type));
+    type.onchange = () => { setType(q, type.value); const t = $("qType"); if (t) t.focus(); };
     card.append(el("div.qed-sec.qed-details", {},
       el("div.field", {}, el("label", { for: "qCat", text: "Category" }), cat),
+      el("div.field", {}, el("label", { for: "qType", text: "Type" }), type),
       el("div.field", {}, el("span.lbl", { text: "Weighting" }), crit)));
 
     // the question itself
@@ -367,15 +362,9 @@
     card.append(psec);
     requestAnimationFrame(grow);
 
-    // the answer: type first, then what counts as right
-    const seg = el("div.seg", { role: "radiogroup", "aria-label": "Question type" });
-    for (const [v, l, d] of TYPES) {
-      const b = el("button.seg-b.t-" + v, { type: "button", role: "radio", "aria-checked": String(v === q.type), html: `${typeIcon(v)}<span><b>${l}</b><small>${d}</small></span>` });
-      b.onclick = () => setType(q, v);
-      seg.append(b);
-    }
+    // the answer: what counts as right
     const ans = el("div.qed-answers", { id: "qAnswers" });
-    card.append(el("div.qed-sec", {}, el("span.qed-label", { text: "Type" }), seg, ans));
+    card.append(el("div.qed-sec", {}, el("span.qed-label", { text: "Answer" }), ans));
     renderAnswers(q, ans);
 
     // footer: is it ready, and a quick way to keep going
@@ -416,8 +405,8 @@
   function renderOptions(q, box) {
     const multi = q.type === "multi", correct = q.correct || [];
     box.append(el("p.qed-how.t-" + q.type, { html: multi
-      ? `${typeIcon("multi")}<span><b>Tick every correct option.</b> Candidates see “Select all that apply” and must pick exactly these.</span>`
-      : `${typeIcon("single")}<span><b>Choose the one correct option.</b> Candidates see “Choose one answer”.</span>` }));
+      ? `<span><b>Tick every correct option.</b> Candidates see “Select all that apply” and must pick exactly these.</span>`
+      : `<span><b>Choose the one correct option.</b> Candidates see “Choose one answer”.</span>` }));
     const list = el("div.opts" + (multi ? ".multi" : ".single"), { role: multi ? "group" : "radiogroup", "aria-label": "Correct option" });
     const idOf = (k) => `o-${q.id}-${k}`;
     const add = (at) => { if (q.options.length >= MAX_OPTS) return; q.options.splice(at, 0, ""); q.correct = correct.map((x) => (x >= at ? x + 1 : x)); redrawAnswers(q, idOf(at)); };
@@ -445,7 +434,7 @@
   }
 
   function renderPairs(q, box) {
-    box.append(el("p.qed-how.t-match", { html: `${typeIcon("match")}<span><b>Write each pair on one row.</b> Candidates see Column B shuffled and match every A to its B. All pairs must be right for the mark.</span>` }));
+    box.append(el("p.qed-how.t-match", { html: `<span><b>Write each pair on one row.</b> Candidates see Column B shuffled and match every A to its B. All pairs must be right for the mark.</span>` }));
     const list = el("div.pairs");
     list.append(el("div.pair-head", { html: '<span></span><span><i>A</i> Item</span><span></span><span><i>B</i> Its match</span><span></span>' }));
     const idOf = (k) => `pl-${q.id}-${k}`;
@@ -471,7 +460,7 @@
   function renderAccepted(q, box) {
     if (!ansRows) ansRows = (q.answers || []).length ? q.answers.slice() : [""];
     const rows = ansRows, sync = () => { q.answers = rows.map((s) => s.trim()).filter(Boolean); changed(q); tryIt(); };
-    box.append(el("p.qed-how.t-" + q.type, { html: `${typeIcon(q.type)}<span><b>List every answer you'll accept.</b> Capitals, accents, spaces and punctuation are ignored, so “Thursday.”, “thursday” and “THURSDAY” all match.</span>` }));
+    box.append(el("p.qed-how.t-" + q.type, { html: `<span><b>List every answer you'll accept.</b> Capitals, accents, spaces and punctuation are ignored, so “Thursday.”, “thursday” and “THURSDAY” all match.</span>` }));
     const list = el("div.accepted");
     const idOf = (k) => `a-${q.id}-${k}`;
     const add = (at) => { rows.splice(at, 0, ""); redrawAnswers(q, idOf(at)); };

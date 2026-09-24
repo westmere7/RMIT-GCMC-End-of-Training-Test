@@ -27,17 +27,6 @@
 #conflict { padding-bottom: 0; }
 .admin { padding-top: 24px; }
 
-/* ---------- type glyphs: one shape per question type ---------- */
-.ti { display: inline-block; flex: none; width: 13px; height: 13px; position: relative; vertical-align: -1px; color: currentColor; }
-.ti-single { border: 1.6px solid; border-radius: 50%; }
-.ti-single::after { content: ""; position: absolute; inset: 2.2px; border-radius: 50%; background: currentColor; }
-.ti-multi { border: 1.6px solid; border-radius: 2px; }
-.ti-multi::after { content: ""; position: absolute; left: 3px; top: 0.5px; width: 3px; height: 6px; border: solid currentColor; border-width: 0 1.6px 1.6px 0; transform: rotate(45deg); }
-.ti-match::after { content: "⇄"; position: absolute; inset: -3px -2px; font-size: 14px; font-style: normal; font-weight: 700; line-height: 18px; text-align: center; }
-.ti-fill { border-bottom: 2px solid; height: 11px; }
-.ti-fill::after { content: ""; position: absolute; left: 0; right: 0; bottom: 3px; height: 4px; border: solid currentColor; border-width: 0 1.4px; }
-.ti-short::after { content: "Aa"; position: absolute; inset: -3px -4px; font-size: 11px; font-style: normal; font-weight: 700; line-height: 18px; letter-spacing: -0.03em; text-align: center; }
-
 /* ---------- questions: list + editor ---------- */
 .qx { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 24px; align-items: start; }
 .qx-side {
@@ -80,7 +69,7 @@
 .qrow-text { font-size: 14px; line-height: 1.35; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .qrow-text.empty { color: var(--muted); font-style: italic; }
 .qrow-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 11px; font-weight: 700; }
-.qrow-type { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 3px; background: var(--grey-50); color: var(--muted); }
+.qrow-type { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 3px; background: var(--grey-50); color: var(--muted); }
 .qrow-crit { color: var(--red); letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
 .qrow-bad { color: #fff; background: var(--red-dark); padding: 2px 7px; border-radius: 3px; }
 /* single vs multi at a glance: multi (and match) carry the same yellow the candidate sees on "Select all that apply" */
@@ -100,7 +89,7 @@
 .qed-nav { display: flex; gap: 4px; margin-right: 8px; }
 .qed-sec { padding: 22px 30px; }
 .qed-sec + .qed-sec { border-top: 1px solid #efefeb; }
-.qed-details { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; background: var(--tint); }
+.qed-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; background: var(--tint); }
 .qed-details .input { padding: 10px 12px; font-size: 15px; }
 .lbl, .field label { font-size: 13px; font-weight: 700; color: var(--ink); letter-spacing: 0.02em; }
 .qed-label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
@@ -108,28 +97,14 @@
 .qed-prompt::placeholder { color: #a8a8bd; }
 .qed-hint { display: flex; align-items: center; gap: 12px; margin-top: 10px; font-size: 13px; color: var(--muted); }
 
-.crit-toggle { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; font-size: 14px; color: var(--muted); cursor: pointer; }
+.crit-toggle { display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; height: 44px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: var(--radius); background: #fff; font-size: 14px; color: var(--muted); cursor: pointer; }
 .crit-toggle b { color: var(--ink); }
 .crit-toggle input { width: 18px; height: 18px; accent-color: var(--red); margin: 0; }
 .crit-toggle:has(input:checked) { border-color: var(--red); background: #fff5f5; color: var(--red-dark); }
 .crit-toggle:has(input:checked) b { color: var(--red); }
 .qed-details .field { gap: 6px; }
 
-/* type picker */
-.seg { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
-.seg-b {
-  display: flex; align-items: flex-start; gap: 9px; text-align: left; padding: 11px 12px; border: 1.5px solid var(--line); border-radius: var(--radius);
-  background: #fff; color: var(--muted); transition: border-color 0.12s, background 0.12s;
-}
-.seg-b .ti { margin-top: 3px; }
-.seg-b b { display: block; font-size: 14px; color: var(--ink); line-height: 1.25; }
-.seg-b small { display: block; font-size: 12px; line-height: 1.3; margin-top: 2px; }
-.seg-b:hover { border-color: var(--navy-30); }
-.seg-b[aria-checked="true"] { border-color: var(--navy); background: var(--sel); box-shadow: inset 0 0 0 1px var(--navy); color: var(--navy); }
-
-.qed-answers { margin-top: 20px; }
 .qed-how { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--body); padding: 11px 14px; border-radius: var(--radius); background: var(--grey-50); margin-bottom: 14px; }
-.qed-how .ti { margin-top: 4px; color: var(--navy); }
 .qed-how b { color: var(--ink); }
 .qed-how.t-multi, .qed-how.t-match { background: #fff7d6; box-shadow: inset 0 0 0 1.5px var(--yellow); }
 .qed-sub { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--muted); }
@@ -242,8 +217,9 @@
 
 /* ---------- narrower screens ---------- */
 @media (max-width: 1240px) {
-  .seg { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .qx { grid-template-columns: 340px minmax(0, 1fr); }
+  .qed-details { grid-template-columns: 1fr 1fr; }
+  .qed-details .field:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 980px) {
   .qx { grid-template-columns: 1fr; }
@@ -258,7 +234,6 @@
   .savebar-in { flex-wrap: wrap; }
   .qed-head, .qed-sec, .qed-foot { padding-left: 18px; padding-right: 18px; }
   .qed-details, .set-fields { grid-template-columns: 1fr; }
-  .seg { grid-template-columns: 1fr 1fr; }
   .qed-foot { flex-direction: column; align-items: stretch; }
   .tester { margin-left: 0; flex-wrap: wrap; }
   .acc-row { grid-template-columns: 1fr 34px; }
