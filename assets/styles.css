@@ -457,24 +457,49 @@ button { cursor: pointer; }
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8.5l3.5 3.5 7.5-8' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
-/* ---------- match the pairs ---------- */
-.match-cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; }
-.match-col { display: grid; gap: 10px; align-content: start; }
-.match-col h4 { margin: 0 0 2px; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-.match-col h4 span { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 3px; background: var(--navy); color: #fff; letter-spacing: 0; font-size: 13px; }
+/* ---------- match the pairs: link A to B with a line ---------- */
+.match-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -12px 0 0; }
+.match-top .pick-how { margin: 0; }
+.match-reset { border: 0; background: none; color: var(--muted); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; }
+.match-reset:hover { color: var(--navy); }
+.match-tip { font-size: 14px; color: var(--muted); margin: 12px 0 16px; min-height: 21px; }
+.match-tip b { color: var(--ink); }
+.match-board { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); user-select: none; -webkit-user-select: none; }
+.match-lines { position: absolute; inset: 0; pointer-events: none; overflow: visible; z-index: 0; }
+.match-lines path { fill: none; stroke-width: 2.6; stroke-linecap: round; }
+.match-lines path.pending { stroke: var(--navy); stroke-width: 2; stroke-dasharray: 5 6; opacity: 0.55; }
+.match-col { display: grid; gap: 10px; align-content: start; position: relative; z-index: 1; }
+.match-col.a { grid-column: 1; }
+.match-col.b { grid-column: 3; }
+.match-col h4 { margin: 0 0 2px; }
+.match-col h4 span { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 3px; background: var(--navy); color: #fff; font-size: 13px; font-weight: 700; }
 .match-col.b h4 span { background: var(--grey); color: var(--navy); }
-.match-a { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); padding: 12px 14px; transition: border-color 0.12s; }
-.match-a.done { border-color: var(--navy-30); background: #fafafd; }
-.match-a .num { font-family: var(--display); font-size: 22px; color: var(--red); font-variant-numeric: tabular-nums; }
-.match-a .t, .match-b .t { color: var(--ink); font-size: 16px; line-height: 1.35; }
-.match-picks { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-.mp { width: 34px; height: 34px; border: 1.5px solid var(--navy-30); background: var(--grey-50); border-radius: 3px; font-weight: 700; font-size: 14px; color: var(--navy); transition: all 0.12s; }
-.mp:hover { border-color: var(--navy); background: #fff; }
-.mp[aria-checked="true"] { background: var(--navy); border-color: var(--navy); color: #fff; }
-.match-b { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 1.5px dashed var(--line); border-radius: var(--radius); padding: 11px 14px; min-height: 60px; transition: all 0.12s; }
-.match-b .key { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 3px; background: var(--grey); color: var(--navy); font-weight: 700; font-size: 14px; }
-.match-b .used { font-size: 13px; font-weight: 700; color: var(--navy); white-space: nowrap; }
-.match-b.taken { border-style: solid; border-color: var(--navy-30); background: #f3f3f9; }
-.match-b.taken .key { background: var(--navy); color: #fff; }
+.match-col.b h4 { text-align: right; }
+
+.match-item {
+  --c: var(--navy); display: grid; align-items: center; gap: 12px; min-height: 60px; padding: 10px 14px; text-align: left;
+  background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius); color: var(--ink); font-size: 16px; line-height: 1.35;
+  cursor: pointer; touch-action: none; transition: border-color 0.12s, background 0.12s, box-shadow 0.12s;
+}
+.match-item.a { grid-template-columns: 30px minmax(0, 1fr) 14px; padding-right: 0; }
+.match-item.b { grid-template-columns: 14px minmax(0, 1fr) 30px; padding-left: 0; }
+.match-item:hover { border-color: var(--navy-30); background: var(--grey-50); }
+.match-item .dot { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 2px solid var(--navy-30); transition: all 0.12s; }
+.match-item.a .dot { transform: translateX(7px); }
+.match-item.b .dot { transform: translateX(-7px); }
+.match-item .mi-n { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; }
+.match-item.a .mi-n { background: var(--grey-50); color: var(--navy); border: 1.5px solid var(--navy-30); }
+.match-item.b .mi-n:empty { visibility: hidden; }
+
+/* linked: both ends take the pair's colour and number */
+.match-item.linked { border-color: var(--c); background: color-mix(in srgb, var(--c) 6%, #fff); }
+.match-item.linked .dot { background: var(--c); border-color: var(--c); }
+.match-item.linked .mi-n { background: var(--c); border-color: var(--c); color: #fff; }
+
+/* picked, waiting for its match: the other side invites the click */
+.match-item.active { border-color: var(--navy); background: #eef0fa; box-shadow: 0 0 0 3px rgba(0, 0, 84, 0.14); }
+.match-item.active .dot { background: var(--navy); border-color: var(--navy); box-shadow: 0 0 0 4px rgba(0, 0, 84, 0.18); }
+.match-board.picking-b .match-item.b:not(.linked), .match-board.picking-a .match-item.a:not(.linked) { border-style: dashed; border-color: var(--navy-30); }
+.match-board.picking-b .match-item.b:hover, .match-board.picking-a .match-item.a:hover { border-style: solid; border-color: var(--navy); background: #fff; }
+.match-board.dragging, .match-board.dragging .match-item { cursor: grabbing; }
 .q-card.locked .match { pointer-events: none; opacity: 0.75; }
-@media (max-width: 1080px) { .match-cols { grid-template-columns: 1fr; } .match-col.b { order: -1; } }

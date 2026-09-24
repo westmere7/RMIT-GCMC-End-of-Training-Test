@@ -42,7 +42,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 
 - **Single choice:** one correct option. Candidates see round keys and "Choose one answer".
 - **Multi choice:** several correct options; candidates must pick exactly those. They see square tick boxes, a yellow "Select all that apply" badge and a running count.
-- **Match pairs:** each row in the editor is one pair (Column A → Column B), 2 to 8 pairs. Candidates see Column A numbered and Column B lettered and shuffled, and give each A item one letter. Every pair must be right for the mark. Stored as `"pairs": [{ "left": "...", "right": "..." }]`.
+- **Match pairs:** each row in the editor is one pair (Column A → Column B), 2 to 8 pairs. Candidates see Column A on the left and Column B (shuffled) on the right, and link each pair by clicking one item then its match, or dragging between them. Each link is drawn as a coloured line, with the same number on both ends; clicking a pair again undoes it. Every pair must be right for the mark. Stored as `"pairs": [{ "left": "...", "right": "..." }]`.
 - **Fill in the blank:** the prompt has `___` where the gap goes; answers are typed.
 - **Short answer:** a typed answer. For both typed types, capitals, accents, spaces and punctuation are ignored, and the first accepted answer is the one shown as correct.
 

@@ -264,54 +264,127 @@
     $("submitBtn").disabled = !current.length;
   }
 
-  // Match the pairs: Column A is numbered, Column B lettered. Each A item takes one letter, and each letter goes to one item
-  // (picking a letter that's already used moves it). current[p] = the pair index of the B item chosen for pair p's A item.
+  // Match the pairs: a board with Column A on the left and Column B on the right. Click an item, then its match on the
+  // other side (either way round), or drag from one to the other; a line joins each pair, in its own colour, and both
+  // ends carry the same number. Linking a taken item moves the link; linking the same pair again undoes it.
+  // current[p] = the pair index of the B item linked to pair p's A item.
+  const LINK_COLOURS = ["#000054", "#0b7a8f", "#7a3e9d", "#b0620b", "#b8336a", "#3f7a1f", "#4b5c8a", "#8a5a2b"];
   function renderMatch(q) {
     const ord = S.order[S.index] || { a: [], b: [] };
+    const esc = A.escapeHtml, NS = "http://www.w3.org/2000/svg";
     const wrap = document.createElement("div"); wrap.className = "match";
-    wrap.innerHTML = '<p class="pick-how match"><span class="pick-icon" aria-hidden="true"></span><b>Match each item in A with one in B</b><span class="pick-count" id="pickCount"></span></p>';
-    const cols = document.createElement("div"); cols.className = "match-cols";
-    const colA = document.createElement("div"); colA.className = "match-col a";
-    colA.innerHTML = '<h4><span>A</span></h4>';
-    const colB = document.createElement("div"); colB.className = "match-col b";
-    colB.innerHTML = '<h4><span>B</span></h4>';
-    const bItems = ord.b.map((p, k) => {
-      const li = document.createElement("div"); li.className = "match-b"; li.dataset.pair = p;
-      li.innerHTML = `<span class="key">${LETTERS[k]}</span><span class="t">${A.escapeHtml(q.pairs[p].right)}</span><span class="used" aria-hidden="true"></span>`;
-      colB.append(li); return li;
-    });
-    const rows = ord.a.map((p, i) => {
-      const row = document.createElement("div"); row.className = "match-a";
-      row.innerHTML = `<span class="num">${i + 1}</span><span class="t" id="ma-${i}">${A.escapeHtml(q.pairs[p].left)}</span>`;
-      const picks = document.createElement("div"); picks.className = "match-picks"; picks.setAttribute("role", "radiogroup"); picks.setAttribute("aria-labelledby", "ma-" + i);
-      ord.b.forEach((bp, k) => {
-        const b = document.createElement("button"); b.type = "button"; b.className = "mp"; b.textContent = LETTERS[k];
-        b.setAttribute("role", "radio"); b.setAttribute("aria-checked", "false"); b.setAttribute("aria-label", `${LETTERS[k]}: ${q.pairs[bp].right}`);
-        b.addEventListener("click", () => {
-          if (locked) return;
-          const on = current[p] === bp;
-          current = current.map((x) => (x === bp ? null : x)); // a letter goes to one item only
-          if (!on) current[p] = bp;
-          paint();
-        });
-        picks.append(b);
-      });
-      row.append(picks); colA.append(row); return { row, p, picks };
-    });
-    function paint() {
-      rows.forEach(({ row, p, picks }) => {
-        [...picks.children].forEach((b, k) => b.setAttribute("aria-checked", String(current[p] === ord.b[k])));
-        row.classList.toggle("done", current[p] != null);
-      });
-      bItems.forEach((li) => {
-        const p = +li.dataset.pair, who = ord.a.findIndex((ap) => current[ap] === p);
-        li.classList.toggle("taken", who >= 0); li.querySelector(".used").textContent = who >= 0 ? "→ " + (who + 1) : "";
-      });
-      const n = current.filter((x) => x != null).length;
-      $("pickCount").textContent = `${n} of ${current.length} matched`;
-      $("submitBtn").disabled = n < current.length;
+    wrap.innerHTML = '<div class="match-top"><p class="pick-how match"><span class="pick-icon" aria-hidden="true"></span><b>Link each item in A to its match in B</b><span class="pick-count" id="pickCount"></span></p>'
+      + '<button type="button" class="match-reset" id="matchReset" hidden>Start over</button></div>'
+      + '<p class="match-tip" id="matchTip" aria-live="polite"></p>';
+    const board = document.createElement("div"); board.className = "match-board";
+    const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "match-lines"); svg.setAttribute("aria-hidden", "true");
+    const colA = document.createElement("div"); colA.className = "match-col a"; colA.innerHTML = "<h4><span>A</span></h4>";
+    const colB = document.createElement("div"); colB.className = "match-col b"; colB.innerHTML = "<h4><span>B</span></h4>";
+    const item = (side, p, i) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "match-item " + side; b.dataset.side = side; b.dataset.p = p;
+      b.innerHTML = side === "a"
+        ? `<span class="mi-n">${i + 1}</span><span class="t">${esc(q.pairs[p].left)}</span><span class="dot"></span>`
+        : `<span class="dot"></span><span class="t">${esc(q.pairs[p].right)}</span><span class="mi-n"></span>`;
+      return b;
+    };
+    const aEls = ord.a.map((p, i) => item("a", p, i)), bEls = ord.b.map((p) => item("b", p));
+    colA.append(...aEls); colB.append(...bEls); board.append(svg, colA, colB); wrap.append(board);
+
+    let active = null, pointer = null, drag = null, justDragged = false;
+    const numOf = (ap) => ord.a.indexOf(ap); // display position of an A item
+    const colourOf = (ap) => LINK_COLOURS[numOf(ap) % LINK_COLOURS.length];
+    const textOf = (side, p) => (side === "a" ? q.pairs[p].left : q.pairs[p].right);
+    function link(ap, bp) {
+      if (current[ap] === bp) current[ap] = null; // the same pair again: undo it
+      else { current = current.map((x) => (x === bp ? null : x)); current[ap] = bp; }
+      active = null; paint();
     }
-    cols.append(colA, colB); wrap.append(cols);
+    function choose(side, p) {
+      if (locked) return;
+      if (active && active.side !== side) return side === "b" ? link(active.p, p) : link(p, active.p);
+      active = active && active.side === side && active.p === p ? null : { side, p };
+      paint();
+    }
+    // pointer: a click picks; a drag from one side to the other links
+    board.addEventListener("pointerdown", (e) => {
+      const it = e.target.closest(".match-item"); if (!it || locked || e.button > 0) return;
+      drag = { side: it.dataset.side, p: +it.dataset.p, x: e.clientX, y: e.clientY, moved: false };
+    });
+    const onMove = (e) => {
+      if (!board.isConnected) return removeEventListener("pointermove", onMove);
+      const r = board.getBoundingClientRect();
+      pointer = e.clientX >= r.left - 40 && e.clientX <= r.right + 40 && e.clientY >= r.top - 40 && e.clientY <= r.bottom + 40 ? { x: e.clientX - r.left, y: e.clientY - r.top } : null;
+      if (drag && !drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) { drag.moved = true; active = { side: drag.side, p: drag.p }; board.classList.add("dragging"); paint(); }
+      if (active) drawLines();
+    };
+    const onUp = (e) => {
+      if (!board.isConnected) return removeEventListener("pointerup", onUp);
+      if (!drag) return;
+      const d = drag; drag = null; board.classList.remove("dragging");
+      if (!d.moved) return;
+      justDragged = true; setTimeout(() => { justDragged = false; }, 0);
+      const over = document.elementFromPoint(e.clientX, e.clientY), it = over && over.closest(".match-item");
+      if (it && board.contains(it) && it.dataset.side !== d.side) choose(it.dataset.side, +it.dataset.p);
+      else { active = null; paint(); }
+    };
+    addEventListener("pointermove", onMove); addEventListener("pointerup", onUp);
+    board.addEventListener("click", (e) => {
+      const it = e.target.closest(".match-item"); if (!it || justDragged) return;
+      choose(it.dataset.side, +it.dataset.p);
+    });
+    board.addEventListener("keydown", (e) => { if (e.key === "Escape" && active) { active = null; paint(); } });
+    wrap.querySelector("#matchReset").addEventListener("click", () => { if (locked) return; current = current.map(() => null); active = null; paint(); });
+
+    function dotOf(el) {
+      const r = el.querySelector(".dot").getBoundingClientRect(), br = board.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - br.left, y: r.top + r.height / 2 - br.top };
+    }
+    const curve = (a, b) => { const dx = Math.max(30, Math.abs(b.x - a.x) * 0.45); return `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`; };
+    function drawLines() {
+      svg.setAttribute("width", board.clientWidth); svg.setAttribute("height", board.clientHeight);
+      svg.innerHTML = "";
+      ord.a.forEach((ap, i) => {
+        const bp = current[ap]; if (bp == null) return;
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute("d", curve(dotOf(aEls[i]), dotOf(bEls[ord.b.indexOf(bp)]))); path.setAttribute("stroke", colourOf(ap));
+        svg.append(path);
+      });
+      // the line being drawn, from the picked item to the pointer
+      if (active && pointer) {
+        const from = dotOf(active.side === "a" ? aEls[ord.a.indexOf(active.p)] : bEls[ord.b.indexOf(active.p)]);
+        const path = document.createElementNS(NS, "path"); path.setAttribute("class", "pending");
+        path.setAttribute("d", active.side === "a" ? curve(from, pointer) : curve(pointer, from));
+        svg.append(path);
+      }
+    }
+    function paint() {
+      aEls.forEach((el, i) => {
+        const ap = ord.a[i], on = current[ap] != null, act = !!active && active.side === "a" && active.p === ap;
+        el.classList.toggle("linked", on); el.classList.toggle("active", act);
+        el.style.setProperty("--c", on ? colourOf(ap) : "");
+        el.setAttribute("aria-pressed", String(act));
+        el.setAttribute("aria-label", `A${i + 1}: ${q.pairs[ap].left}` + (on ? `, linked to ${q.pairs[current[ap]].right}` : ", not linked"));
+      });
+      bEls.forEach((el, k) => {
+        const bp = ord.b[k], ap = ord.a.find((x) => current[x] === bp), on = ap != null, act = !!active && active.side === "b" && active.p === bp;
+        el.classList.toggle("linked", on); el.classList.toggle("active", act);
+        el.style.setProperty("--c", on ? colourOf(ap) : "");
+        el.querySelector(".mi-n").textContent = on ? numOf(ap) + 1 : "";
+        el.setAttribute("aria-pressed", String(act));
+        el.setAttribute("aria-label", `B: ${q.pairs[bp].right}` + (on ? `, linked to A${numOf(ap) + 1}` : ", not linked"));
+      });
+      board.classList.toggle("picking-a", !!active && active.side === "b");
+      board.classList.toggle("picking-b", !!active && active.side === "a");
+      const n = current.filter((x) => x != null).length;
+      $("pickCount").textContent = `${n} of ${current.length} linked`;
+      $("matchReset").hidden = !n;
+      $("matchTip").innerHTML = active
+        ? `Now pick the match for <b>${esc(textOf(active.side, active.p))}</b> in ${active.side === "a" ? "B" : "A"}.`
+        : n === current.length ? "All linked. Click a pair again to undo it, or submit." : "Click an item, then its match on the other side. You can also drag between them.";
+      $("submitBtn").disabled = n < current.length;
+      drawLines();
+    }
+    new ResizeObserver(() => drawLines()).observe(board);
     setTimeout(paint, 0);
     return wrap;
   }
@@ -344,6 +417,7 @@
   document.addEventListener("keydown", (e) => {
     if ($("scrTest").hidden || locked) return;
     const q = QS()[S.index];
+    if (e.key === "Enter" && e.target.closest && e.target.closest(".match-item")) return; // Enter picks a match item
     if (e.key === "Enter") { e.preventDefault(); if (!$("submitBtn").disabled) submit(false); return; }
     if ((q.type === "single" || q.type === "multi") && !e.ctrlKey && !e.metaKey && !e.altKey && e.target.tagName !== "INPUT") {
       const k = LETTERS.indexOf(e.key.toUpperCase());
