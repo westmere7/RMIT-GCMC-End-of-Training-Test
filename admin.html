@@ -24,11 +24,11 @@
       <nav class="tabs ed-tabs" role="tablist" aria-label="Editor sections">
         <button class="tab" role="tab" id="tabBtnQuestions" data-tab="questions" aria-selected="true">Questions <b id="tabQCount"></b></button>
         <button class="tab" role="tab" id="tabBtnSettings" data-tab="settings" aria-selected="false">Settings</button>
-        <button class="tab" role="tab" id="tabBtnPeople" data-tab="people" aria-selected="false">People</button>
+        <button class="tab" role="tab" id="tabBtnPeople" data-tab="people" aria-selected="false">People <b id="tabPCount"></b></button>
       </nav>
       <span id="saveState" class="save-state">Loading…</span>
       <span class="spacer"></span>
-      <button class="btn small" id="saveBtn" disabled>Save changes</button>
+      <button class="btn small" id="saveBtn" disabled title="Save (Ctrl+S)">Save changes</button>
     </div>
   </div>
 
@@ -61,51 +61,102 @@
   </script>
 
   <main class="container admin">
-    <section class="card" data-panel="settings" role="tabpanel" hidden>
-      <p class="eyebrow">Settings</p>
-      <div class="grid-3">
-        <div class="field"><label for="sTitle">Title</label><input class="input" id="sTitle"></div>
-        <div class="field"><label for="sSubtitle">Subtitle</label><input class="input" id="sSubtitle"></div>
-        <div class="field"><label for="sCode">Assessment code</label><input class="input" id="sCode"></div>
-        <div class="field"><label for="sPer">Questions per attempt</label><input class="input" id="sPer" type="number" min="1"></div>
-        <div class="field"><label for="sMins">Time limit (minutes)</label><input class="input" id="sMins" type="number" min="1" max="120"></div>
-        <div class="field"><label for="sConf">Confetti from (%)</label><input class="input" id="sConf" type="number" min="0" max="100"></div>
-        <div class="field"><label for="sPen">Critical · marks lost if wrong</label><input class="input" id="sPen" type="number" min="0" max="30"></div>
-        <div class="field"><label for="gLeft">Meter · red side label</label><input class="input" id="gLeft"></div>
-        <div class="field"><label for="gRight">Meter · navy side label</label><input class="input" id="gRight"></div>
-        <div class="field"><label>Question bank</label><p class="help" id="bankInfo" style="margin-top:12px"></p></div>
-      </div>
-      <div class="field" style="margin-top:16px"><label for="sCats">Categories (comma-separated, in display order)</label><input class="input" id="sCats"></div>
-      <label class="confirm"><input type="checkbox" id="sShuffle"> Shuffle answer options for each attempt</label>
+    <!-- Questions: the bank on the left, one question open on the right -->
+    <section class="qx" data-panel="questions" role="tabpanel" aria-labelledby="tabBtnQuestions">
+      <aside class="qx-side" aria-label="Question bank">
+        <div class="qx-side-head">
+          <div>
+            <h2>Question bank</h2>
+            <p class="qx-sub"><span id="qCount">0</span> questions<span id="qShown"></span></p>
+          </div>
+          <button class="btn small" id="newQ" type="button" title="New question (Alt+N)"><span aria-hidden="true">+</span> New question</button>
+        </div>
+        <div class="qx-filters">
+          <input class="input" id="qSearch" type="search" placeholder="Search questions, options, answers or ID" aria-label="Search questions" autocomplete="off">
+          <div class="qx-filter-row">
+            <select class="input" id="fCat" aria-label="Filter by category"></select>
+            <select class="input" id="fType" aria-label="Filter by type"></select>
+          </div>
+          <div class="qx-chips">
+            <button class="fchip crit" id="fCrit" type="button" aria-pressed="false">Critical <b></b></button>
+            <button class="fchip bad" id="fBad" type="button" aria-pressed="false">Needs fixing <b></b></button>
+            <button class="fchip clear" id="fClear" type="button" hidden>Clear filters</button>
+          </div>
+        </div>
+        <div class="qx-list" id="qList"></div>
+      </aside>
+      <div class="qx-main" id="qEditor"></div>
     </section>
 
-    <section class="card" data-panel="people" role="tabpanel" hidden>
-      <p class="eyebrow">People</p>
-      <p class="help" id="gateState"></p>
-      <div id="candList" class="cand-list"></div>
-      <div class="cand-row new">
-        <input class="input" id="cName" placeholder="First name (shown in the test)" aria-label="First name">
-        <input class="input" id="cEmail" type="email" placeholder="Their email" aria-label="Their email">
-        <button class="btn ghost small" id="cAdd" type="button">Add person</button>
+    <!-- Settings -->
+    <section class="settings" data-panel="settings" role="tabpanel" aria-labelledby="tabBtnSettings" hidden>
+      <div class="bank-stats" id="bankStats"></div>
+
+      <div class="card set-group">
+        <div class="set-intro"><h3>Test details</h3><p>The name and code candidates see on the sign-in page and the briefing.</p></div>
+        <div class="set-fields">
+          <div class="field span-2"><label for="sTitle">Title</label><input class="input" id="sTitle"></div>
+          <div class="field"><label for="sSubtitle">Subtitle</label><input class="input" id="sSubtitle"></div>
+          <div class="field"><label for="sCode">Assessment code</label><input class="input" id="sCode"></div>
+        </div>
       </div>
-      <p class="help">Sign-in accepts any email and any staff ID (testing build, no real authentication). Anyone without a saved name is asked for their first name when they sign in, and it's saved here. Changes to people save straight away. Emails are stored as SHA-256 fingerprints.</p>
+
+      <div class="card set-group">
+        <div class="set-intro"><h3>Each attempt</h3><p>How many questions are drawn from the bank, and how long candidates get.</p></div>
+        <div class="set-fields">
+          <div class="field"><label for="sPer">Questions per attempt</label><input class="input" id="sPer" type="number" min="1"><p class="help" id="perHelp"></p></div>
+          <div class="field"><label for="sMins">Time limit</label><div class="unit"><input class="input" id="sMins" type="number" min="1" max="120"><span>minutes</span></div></div>
+          <label class="confirm span-2"><input type="checkbox" id="sShuffle"> Shuffle the answer options (and Column A of matching questions) for each attempt</label>
+        </div>
+      </div>
+
+      <div class="card set-group">
+        <div class="set-intro"><h3>Scoring</h3><p>Every question is worth one mark. Missing a critical question costs extra marks, and a high score earns confetti.</p></div>
+        <div class="set-fields">
+          <div class="field"><label for="sPen">Marks lost for a wrong critical answer</label><input class="input" id="sPen" type="number" min="0" max="30"></div>
+          <div class="field"><label for="sConf">Confetti from</label><div class="unit"><input class="input" id="sConf" type="number" min="0" max="100"><span>%</span></div></div>
+        </div>
+      </div>
+
+      <div class="card set-group">
+        <div class="set-intro"><h3>Categories</h3><p>Comma-separated, in display order. Every question belongs to one, and each attempt draws from all of them.</p></div>
+        <div class="set-fields">
+          <div class="field span-2"><label for="sCats">Categories</label><input class="input" id="sCats"></div>
+          <div class="cat-counts span-2" id="catCounts"></div>
+        </div>
+      </div>
+
+      <div class="card set-group">
+        <div class="set-intro"><h3>Meter</h3><p>The labels at each end of the live meter candidates watch during the test.</p></div>
+        <div class="set-fields">
+          <div class="field"><label for="gLeft">Red end (low score)</label><input class="input" id="gLeft"></div>
+          <div class="field"><label for="gRight">Navy end (high score)</label><input class="input" id="gRight"></div>
+        </div>
+      </div>
     </section>
 
-    <section data-panel="questions" role="tabpanel">
-      <div class="list-head">
-        <h2>Questions <span id="qCount" class="muted"></span></h2>
-        <p class="help">Written answers ignore capitals, accents, spaces and punctuation, so “Thursday.”, “thursday” and “THURSDAY” all match. For fill-in questions, put <b>___</b> (three underscores) where the blank goes.</p>
-      </div>
-      <div id="qList"></div>
-      <div class="add-row">
-        <span>Add a question:</span>
-        <button class="btn ghost small" data-add="single">Single choice</button>
-        <button class="btn ghost small" data-add="multi">Multi choice</button>
-        <button class="btn ghost small" data-add="fill">Fill in the blank</button>
-        <button class="btn ghost small" data-add="short">Short answer</button>
+    <!-- People -->
+    <section class="settings" data-panel="people" role="tabpanel" aria-labelledby="tabBtnPeople" hidden>
+      <div class="card set-group">
+        <div class="set-intro">
+          <h3>People</h3>
+          <p>Saved first names greet people in the test and on their results. Changes here save straight away.</p>
+          <p class="help">Sign-in accepts any email and any staff ID (testing build, no real authentication). Anyone without a saved name is asked for it when they sign in. Emails are stored as SHA-256 fingerprints.</p>
+        </div>
+        <div class="set-fields one">
+          <p class="gate" id="gateState"></p>
+          <div class="cand-row new">
+            <input class="input" id="cName" placeholder="First name (shown in the test)" aria-label="First name">
+            <input class="input" id="cEmail" type="email" placeholder="Their email" aria-label="Their email">
+            <button class="btn ghost small" id="cAdd" type="button">Add person</button>
+          </div>
+          <div id="candList" class="cand-list"></div>
+        </div>
       </div>
     </section>
   </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="assets/common.js"></script>
   <script src="assets/admin.js"></script>

@@ -38,6 +38,11 @@
 
   /** Is this response correct for this question? `response` is an array of option indices or a string. */
   function isCorrect(q, response) {
+    if (q.type === "match") {
+      // response[i] is the Column B item picked for the i-th pair's Column A item; every pair must be right
+      const n = (q.pairs || []).length;
+      return n > 0 && Array.isArray(response) && response.length === n && response.every((r, i) => r === i);
+    }
     if (q.type === "single" || q.type === "multi") {
       if (!Array.isArray(response)) return false;
       const want = [...(q.correct || [])].sort((a, b) => a - b).join(",");
@@ -50,17 +55,19 @@
   }
 
   function correctText(q) {
+    if (q.type === "match") return (q.pairs || []).map((p) => p.left + " → " + p.right).join(" · ");
     if (q.type === "single" || q.type === "multi") return (q.correct || []).map((i) => q.options[i]).join(" · ");
     return (q.answers || [])[0] || "";
   }
 
   function responseText(q, response) {
     if (response == null || response === "" || (Array.isArray(response) && !response.length)) return "No answer";
+    if (q.type === "match") return (q.pairs || []).map((p, i) => p.left + " → " + (q.pairs[response[i]] ? q.pairs[response[i]].right : "—")).join(" · ");
     if (Array.isArray(response)) return response.map((i) => q.options[i]).join(" · ");
     return String(response);
   }
 
-  const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer" };
+  const TYPE_LABEL = { single: "Single choice", multi: "Select all that apply", fill: "Fill in the blank", short: "Short answer", match: "Match the pairs" };
 
   // ---------- categories ----------
   const DEFAULT_CATEGORIES = ["Team", "Culture", "Work", "Platforms", "Brand", "RMIT", "Glossary", "Aussie English", "Misc"];

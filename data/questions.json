@@ -2344,6 +2344,110 @@
         "Semester 1 intake"
       ],
       "category": "RMIT"
+    },
+    {
+      "id": "q186",
+      "type": "match",
+      "category": "Platforms",
+      "prompt": "Match each platform to what we use it for.",
+      "pairs": [
+        {
+          "left": "Monday.com",
+          "right": "Managing requests and logging decisions"
+        },
+        {
+          "left": "Frame.io",
+          "right": "Reviewing designs with stakeholders"
+        },
+        {
+          "left": "SharePoint",
+          "right": "Archiving FAs and working files"
+        },
+        {
+          "left": "ServiceNow",
+          "right": "Raising IT issues"
+        },
+        {
+          "left": "Workday",
+          "right": "Requesting leave and finding payslips"
+        }
+      ]
+    },
+    {
+      "id": "q187",
+      "type": "match",
+      "category": "Platforms",
+      "prompt": "Match each channel to the job it's for.",
+      "pairs": [
+        {
+          "left": "Teams",
+          "right": "An urgent, quick question"
+        },
+        {
+          "left": "Email",
+          "right": "INTON design rounds, feedback and approvals"
+        },
+        {
+          "left": "Monday.com",
+          "right": "Domestic's main channel"
+        }
+      ]
+    },
+    {
+      "id": "q188",
+      "type": "match",
+      "category": "Glossary",
+      "prompt": "Match each abbreviation to what it stands for.",
+      "pairs": [
+        {
+          "left": "FA",
+          "right": "Final Artwork"
+        },
+        {
+          "left": "SL",
+          "right": "School leavers"
+        },
+        {
+          "left": "NSL",
+          "right": "Non-school leavers"
+        },
+        {
+          "left": "PG",
+          "right": "Postgraduate"
+        },
+        {
+          "left": "IA",
+          "right": "Interest Area"
+        }
+      ]
+    },
+    {
+      "id": "q189",
+      "type": "match",
+      "category": "Aussie English",
+      "prompt": "Match each phrase to what your stakeholder means.",
+      "pairs": [
+        {
+          "left": "\"This arvo\"",
+          "right": "This afternoon"
+        },
+        {
+          "left": "\"Take a squiz\"",
+          "right": "Have a quick look"
+        },
+        {
+          "left": "\"Flat out\"",
+          "right": "Very busy"
+        },
+        {
+          "left": "\"Stoked\"",
+          "right": "Very happy"
+        },
+        {
+          "left": "\"Too easy\"",
+          "right": "Sure, no problem"
+        }
+      ]
     }
   ],
   "candidates": []

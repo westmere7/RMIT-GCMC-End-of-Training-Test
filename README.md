@@ -38,6 +38,14 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 - **The random draw takes at least one question from each category** whenever the number of questions per attempt is at least the number of categories. The rest are drawn at random.
 - **Results break the score down by category**, with the strongest and weakest named.
 
+## Question types
+
+- **Single choice:** one correct option. Candidates see round keys and "Choose one answer".
+- **Multi choice:** several correct options; candidates must pick exactly those. They see square tick boxes, a yellow "Select all that apply" badge and a running count.
+- **Match pairs:** each row in the editor is one pair (Column A → Column B), 2 to 8 pairs. Candidates see Column A numbered and Column B lettered and shuffled, and give each A item one letter. Every pair must be right for the mark. Stored as `"pairs": [{ "left": "...", "right": "..." }]`.
+- **Fill in the blank:** the prompt has `___` where the gap goes; answers are typed.
+- **Short answer:** a typed answer. For both typed types, capitals, accents, spaces and punctuation are ignored, and the first accepted answer is the one shown as correct.
+
 ## Critical questions
 
 - **Tick "Critical"** on any question in the editor. The candidate sees it flagged in red, with the penalty.

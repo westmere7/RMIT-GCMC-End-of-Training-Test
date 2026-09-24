@@ -122,7 +122,17 @@
       S.started = true; S.startedAt = Date.now(); S.index = 0; S.responses = {};
       S.limitMs = (st.timeLimitMinutes || 10) * 60000;
       S.qids = A.drawQuestions(DATA.questions, perAttempt());
-      S.order = QS().map((q) => (q.options ? (st.shuffleOptions ? A.shuffle(q.options.map((_, i) => i)) : q.options.map((_, i) => i)) : null));
+      const seq = (n) => [...Array(n).keys()];
+      S.order = QS().map((q) => {
+        if (q.type === "match") {
+          // Column B is always shuffled, and never lined up straight across from Column A
+          const n = (q.pairs || []).length, a = st.shuffleOptions ? A.shuffle(seq(n)) : seq(n);
+          let b = A.shuffle(seq(n));
+          for (let t = 0; n > 1 && t < 20 && b.some((x, k) => x === a[k]); t++) b = A.shuffle(seq(n));
+          return { a, b };
+        }
+        return q.options ? (st.shuffleOptions ? A.shuffle(seq(q.options.length)) : seq(q.options.length)) : null;
+      });
       save();
     }
     show("scrTest");
@@ -191,7 +201,8 @@
     $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>−${PENALTY()} marks if wrong</small>` : "1 mark";
     $("qStatus").className = "status"; $("qStatus").innerHTML = '<span class="kbd">Press <b>Enter</b> to submit</span>';
     const body = $("qBody"); body.innerHTML = "";
-    current = q.type === "single" || q.type === "multi" ? [] : "";
+    current = q.type === "single" || q.type === "multi" ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
+    $("qCard").dataset.type = q.type;
 
     if (q.type === "fill") {
       const parts = String(q.prompt).split(/_{3,}/);
@@ -211,8 +222,17 @@
         const inp = wrap.querySelector("input");
         inp.addEventListener("input", () => { current = inp.value; $("submitBtn").disabled = !A.normalize(current); });
         setTimeout(() => inp.focus(), 30);
+      } else if (q.type === "match") {
+        body.append(renderMatch(q));
       } else {
+        // say how many to pick, where it can't be missed: one (round keys) or all that apply (square ticks, with a running count)
+        const how = document.createElement("p"); how.className = "pick-how " + q.type; how.id = "pickHow";
+        how.innerHTML = q.type === "multi"
+          ? '<span class="pick-icon" aria-hidden="true"></span><b>Select all that apply</b><span class="pick-count" id="pickCount">None selected</span>'
+          : '<span class="pick-icon" aria-hidden="true"></span><b>Choose one answer</b>';
+        body.append(how);
         const grid = document.createElement("div"); grid.className = "options"; grid.setAttribute("role", q.type === "single" ? "radiogroup" : "group");
+        grid.setAttribute("aria-describedby", "pickHow");
         S.order[S.index].forEach((orig, k) => {
           const b = document.createElement("button");
           b.type = "button"; b.className = "opt" + (q.type === "multi" ? " multi" : "");
@@ -239,15 +259,68 @@
       const on = b.getAttribute("aria-checked") !== "true";
       b.setAttribute("aria-checked", String(on));
       current = on ? [...current, orig] : current.filter((x) => x !== orig);
+      const pc = $("pickCount"); if (pc) pc.textContent = current.length ? `${current.length} selected` : "None selected";
     }
     $("submitBtn").disabled = !current.length;
+  }
+
+  // Match the pairs: Column A is numbered, Column B lettered. Each A item takes one letter, and each letter goes to one item
+  // (picking a letter that's already used moves it). current[p] = the pair index of the B item chosen for pair p's A item.
+  function renderMatch(q) {
+    const ord = S.order[S.index] || { a: [], b: [] };
+    const wrap = document.createElement("div"); wrap.className = "match";
+    wrap.innerHTML = '<p class="pick-how match"><span class="pick-icon" aria-hidden="true"></span><b>Match each item in A with one in B</b><span class="pick-count" id="pickCount"></span></p>';
+    const cols = document.createElement("div"); cols.className = "match-cols";
+    const colA = document.createElement("div"); colA.className = "match-col a";
+    colA.innerHTML = '<h4><span>A</span></h4>';
+    const colB = document.createElement("div"); colB.className = "match-col b";
+    colB.innerHTML = '<h4><span>B</span></h4>';
+    const bItems = ord.b.map((p, k) => {
+      const li = document.createElement("div"); li.className = "match-b"; li.dataset.pair = p;
+      li.innerHTML = `<span class="key">${LETTERS[k]}</span><span class="t">${A.escapeHtml(q.pairs[p].right)}</span><span class="used" aria-hidden="true"></span>`;
+      colB.append(li); return li;
+    });
+    const rows = ord.a.map((p, i) => {
+      const row = document.createElement("div"); row.className = "match-a";
+      row.innerHTML = `<span class="num">${i + 1}</span><span class="t" id="ma-${i}">${A.escapeHtml(q.pairs[p].left)}</span>`;
+      const picks = document.createElement("div"); picks.className = "match-picks"; picks.setAttribute("role", "radiogroup"); picks.setAttribute("aria-labelledby", "ma-" + i);
+      ord.b.forEach((bp, k) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "mp"; b.textContent = LETTERS[k];
+        b.setAttribute("role", "radio"); b.setAttribute("aria-checked", "false"); b.setAttribute("aria-label", `${LETTERS[k]}: ${q.pairs[bp].right}`);
+        b.addEventListener("click", () => {
+          if (locked) return;
+          const on = current[p] === bp;
+          current = current.map((x) => (x === bp ? null : x)); // a letter goes to one item only
+          if (!on) current[p] = bp;
+          paint();
+        });
+        picks.append(b);
+      });
+      row.append(picks); colA.append(row); return { row, p, picks };
+    });
+    function paint() {
+      rows.forEach(({ row, p, picks }) => {
+        [...picks.children].forEach((b, k) => b.setAttribute("aria-checked", String(current[p] === ord.b[k])));
+        row.classList.toggle("done", current[p] != null);
+      });
+      bItems.forEach((li) => {
+        const p = +li.dataset.pair, who = ord.a.findIndex((ap) => current[ap] === p);
+        li.classList.toggle("taken", who >= 0); li.querySelector(".used").textContent = who >= 0 ? "→ " + (who + 1) : "";
+      });
+      const n = current.filter((x) => x != null).length;
+      $("pickCount").textContent = `${n} of ${current.length} matched`;
+      $("submitBtn").disabled = n < current.length;
+    }
+    cols.append(colA, colB); wrap.append(cols);
+    setTimeout(paint, 0);
+    return wrap;
   }
 
   function submit(skipped) {
     if (locked) return;
     const q = QS()[S.index];
     const resp = skipped ? null : current;
-    if (!skipped && (Array.isArray(resp) ? !resp.length : !A.normalize(resp))) return;
+    if (!skipped && (Array.isArray(resp) ? !resp.length || resp.some((x) => x == null) : !A.normalize(resp))) return;
     locked = true;
     const correct = !skipped && A.isCorrect(q, resp);
     S.responses[q.id] = { response: resp, correct, skipped: !!skipped, at: Date.now() };
