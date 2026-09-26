@@ -3111,6 +3111,96 @@
         0
       ],
       "category": "Platforms"
+    },
+    {
+      "id": "q231",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "Why are the kangaroo and the emu featured on Australia's Coat of Arms?",
+      "options": [
+        "Neither animal can easily walk backwards, symbolising progress and moving forward",
+        "They are the two fastest land animals in Australia",
+        "They were chosen by popular vote in Australia's first referendum",
+        "They are the only animals found across every Australian state and territory"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q232",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "What makes Australia's platypus and echidna uniquely special among almost all other mammals in the world?",
+      "options": [
+        "They lay eggs instead of giving birth to live young (monotremes)",
+        "They can breathe underwater for several hours without surfacing",
+        "They hibernate throughout the entire Australian summer",
+        "They have no blood vessels in their outer skin"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q233",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "Which small Australian marsupial native to Rottnest Island is famous worldwide as the 'world's happiest animal' due to its smiling selfies?",
+      "options": [
+        "Quokka",
+        "Sugar glider",
+        "Bandicoot",
+        "Tree kangaroo"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q234",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "What famous and uniquely odd characteristic belongs to the Australian wombat?",
+      "options": [
+        "It produces cube-shaped droppings to stop them rolling off rocks and territory markers",
+        "It has blue stripes under its fur visible only under moonlight",
+        "It can leap over two metres high when startled",
+        "It burrows only when the tide is going out"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q235",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "During Australian spring, why do pedestrians and cyclists often attach zip ties pointing up from their helmets?",
+      "options": [
+        "To deter territorial magpies from swooping during nesting season",
+        "To prevent swooping by fruit bats at dusk",
+        "To signal to trams that a bike is approaching",
+        "It is a traditional Melbourne Spring Racing Carnival dress code"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q236",
+      "category": "Culture",
+      "type": "single",
+      "prompt": "Which iconic Australian bird is famous for a loud, echoing territorial call that sounds just like human laughter?",
+      "options": [
+        "Laughing Kookaburra",
+        "Sulphur-crested Cockatoo",
+        "Galah",
+        "Rainbow Lorikeet"
+      ],
+      "correct": [
+        0
+      ]
     }
   ]
 }
