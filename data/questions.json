@@ -2930,6 +2930,187 @@
         "Lygon St",
         "Lygon"
       ]
+    },
+    {
+      "id": "q220",
+      "type": "multi",
+      "topic": "Photography",
+      "prompt": "Which photo treatments are strictly forbidden according to RMIT brand guidelines?",
+      "options": [
+        "Greyscale",
+        "Red filter",
+        "Navy + red duotone on people",
+        "Navy + red duotone on campus buildings",
+        "Candid shots of real students"
+      ],
+      "correct": [
+        0,
+        1,
+        2
+      ],
+      "category": "Brand",
+      "critical": true
+    },
+    {
+      "id": "q221",
+      "type": "single",
+      "topic": "Brand · Colour",
+      "prompt": "What is the Pantone (PMS) reference for RMIT Red?",
+      "options": [
+        "PMS 485 C",
+        "PMS 2757 CP",
+        "PMS 7406",
+        "P 7527"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Brand"
+    },
+    {
+      "id": "q222",
+      "type": "single",
+      "topic": "Workflow",
+      "prompt": "In a project code like [26.0122.B], what does the trailing letter ('B') indicate?",
+      "options": [
+        "The ticket's sequential order that day (the second ticket coded)",
+        "The squad (B for Domestic)",
+        "The priority tier (B for Medium)",
+        "The design revision number"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Work"
+    },
+    {
+      "id": "q223",
+      "type": "single",
+      "topic": "Platforms",
+      "prompt": "Where on SharePoint are approved FAs and working files permanently archived?",
+      "options": [
+        "The Design 2026 site under [CP] Melbourne",
+        "The GCMC Public Downloads folder",
+        "The Vietnam General Archive site",
+        "OneDrive Personal Storage"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Platforms"
+    },
+    {
+      "id": "q224",
+      "type": "match",
+      "topic": "INTON Scholarships",
+      "prompt": "Match each scholarship to the INTON market it targets.",
+      "pairs": [
+        {
+          "left": "China Pathway Scholarship",
+          "right": "China"
+        },
+        {
+          "left": "Future Leaders Scholarship",
+          "right": "Indian subcontinent"
+        }
+      ],
+      "category": "Work"
+    },
+    {
+      "id": "q225",
+      "type": "single",
+      "topic": "INTON markets",
+      "prompt": "Which market joined INTON in 2026 with its first Information Day?",
+      "options": [
+        "Kenya (Africa)",
+        "Nigeria",
+        "South Africa",
+        "Ghana"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Team"
+    },
+    {
+      "id": "q226",
+      "type": "single",
+      "topic": "Working with Melbourne",
+      "prompt": "From 4 October, when Melbourne enters daylight saving (+4 hours ahead), what is the local cutoff time after which you should expect answers tomorrow?",
+      "options": [
+        "13:00 (1:00 PM)",
+        "14:00 (2:00 PM)",
+        "12:00 (Noon)",
+        "15:00 (3:00 PM)"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Culture"
+    },
+    {
+      "id": "q227",
+      "type": "single",
+      "topic": "Team structure",
+      "prompt": "Who is the Assistant Director of GCMC?",
+      "options": [
+        "Alex BK",
+        "Robert Fantozzi",
+        "Ha Nguyen",
+        "Đức Nguyen"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Team"
+    },
+    {
+      "id": "q228",
+      "type": "single",
+      "topic": "Onboarding",
+      "prompt": "What is scheduled for Week 2 of your onboarding?",
+      "options": [
+        "Shadowing: join INTON stand-up and sprint planning, and pair with a senior on a live BAU task",
+        "Taking full ownership of campaign deliverables independently",
+        "Leading the fortnightly GCMC planning meeting",
+        "Attending Domestic stand-ups"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Culture"
+    },
+    {
+      "id": "q229",
+      "type": "single",
+      "topic": "INTON video",
+      "prompt": "For INTON video campaigns, what are the standard cut lengths for prospecting and remarketing?",
+      "options": [
+        "15″ prospecting video and 6″ remarketing cut",
+        "30″ prospecting video and 15″ remarketing cut",
+        "60″ prospecting video and 30″ remarketing cut",
+        "6″ prospecting video and 15″ remarketing cut"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Work"
+    },
+    {
+      "id": "q230",
+      "type": "single",
+      "topic": "Workload dashboard",
+      "prompt": "Can team members view the GCMC Workload Report dashboard (mel-workload-report.vercel.app) without signing in?",
+      "options": [
+        "Yes, viewing needs no sign-in",
+        "No, it requires signing in with an RMIT staff account",
+        "No, only managers can access it",
+        "Yes, but only when connected to RMIT VPN"
+      ],
+      "correct": [
+        0
+      ],
+      "category": "Platforms"
     }
   ]
 }

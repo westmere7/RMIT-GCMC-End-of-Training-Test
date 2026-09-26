@@ -742,6 +742,32 @@
   $("overwrite").onclick = () => save(true);
   $("edRetry").onclick = () => location.reload();
 
+  // ---------- dark theme switch ----------
+  function initTheme() {
+    const btn = $("themeToggle");
+    const label = $("themeLabel");
+    if (!btn) return;
+    function updateUI(isDark) {
+      btn.setAttribute("aria-checked", String(isDark));
+      if (label) label.textContent = isDark ? "Light theme" : "Dark theme";
+      btn.title = isDark ? "Switch to light theme" : "Switch to dark theme";
+    }
+    updateUI(document.documentElement.getAttribute("data-theme") === "dark");
+    btn.onclick = () => {
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+      const nextDark = !isDark;
+      if (nextDark) {
+        document.documentElement.setAttribute("data-theme", "dark");
+        try { localStorage.setItem("gcmc_theme", "dark"); } catch (e) {}
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+        try { localStorage.setItem("gcmc_theme", "light"); } catch (e) {}
+      }
+      updateUI(nextDark);
+    };
+  }
+  initTheme();
+
   // Ctrl/⌘+S saves; Alt+N starts a new question (same category and type as the open one)
   addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); if (!$("saveBtn").disabled) save(false); }
