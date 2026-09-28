@@ -2,7 +2,8 @@
    to glow and shimmer as the needle nears it), with a sprung needle that never quite sits still.
    setScore(p) moves the rest position (-1 … 1); kick(dir) flicks the needle on each answer; setStats() fills the
    readout under the arc (points, question, streak); pulse(delta, right) marks an answer with a ripple and a points chip
-   at the needle tip. The candidate's first name rides on the needle tip. The arc flattens to fit whatever width it's given. */
+   at the needle tip; setMarks() puts the rest of the room on the arc as small marks that glide (no spring, no bounce).
+   The candidate's first name rides on the needle tip; the room's names ride on badges that keep clear of each other. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
   const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd", award: "#a445ff", awardInk: "#6a1fb0", spark: "#ecd2ff" };
@@ -26,7 +27,7 @@
   function Meter(canvas, lamp, labels) {
     this.c = canvas; this.ctx = canvas && canvas.getContext("2d"); this.lamp = lamp;
     this.labels = labels || {}; this.name = ""; this.p = 0; this.theta = 0; this.vel = 0; this.t = 0; this.last = 0;
-    this.stats = null; this.tween = null; this.pulses = [];
+    this.stats = null; this.tween = null; this.pulses = []; this.marks = [];
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.resize = this.resize.bind(this); this.frame = this.frame.bind(this);
     if (canvas) { addEventListener("resize", this.resize); this.resize(); }
@@ -75,6 +76,11 @@
     const tw = this.tween; if (!tw) return this.stats ? this.stats.points : 0;
     const k = this.reduced ? 1 : Math.min(1, (performance.now() - tw.t0) / 700);
     return tw.from + (tw.to - tw.from) * (1 - Math.pow(1 - k, 3));
+  };
+  /** The rest of the room: [{ id, name, color, initial, p }] with p a reading (−1 … 1). Each mark glides to its place. */
+  Meter.prototype.setMarks = function (marks) {
+    const old = new Map(this.marks.map((m) => [m.id, m]));
+    this.marks = (marks || []).map((m) => ({ ...m, a: old.has(m.id) ? old.get(m.id).a : 0 }));
   };
   /** An answer just landed: a ripple at the needle tip and a points chip that floats up from it. */
   Meter.prototype.pulse = function (delta, right) { if (this.reduced) return; this.pulses.push({ t0: this.t, delta, right }); };
@@ -129,6 +135,8 @@
     if (earned && this.inGreen() && !this.greenLit) { this.greenLit = true; if (this.onGreen) this.onGreen(this.greenPoint()); }
     if (!earned) this.greenLit = false;
     this.pulses = this.pulses.filter((p) => this.t - p.t0 < 1.6);
+    // the room's marks ease to their places: smooth, no overshoot
+    for (const m of this.marks) m.a += (this.aim(m.p) * S - m.a) * (this.reduced ? 1 : Math.min(1, dt * 2.2));
     this.draw();
     requestAnimationFrame(this.frame);
   };
@@ -243,6 +251,60 @@
       }
     }
 
+    // the taker's name tag rides on the needle tip (drawn last, on top); worked out here so the room's badges can keep clear of it
+    const tag = (() => {
+      if (!this.name) return null;
+      g.font = "700 13px " + TEXT;
+      const pw = g.measureText(this.name).width + 24, ph = 26, [tx, ty] = pt(this.theta, rr + lw / 2 + 12);
+      return { pw, ph, tx, x: Math.max(pw / 2 + 4, Math.min(w - pw / 2 - 4, tx)), y: Math.max(ph / 2 + 2, ty - 20) };
+    })();
+
+    // the rest of the room: a small mark each on the arc (their colour and initial), linked to a name badge. Badges never
+    // overlap each other, the taker's tag or the award label: each takes the first free spot, trying further out from the
+    // arc and then inside it, and keeps its spot while it stays free, so they don't jump about
+    if (this.marks.length) {
+      const r = this.compact ? 7 : 10, fs = this.compact ? 10 : 12, bh = this.compact ? 18 : 22;
+      const boxes = [], hit = (b) => boxes.some((o) => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+      if (tag) boxes.push({ x: tag.x - tag.pw / 2 - 4, y: tag.y - tag.ph / 2 - 4, w: tag.pw + 8, h: tag.ph + 14 });
+      { const mid = (zs + S) / 2, [lx, ly] = pt(mid, rr + lw / 2 + (this.compact ? 16 : 20)); boxes.push({ x: lx - 38, y: ly - 13, w: 76, h: 26 }); }
+      { // and the needle itself, from the bead down to where it fades out
+        const [ix, iy] = pt(this.theta, rr - drop * 0.3), pad = lw / 2 + 4;
+        boxes.push({ x: Math.min(hx, ix) - pad, y: Math.min(hy, iy) - pad, w: Math.abs(hx - ix) + 2 * pad, h: Math.abs(hy - iy) + 2 * pad });
+      }
+      const rings = [0, 1, 2, 3, -1, -2]; // outwards from the arc first, then inside it
+      g.font = `700 ${fs}px ` + TEXT;
+      for (const m of [...this.marks].sort((x, y) => x.a - y.a)) {
+        const a = Math.max(-S, Math.min(S, m.a)), [mx, my] = pt(a, rr), bw = g.measureText(m.name || "").width + 18;
+        const at = (ring) => {
+          const d = ring >= 0 ? rr + lw / 2 + bh / 2 + 10 + ring * (bh + 5) : rr - lw / 2 - 28 - (-ring - 1) * (bh + 5) - bh / 2;
+          const [x0, y0] = pt(a, d);
+          return { x: Math.max(4, Math.min(w - bw - 4, x0 - bw / 2)), y: Math.max(2, Math.min(this.h - bh - 2, y0 - bh / 2)), w: bw, h: bh };
+        };
+        let box = null;
+        for (const ring of m.ring != null ? [m.ring, ...rings.filter((x) => x !== m.ring)] : rings) {
+          const b = at(ring); if (!hit(b)) { box = b; m.ring = ring; break; }
+        }
+        if (!box) box = at(m.ring != null ? m.ring : 0); // nowhere free (a very full room): the last spot it had
+        boxes.push(box);
+        const bx0 = box.x + box.w / 2, by0 = box.y + box.h / 2;
+        // the link from the mark to its badge
+        g.strokeStyle = m.color; g.globalAlpha = 0.6; g.lineWidth = 1.5;
+        g.beginPath(); g.moveTo(mx, my); g.lineTo(bx0, by0); g.stroke(); g.globalAlpha = 1;
+        // the mark, on the arc
+        g.save(); g.shadowColor = "rgba(0,0,40,0.35)"; g.shadowBlur = 6; g.shadowOffsetY = 1.5;
+        g.fillStyle = m.color; g.beginPath(); g.arc(mx, my, r, 0, Math.PI * 2); g.fill(); g.restore();
+        g.lineWidth = 2; g.strokeStyle = "#fff"; g.stroke();
+        g.fillStyle = "#fff"; g.font = `700 ${Math.round(r * 1.1)}px ` + DISPLAY; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(m.initial || "", mx, my + 1);
+        // the badge, like the taker's tag but smaller and in their colour
+        g.save(); g.shadowColor = "rgba(0,0,40,0.28)"; g.shadowBlur = 6; g.shadowOffsetY = 1.5;
+        g.fillStyle = m.color; g.beginPath();
+        if (g.roundRect) g.roundRect(box.x, box.y, box.w, box.h, box.h / 2); else g.rect(box.x, box.y, box.w, box.h);
+        g.fill(); g.restore();
+        g.fillStyle = "#fff"; g.font = `700 ${fs}px ` + TEXT; g.fillText(m.name || "", bx0, by0 + 1);
+      }
+    }
+
     // the needle: bold and tapered, outlined in white, glowing in the colour it points at
     const inner = rr - drop * 0.3, [nx, ny] = pt(this.theta, rr + lw / 2 + 8), [bx, by] = pt(this.theta, inner);
     const px = Math.cos(ang(this.theta) + Math.PI / 2), py = Math.sin(ang(this.theta) + Math.PI / 2), wb = this.compact ? 4.5 : 7;
@@ -283,17 +345,14 @@
     }
 
     // the candidate's first name, riding on the needle tip
-    if (this.name) {
+    if (tag) {
       g.font = "700 13px " + TEXT; g.textAlign = "center"; g.textBaseline = "middle";
-      const tw = g.measureText(this.name).width, pw = tw + 24, ph = 26;
-      const [tx, ty] = pt(this.theta, rr + lw / 2 + 12);
-      const pxx = Math.max(pw / 2 + 4, Math.min(w - pw / 2 - 4, tx)), pyy = Math.max(ph / 2 + 2, ty - 20);
       g.save(); g.shadowColor = "rgba(0,0,40,0.3)"; g.shadowBlur = 8; g.shadowOffsetY = 2;
       g.fillStyle = C.navy; g.beginPath();
-      if (g.roundRect) g.roundRect(pxx - pw / 2, pyy - ph / 2, pw, ph, ph / 2); else g.rect(pxx - pw / 2, pyy - ph / 2, pw, ph);
+      if (g.roundRect) g.roundRect(tag.x - tag.pw / 2, tag.y - tag.ph / 2, tag.pw, tag.ph, tag.ph / 2); else g.rect(tag.x - tag.pw / 2, tag.y - tag.ph / 2, tag.pw, tag.ph);
       g.fill(); g.restore();
-      g.fillStyle = C.navy; g.beginPath(); g.moveTo(tx - 5, pyy + ph / 2 - 1); g.lineTo(tx + 5, pyy + ph / 2 - 1); g.lineTo(tx, pyy + ph / 2 + 6); g.closePath(); g.fill();
-      g.fillStyle = "#fff"; g.fillText(this.name, pxx, pyy + 1);
+      g.fillStyle = C.navy; g.beginPath(); g.moveTo(tag.tx - 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx + 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx, tag.y + tag.ph / 2 + 6); g.closePath(); g.fill();
+      g.fillStyle = "#fff"; g.fillText(this.name, tag.x, tag.y + 1);
     }
   };
 

@@ -376,6 +376,15 @@
     let streak = 0;
     for (const q of qs) { const r = S.responses[q.id]; if (!r) break; streak = r.correct ? streak + 1 : 0; }
     meter.setStats({ points: me.points, answered: Object.keys(S.responses).length, total: qs.length, streak });
+    // the room on the taker's meter: each teammate's right against wrong so far (critical ×2), the scale the meter uses on your own
+    if (HOSTING()) {
+      const t = tally();
+      meter.setMarks(t.rows.slice(1).map((r) => {
+        let rw = 0, ww = 0;
+        r.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else if (c !== "none") ww += k; });
+        return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterReading(rw, ww, qs.length) };
+      }));
+    }
     if (k != null) meter.pulse(me.deltas[k], !!(S.responses[qs[k].id] || {}).correct);
     return me;
   }
