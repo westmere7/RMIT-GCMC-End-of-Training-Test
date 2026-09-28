@@ -9,3 +9,4 @@ data/people.json
 supabase/
 README.md
 scripts/
+tests/

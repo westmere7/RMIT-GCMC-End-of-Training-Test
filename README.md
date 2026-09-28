@@ -122,6 +122,12 @@ Double-click `Start Test.bat`. It opens http://localhost:8765/.
 - **Auto-refresh:** with the dev server, open pages refresh by themselves when a file changes. CSS changes swap in without a reload. A test in progress survives a reload.
 - **Offline:** without a `.env` or without Node, it falls back to `server.py` (Python), which reads and writes `data/questions.json` and keeps everything in local files.
 
+## Tests
+
+- `node --test tests/*.test.js` checks the points rules (every case, critical ×2, on your own), their limits, and the meter (range, zones, when confetti lands), plus simulated sittings that check a stronger player always scores more.
+- `node tests/simulate.js` prints what scores look like in practice: taker and teammate points at different skill levels and room sizes, and where the meter ends up.
+- They run the real `assets/common.js`, `group.js` and `meter.js`, with nothing to install.
+
 ## Database changes
 
 Schema changes go in a new numbered file in `supabase/migrations/`, which is then applied to the live project. `schema.sql` is always the complete current state, for fresh installs. Applying a migration needs `SUPABASE_DB_URL` in `.env`; use the **session pooler** URI, because the direct `db.<ref>` host is IPv6-only.

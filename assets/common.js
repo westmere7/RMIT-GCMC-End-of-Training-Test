@@ -146,6 +146,14 @@
     return shuffle([...picked]).slice(0, n);
   }
 
+  /** The meter's reading, −1 … 1. Each answer moves it a fixed step until half the attempt is in, then it tracks
+      accuracy, with each critical miss counting `pen` extra wrong answers. The step is sized to the attempt, so a run of
+      right answers climbs steadily instead of pinning the needle early. */
+  function meterReading(right, wrong, critMisses, n, pen) {
+    const steps = Math.max(8, Math.round(n / 2)), k = pen == null ? 3 : pen;
+    return Math.max(-1, Math.min(1, (right - wrong - k * critMisses) / Math.max(right + wrong, steps)));
+  }
+
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading };
 })(window);

@@ -348,10 +348,7 @@
   function score() {
     let c = 0, w = 0, crit = 0;
     QS().forEach((q) => { const r = S.responses[q.id]; if (!r) return; if (r.correct) c++; else { w++; if (q.critical) crit++; } });
-    // the meter: each answer moves it a fixed step until half the attempt is in, then it tracks accuracy (critical misses
-    // weigh extra); the step is sized to the attempt so a run of correct answers climbs steadily instead of pinning the needle early
-    const pen = 3, steps = Math.max(8, Math.round(QS().length / 2));
-    return { c, w, crit, p: Math.max(-1, Math.min(1, (c - w - pen * crit) / Math.max(c + w, steps))) };
+    return { c, w, crit, p: A.meterReading(c, w, crit, QS().length) };
   }
   // does the viewer's own share of right answers earn the distinction (the meter's confetti threshold)?
   const distinctionFor = (c, n) => (100 * c) / Math.max(1, n) >= ((DATA.settings || {}).confettiThreshold || 95);
