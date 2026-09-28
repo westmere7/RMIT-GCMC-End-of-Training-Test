@@ -6,7 +6,8 @@
 // POST /api/room { action, r, d | h, since, ... }                                 -> the same, after the action
 //   create {name}                         -> also { hostKey }
 //   join {name, color} · leave            (members, in the lobby)
-//   busy {q, busy}                        (anyone: working on question q, not yet submitted)
+//   busy {q, busy, draft}                 (anyone: working on question q, not yet submitted; a member's draft is
+//                                          their current pick, which counts as their answer when the taker submits)
 //   answer {q, response}                  (members, while question q is open)
 //   kick {m} · start {paper} · reveal {q, response} · next {q} · finish {q, timedOut} · end   (the taker)
 const { configured, rooms, readJson, send, sha256 } = require("./_store");
@@ -104,7 +105,10 @@ async function act(body) {
     } else if (action === "leave") {
       if (mine && st.phase === "lobby") await rooms.removeMember(code, mine.id);
     } else if (action === "busy") {
-      if (mine && st.phase === "question" && q === st.index) await rooms.patchMember(code, mine.id, { busy_q: body.busy ? q : null });
+      if (mine && st.phase === "question" && q === st.index) {
+        const draft = body.busy && body.draft != null && JSON.stringify(body.draft).length < 4000 ? body.draft : null;
+        await rooms.patchMember(code, mine.id, { busy_q: body.busy ? q : null, draft, draft_q: draft == null ? null : q });
+      }
     } else if (action === "answer") {
       if (!mine) throw fail(403, "You're not in this room.");
       if (!(st.roster || []).includes(mine.id)) throw fail(409, "You joined after the start, so you're watching this one.");
@@ -130,7 +134,10 @@ async function act(body) {
       clock: { limitMs, usedMs: 0, runningSince: now }, revealAt: {} }, paper);
   } else if (action === "reveal") {
     if (st.phase === "question" && q === st.index) {
-      await rooms.answer(code, 0, q, body.response);
+      await rooms.answer(code, 0, q, body.response, now);
+      // anyone who picked something but didn't press Submit: their pick counts (a submitted answer stays as it was)
+      const drafts = (await rooms.drafts(code, q)).filter((d) => (st.roster || []).includes(d.id));
+      await Promise.all(drafts.map((d) => rooms.answer(code, d.id, q, d.draft, now)));
       await setState({ ...st, phase: "reveal", clock: freeze(st.clock, now), revealAt: { ...(st.revealAt || {}), [q]: now } });
       await rooms.patchHost(code, { host_busy_q: null });
     }

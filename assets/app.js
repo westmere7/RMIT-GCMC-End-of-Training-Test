@@ -124,7 +124,7 @@
   $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
   function enter(email, name, attempt) {
     S = { email, name, attempt: attempt || 1, started: false, finished: false }; save();
-    $("agree").checked = false; $("startBtn").disabled = true; $("dAttempt").textContent = S.attempt;
+    $("startBtn").disabled = false; $("dAttempt").textContent = S.attempt;
     show("scrBrief");
     openLobby();
   }
@@ -232,44 +232,27 @@
     b.disabled = true;
     try { await roomAct({ action: "kick", m: +b.dataset.kick }); renderLobby(); } catch (err) { b.disabled = false; }
   });
-  // the points rules as two grids: read across for what the others did, down for what you did (green earns, red costs)
+  // the points rules, grouped by "you got it right / wrong", with the points first so they scan at a glance
   function pointsHtml() {
-    const name = esc(S.name || "The taker");
-    const cell = (p) => {
-      const a = (0.1 + 0.45 * Math.min(1, Math.abs(p) / 10)).toFixed(2);
-      const bg = p > 0 ? `rgba(31, 157, 85, ${a})` : p < 0 ? `rgba(230, 30, 42, ${a})` : "var(--grey-50)";
-      return `<td class="${p > 0 ? "up" : p < 0 ? "down" : ""}" style="background:${bg}">${G.signed(p)}</td>`;
-    };
-    const mark = (ok) => `<span class="mark ${ok ? "y" : "n"}" aria-hidden="true"></span>`;
-    const team = (pattern) => `<span class="team-dots" aria-hidden="true">${[...pattern].map((c) => `<i class="${c}"></i>`).join("")}</span>`;
+    const name = esc(S.name || "the taker");
     const taker = (right, others) => G.RULES.taker.find((r) => r.right === right && r.others === others).pts;
     const member = (right, takerRight) => G.RULES.member.find((r) => r.right === right && (right || r.taker === takerRight)).pts;
-    const you = `<span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>`;
-    return `<figure class="pts-grid">
-        <figcaption>${you}<b>${name}</b></figcaption>
-        <table>
-          <thead><tr><th></th><th>${team("nnn")}<small>Team all wrong</small></th><th>${team("yny")}<small>Some wrong</small></th><th>${team("yyy")}<small>Team all right</small></th></tr></thead>
-          <tbody>
-            <tr><th>${mark(true)}<small>Right</small></th>${cell(taker(true, "wrong"))}${cell(taker(true, "some"))}${cell(taker(true, "right"))}</tr>
-            <tr><th>${mark(false)}<small>Wrong</small></th>${cell(taker(false, "wrong"))}${cell(taker(false, "some"))}${cell(taker(false, "right"))}</tr>
-          </tbody>
-        </table>
-      </figure>
-      <figure class="pts-grid">
-        <figcaption>${team("byp")}<b>Everyone else</b></figcaption>
-        <table>
-          <thead><tr><th></th><th>${you}${mark(true)}<small>${name} right</small></th><th>${you}${mark(false)}<small>${name} wrong</small></th></tr></thead>
-          <tbody>
-            <tr><th>${mark(true)}<small>Right</small></th>${cell(member(true, true))}${cell(member(true, false))}</tr>
-            <tr><th>${mark(false)}<small>Wrong</small></th>${cell(member(false, true))}${cell(member(false, false))}</tr>
-          </tbody>
-        </table>
-      </figure>
-      <div class="pts-foot"><p><span class="crit-chip">Critical</span><b>×2</b></p><p><span class="mark n" aria-hidden="true"></span>No answer when ${name} submits</p></div>`;
+    const line = (pts, text) => `<li><b class="${pts > 0 ? "up" : pts < 0 ? "down" : ""}">${G.signed(pts)}</b><span>${text}</span></li>`;
+    const group = (ok, lines) => `<div class="pts-group"><h4 class="${ok ? "y" : "n"}">${ok ? "Right" : "Wrong"}</h4><ul>${lines.join("")}</ul></div>`;
+    return `<div class="pts-who">
+        <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>${name}</h3>
+        ${group(true, [line(taker(true, "wrong"), "the whole team got it wrong"), line(taker(true, "some"), "some of the team got it wrong"), line(taker(true, "right"), "the whole team got it right too")])}
+        ${group(false, [line(taker(false, "wrong"), "the whole team got it wrong too"), line(taker(false, "some"), "some of the team got it right"), line(taker(false, "right"), "the whole team got it right")])}
+      </div>
+      <div class="pts-who">
+        <h3><span class="team-dots" aria-hidden="true"><i></i><i></i><i></i></span>Everyone else</h3>
+        ${group(true, [line(member(true, true), "always")])}
+        ${group(false, [line(member(false, false), `${name} got it wrong too`), line(member(false, true), `${name} got it right`)])}
+      </div>
+      <p class="pts-foot"><span class="crit-chip">Critical</span> questions count double. No answer by the time ${name} submits counts as wrong.</p>`;
   }
 
   // ---------- briefing ----------
-  $("agree").addEventListener("change", (e) => { $("startBtn").disabled = !e.target.checked; });
   $("startBtn").addEventListener("click", () => startTest(false));
 
   function orderFor(q, st) {
@@ -301,7 +284,7 @@
       const mins = st.timeLimitMinutes || 10;
       $("digits").textContent = String(mins).padStart(2, "0") + ":00"; $("tFill").style.width = "100%";
       $("timerSub").textContent = "The clock doesn't run in a preview";
-      buildDots(); renderQuestion();
+      renderQuestion();
       requestAnimationFrame(() => scrollTo(0, Math.max(0, $("qCard").getBoundingClientRect().top + scrollY - 90))); // straight to the question
     });
     parent.postMessage({ type: "preview-ready" }, location.origin);
@@ -350,7 +333,7 @@
     meter.setThreshold((DATA.settings || {}).confettiThreshold); meter.greenLit = score().p >= (meter.pg || 0.9);
     meter.onGreen = (pt) => confetti({ x: pt.x, y: pt.y, n: 90, life: 2.6 });
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
-    buildDots(); renderQuestion(); runClock();
+    renderQuestion(); runClock();
     if (HOSTING()) { renderPlayers(); startPolling(1000, (gone) => (gone ? roomGone() : syncTaker())); }
   }
 
@@ -412,19 +395,10 @@
   }
 
   // ---------- progress ----------
-  function buildDots() {
-    const box = $("dots"); box.innerHTML = "";
-    QS().forEach((q, i) => { const d = document.createElement("span"); d.textContent = i + 1; if (q.critical) { d.dataset.crit = "1"; d.title = "Critical question"; } box.appendChild(d); });
-    updateProgress();
-  }
   function updateProgress() {
     const n = QS().length, done = Object.keys(S.responses).length;
     $("count").innerHTML = `${done} <small>of ${n} answered</small>`;
     $("barFill").style.width = (100 * done) / n + "%";
-    [...$("dots").children].forEach((d, i) => {
-      const r = S.responses[QS()[i].id];
-      d.className = r ? (r.skipped ? "skipped" : "done") : i === S.index ? "current" : "";
-    });
   }
   const setStatus = (cls, html) => { $("qStatus").className = "status " + cls; $("qStatus").innerHTML = html; };
 
@@ -432,7 +406,7 @@
   let current = null; // the in-progress response for the question on screen
   let revealShown = false, busySent = false;
   function renderQuestion() {
-    locked = false; revealShown = false; busySent = false;
+    locked = false; revealShown = false; busySent = false; draftSent = ""; clearTimeout(draftTimer);
     const q = QS()[S.index], n = QS().length;
     $("qCard").classList.remove("locked", "revealed");
     $("qNo").textContent = String(S.index + 1).padStart(2, "0"); $("qOfN").textContent = `of ${n}`;
@@ -442,7 +416,7 @@
     $("critNotice").hidden = !q.critical;
     $("critNoticeText").textContent = GROUP() ? "Points count double here, right or wrong." : "It's worth 2 points instead of 1.";
     $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>${GROUP() ? "Points ×2, right or wrong" : "2 points"}</small>` : GROUP() ? "Points ×1" : "1 point";
-    setStatus("", '<span class="kbd">Press <b>Enter</b> to submit</span>');
+    setStatus("", MEMBER() ? `<span class="hint">Not submitted when ${esc(takerName())} submits? Your pick still counts.</span>` : '<span class="kbd">Press <b>Enter</b> to submit</span>');
     $("submitBtn").hidden = false; $("skipBtn").hidden = MEMBER(); $("skipBtn").disabled = false; $("nextBtn").hidden = true;
     const body = $("qBody"); body.innerHTML = "";
     current = A.isChoiceQ(q) ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
@@ -503,10 +477,22 @@
     if (MEMBER() && ROOM && ROOM.mine && ROOM.index === S.index && ROOM.phase === "question") answerIn(q, ROOM.mine.r);
   }
 
-  // tell the room whether you've started on this question (Thinking… → Answering…)
+  // tell the room whether you've started on this question (Thinking… → Answering…); a teammate also sends what
+  // they've picked so far, which counts as their answer if the taker submits before they do
+  let draftTimer = null, draftSent = "";
   function reportBusy() {
     if (!GROUP() || locked) return;
     const on = Array.isArray(current) ? current.some((x) => x != null) : !!A.normalize(current);
+    if (MEMBER()) {
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(() => {
+        const draft = on ? JSON.stringify(current) : "";
+        if (locked || draft === draftSent) return;
+        draftSent = draft;
+        G.post({ action: "busy", ...auth(), q: S.index, busy: on, draft: on ? current : null }).catch(() => { draftSent = ""; });
+      }, 200);
+      return;
+    }
     if (on === busySent) return;
     busySent = on;
     G.post({ action: "busy", ...auth(), q: S.index, busy: on }).catch(() => {});
@@ -870,7 +856,7 @@
       } catch (e) { return; } finally { gettingPaper = false; }
       memberResponses();
       show("scrTest"); // answers only: the meter, the room and the answer sheet are on the taker's screen
-      buildDots(); renderQuestion(); runClock();
+      renderQuestion(); runClock();
       startPolling(1000, (gone) => (gone ? roomGone() : syncMember()));
     }
     if (ROOM.phase === "finished") return memberFinish();
@@ -936,6 +922,7 @@
   });
 
   async function memberSubmit(q, resp) {
+    clearTimeout(draftTimer);
     setStatus("", "Sending…");
     try { await roomAct({ action: "answer", q: S.index, response: resp }); answerIn(q, resp); }
     catch (e) {
@@ -947,7 +934,6 @@
   function answerIn(q, resp) {
     locked = true; $("qCard").classList.add("locked"); $("submitBtn").disabled = true;
     setStatus("recorded", `Answer in. Waiting for ${esc(takerName())}…`);
-    const dot = $("dots").children[S.index]; if (dot) dot.className = "done";
   }
   async function memberFinish() {
     stopPolling(); clearInterval(tick);

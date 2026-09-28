@@ -200,14 +200,18 @@ const rooms = {
   async removeMember(code, id) {
     await rest(`assessment_room_members?room=eq.${code}&id=eq.${id}`, { method: "DELETE" });
   },
+  /** Teammates' unsubmitted picks for question q. */
+  async drafts(code, q) {
+    return (await rest(`assessment_room_members?room=eq.${code}&draft_q=eq.${q}&draft=not.is.null&select=id,draft`)) || [];
+  },
   async answers(code, fromQ) {
     return (await rest(`assessment_room_answers?room=eq.${code}&qidx=gte.${fromQ}&select=member_id,qidx,response,at&order=qidx.asc`)) || [];
   },
   /** The first answer counts: a second one for the same question is ignored. */
-  async answer(code, memberId, qidx, response) {
+  async answer(code, memberId, qidx, response, at) {
     await rest("assessment_room_answers?on_conflict=room,member_id,qidx", {
       method: "POST", headers: { Prefer: "resolution=ignore-duplicates" },
-      body: JSON.stringify({ room: code, member_id: memberId, qidx, response: response == null ? null : response, at: new Date().toISOString() }),
+      body: JSON.stringify({ room: code, member_id: memberId, qidx, response: response == null ? null : response, at: new Date(at || Date.now()).toISOString() }),
     });
   },
 };

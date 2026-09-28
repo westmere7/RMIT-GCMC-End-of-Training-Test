@@ -1,4 +1,4 @@
--- End-of-Training Assessment · Supabase schema (current state = migrations 001 to 005)
+-- End-of-Training Assessment · Supabase schema (current state = migrations 001 to 006)
 -- For a fresh project: run this once in the Supabase SQL editor.
 -- For an existing project: apply the files in supabase/migrations/ that aren't in assessment_migrations yet.
 -- Only the Vercel functions (service role key) touch these tables: RLS is on with no policies,
@@ -136,6 +136,8 @@ create table if not exists public.assessment_room_members (
   name        text not null check (char_length(name) between 1 and 24),
   color       text not null check (color ~ '^#[0-9a-f]{6}$'),
   busy_q      integer,
+  draft       jsonb,    -- picked but not submitted (for question draft_q): counts as their answer when the taker submits
+  draft_q     integer,
   seen_at     timestamptz not null default now(),
   created_at  timestamptz not null default now(),
   unique (room, device_hash),
@@ -154,4 +156,4 @@ create table if not exists public.assessment_room_answers (
 );
 alter table public.assessment_room_answers enable row level security;
 
-insert into public.assessment_migrations (name) values ('001_initial'), ('002_people_and_category_scores'), ('003_images_bucket'), ('004_contributions'), ('005_group_rooms') on conflict do nothing;
+insert into public.assessment_migrations (name) values ('001_initial'), ('002_people_and_category_scores'), ('003_images_bucket'), ('004_contributions'), ('005_group_rooms'), ('006_member_drafts') on conflict do nothing;
