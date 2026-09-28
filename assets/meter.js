@@ -17,11 +17,14 @@
   }
   Meter.prototype.resize = function () {
     const r = this.c.getBoundingClientRect(), dpr = devicePixelRatio || 1;
-    this.w = Math.max(300, r.width); this.h = Math.max(140, r.height);
+    this.w = Math.max(240, r.width); this.h = Math.max(140, r.height);
     this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // arc through three points: apex at `top`, ends at ±half-chord near the bottom; the sides hold the zone labels
-    this.top = 64; this.ends = this.h - 46; const half = this.w * 0.33, sag = Math.max(40, this.ends - this.top);
+    // on a phone there's no room beside the arc, so it widens and the labels sit under its ends instead
+    this.compact = this.w < 600;
+    this.top = this.compact ? 52 : 64; this.ends = this.h - (this.compact ? 62 : 46);
+    const half = this.w * (this.compact ? 0.4 : 0.33), sag = Math.max(40, this.ends - this.top);
     this.half = half;
     this.R = (half * half + sag * sag) / (2 * sag);
     this.span = Math.asin(Math.min(0.99, half / this.R));
@@ -126,7 +129,22 @@
       for (const wd of words) { const last = lines[lines.length - 1]; if (last && g.measureText(last + " " + wd).width <= room) lines[lines.length - 1] = last + " " + wd; else lines.push(wd); }
       return lines;
     };
-    for (const [side, text, col] of [[-1, this.labels.left, C.red], [1, this.labels.right, C.navy]]) {
+    if (this.compact) { // under the arc ends, centred, up to two lines
+      const cs = 12, clh = 14, croom = w * 0.42;
+      g.font = `700 ${cs}px ` + TEXT; g.textAlign = "center";
+      const cwrap = (text) => {
+        const words = String(text || "").toUpperCase().split(/\s+/).filter(Boolean), lines = [];
+        for (const wd of words) { const last = lines[lines.length - 1]; if (last && g.measureText(last + " " + wd).width <= croom) lines[lines.length - 1] = last + " " + wd; else lines.push(wd); }
+        return lines.slice(0, 2);
+      };
+      for (const [side, text, col] of [[-1, this.labels.left, C.red], [1, this.labels.right, C.navy]]) {
+        const lines = cwrap(text); if (!lines.length) continue;
+        const widest = Math.max(...lines.map((l) => g.measureText(l).width));
+        const lx = Math.max(widest / 2 + 4, Math.min(w - widest / 2 - 4, cx + side * this.half));
+        g.fillStyle = col; lines.forEach((ln, i) => g.fillText(ln, lx, this.ends + 34 + i * clh));
+      }
+    }
+    for (const [side, text, col] of this.compact ? [] : [[-1, this.labels.left, C.red], [1, this.labels.right, C.navy]]) {
       const lines = wrap(text).slice(0, 4); if (!lines.length) continue;
       g.fillStyle = col; g.textAlign = side < 0 ? "right" : "left";
       const lx = side < 0 ? cx - this.half - 26 : cx + this.half + 26, y0 = this.ends - (lines.length - 1) * lh + 6;

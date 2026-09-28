@@ -121,6 +121,7 @@
   const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["match", "Match pairs"], ["image", "Image question"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
   const TYPE_NAME = Object.fromEntries(TYPES.map(([v, l]) => [v, l]));
   const LETTERS = "ABCDEFGHIJ", MAX_OPTS = 8, MAX_PAIRS = 8;
+  const narrow = () => matchMedia("(max-width: 640px)").matches; // phone layout: pair rows stack, so blank rows need labels
   const isChoice = (t) => t === "single" || t === "multi";
   const isText = (t) => t === "fill" || t === "short";
 
@@ -249,7 +250,7 @@
   }
   function renderRow(q) {
     const b = el("button.qrow", { type: "button" }); b.dataset.id = q.id;
-    b.onclick = () => select(q.id);
+    b.onclick = () => select(q.id, { fromList: true });
     paintRow(b, q);
     return b;
   }
@@ -275,6 +276,8 @@
     const row = id && rowOf(id); if (row) row.scrollIntoView({ block: "nearest" });
     if (opts.focus && $("qPrompt")) $("qPrompt").focus();
     if (!opts.keepScroll && innerWidth > 980) { const ed = $("qEditor"); if (ed.getBoundingClientRect().top < 0) ed.scrollIntoView({ block: "start" }); }
+    // one column (phones, small tablets): the editor sits under the list, so go to it
+    else if (opts.fromList && innerWidth <= 980) $("qEditor").scrollIntoView({ block: "start", behavior: "smooth" });
   }
   function step(dir) {
     const ids = visibleIds(); if (!ids.length) return;
@@ -617,8 +620,8 @@
     const add = (at) => { if (q.pairs.length >= MAX_PAIRS) return; q.pairs.splice(at, 0, { left: "", right: "" }); redrawAnswers(q, idOf(at)); };
     const del = (k, focusK) => { q.pairs.splice(k, 1); redrawAnswers(q, idOf(Math.min(focusK, q.pairs.length - 1)), true); };
     q.pairs.forEach((pr, k) => {
-      const l = el("input.input", { id: idOf(k), value: pr.left, placeholder: k ? "" : "e.g. Frame.io", "aria-label": `Pair ${k + 1}, Column A` });
-      const r = el("input.input", { id: `pr-${q.id}-${k}`, value: pr.right, placeholder: k ? "" : "e.g. Reviewing designs with stakeholders", "aria-label": `Pair ${k + 1}, Column B` });
+      const l = el("input.input", { id: idOf(k), value: pr.left, placeholder: k ? (narrow() ? "A · item" : "") : "e.g. Frame.io", "aria-label": `Pair ${k + 1}, Column A` });
+      const r = el("input.input", { id: `pr-${q.id}-${k}`, value: pr.right, placeholder: k ? (narrow() ? "B · its match" : "") : "e.g. Reviewing designs with stakeholders", "aria-label": `Pair ${k + 1}, Column B` });
       l.oninput = () => { pr.left = l.value; changed(q); };
       r.oninput = () => { pr.right = r.value; changed(q); };
       l.onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); r.focus(); } else rowKeys(e, k, q.pairs.length, add, del, idOf, 2); };
@@ -661,7 +664,8 @@
   let closePreview = () => {};
   function openPreview(q) {
     closePreview();
-    const W = 1280; // the test's desktop layout, scaled down to fit
+    // the test's desktop layout, scaled down to fit; on a phone, the phone layout at full size
+    const widthFor = () => (holder.clientWidth < 760 ? holder.clientWidth : 1280);
     const frame = el("iframe", { src: "./?preview=1", title: "Preview of question " + numOf(q) });
     const holder = el("div.pv-frame", {}, frame);
     const p = problems(q);
@@ -673,7 +677,7 @@
           shut),
         p.length ? el("p.pv-warn", { text: "Still needs fixing: " + p.join(" ") }) : null,
         holder));
-    const fit = () => { const k = Math.min(1, holder.clientWidth / W); frame.style.width = W + "px"; frame.style.height = holder.clientHeight / k + "px"; frame.style.transform = `scale(${k})`; };
+    const fit = () => { const W = widthFor(), k = Math.min(1, holder.clientWidth / W); frame.style.width = W + "px"; frame.style.height = holder.clientHeight / k + "px"; frame.style.transform = `scale(${k})`; };
     const onMsg = (e) => {
       if (e.source !== frame.contentWindow || !e.data || e.data.type !== "preview-ready") return;
       frame.contentWindow.postMessage({ type: "preview", question: JSON.parse(JSON.stringify(q)), settings: D.settings, name: "Preview" }, location.origin);

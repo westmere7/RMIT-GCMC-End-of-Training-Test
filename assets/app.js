@@ -336,6 +336,7 @@
     colA.append(...aEls); colB.append(...bEls); board.append(svg, colA, colB); wrap.append(board);
 
     let active = null, pointer = null, drag = null, justDragged = false;
+    const touch = matchMedia("(pointer: coarse)").matches;
     const numOf = (ap) => ord.a.indexOf(ap); // display position of an A item
     const colourOf = (ap) => LINK_COLOURS[numOf(ap) % LINK_COLOURS.length];
     const textOf = (side, p) => (side === "a" ? q.pairs[p].left : q.pairs[p].right);
@@ -352,7 +353,8 @@
     }
     // pointer: a click picks; a drag from one side to the other links
     board.addEventListener("pointerdown", (e) => {
-      const it = e.target.closest(".match-item"); if (!it || locked || e.button > 0) return;
+      // touch taps (no drag), so a finger on an item can still scroll the page
+      const it = e.target.closest(".match-item"); if (!it || locked || e.button > 0 || e.pointerType === "touch") return;
       drag = { side: it.dataset.side, p: +it.dataset.p, x: e.clientX, y: e.clientY, moved: false };
     });
     const onMove = (e) => {
@@ -425,7 +427,8 @@
       $("matchReset").hidden = !n;
       $("matchTip").innerHTML = active
         ? `Now pick the match for <b>${esc(textOf(active.side, active.p))}</b> in ${active.side === "a" ? "B" : "A"}.`
-        : n === current.length ? "All linked. Click a pair again to undo it, or submit." : "Click an item, then its match on the other side. You can also drag between them.";
+        : n === current.length ? `All linked. ${touch ? "Tap" : "Click"} a pair again to undo it, or submit.`
+        : touch ? "Tap an item, then its match on the other side." : "Click an item, then its match on the other side. You can also drag between them.";
       $("submitBtn").disabled = n < current.length;
       drawLines();
     }
