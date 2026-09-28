@@ -1092,4 +1092,5 @@ button.qr::after { content: ""; position: absolute; right: -6px; bottom: -6px; w
 }
 
 /* ---------- the award (the meter ended in its award zone) ---------- */
-.badge.award { background: linear-gradient(135deg, #ffe07a, #f5b400 55%, #e08e00); color: var(--navy); box-shadow: 0 0 0 3px rgba(245, 180, 0, 0.25), 0 8px 20px -8px rgba(245, 180, 0, 0.8); }
+.badge.award { background: linear-gradient(135deg, #d9a6ff, #a445ff 50%, #7a1fd6); color: #fff; box-shadow: 0 0 0 3px rgba(164, 69, 255, 0.3), 0 8px 22px -8px rgba(164, 69, 255, 0.9); animation: award-glow 2.4s ease-in-out infinite; }
+@keyframes award-glow { 50% { box-shadow: 0 0 0 5px rgba(164, 69, 255, 0.18), 0 10px 30px -6px rgba(164, 69, 255, 1); } }

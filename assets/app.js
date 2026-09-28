@@ -1232,7 +1232,8 @@
     if (reduced) return;
     o = o || {};
     const cv = $("confetti"), burst = o.x != null, now = performance.now();
-    const cols = burst ? ["#1f9d55", "#1f9d55", "#fac800", "#e61e2a", "#000054"] : ["#e61e2a", "#000054", "#fac800", "#e3e5e0", "#ffffff"];
+    // the burst from the award zone is purple, like the zone; the big celebration mixes it with the brand colours
+    const cols = burst ? ["#a445ff", "#d9a6ff", "#7a1fd6", "#ecd2ff", "#fac800"] : ["#a445ff", "#e61e2a", "#000054", "#fac800", "#d9a6ff", "#ffffff"];
     for (let i = 0; i < (o.n || 260); i++) pieces.push({
       x: burst ? o.x : innerWidth / 2 + (Math.random() - 0.5) * 240, y: burst ? o.y : innerHeight * 0.35,
       vx: (Math.random() - 0.5) * (burst ? 10 : 16), vy: -Math.random() * (burst ? 10 : 16) - (burst ? 3 : 4),

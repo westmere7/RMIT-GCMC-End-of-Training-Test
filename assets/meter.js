@@ -1,12 +1,12 @@
-/* The performance meter: a vibrant arc, red through amber to green and a gold award zone at the top end, with a sprung
-   needle that never quite sits still.
+/* The performance meter: a vibrant arc, red through amber to green and a purple award zone at the top end (which starts
+   to glow and shimmer as the needle nears it), with a sprung needle that never quite sits still.
    setScore(p) moves the rest position (-1 … 1); kick(dir) flicks the needle on each answer; setStats() fills the
    readout under the arc (points, question, streak); pulse(delta, right) marks an answer with a ripple and a points chip
    at the needle tip. The candidate's first name rides on the needle tip. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
-  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd", gold: "#f5b400", goldInk: "#9a6a00" };
-  const GOLD = [[0, "#ffe07a"], [0.5, "#f5b400"], [1, "#e08e00"]];
+  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd", award: "#a445ff", awardInk: "#6a1fb0", spark: "#ecd2ff" };
+  const AWARD = [[0, "#d9a6ff"], [0.5, "#a445ff"], [1, "#7a1fd6"]];
   const STOPS = [[0, "#e61e2a"], [0.24, "#ff5b36"], [0.5, "#ffb000"], [0.74, "#6fcf3c"], [1, "#12a150"]]; // left end → right end
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
   const DISPLAY = "'Museo-RMITVN 700', 'Museo 700', 'Museo', " + TEXT;
@@ -39,7 +39,7 @@
     // arc through three points: apex at `top`, ends at ±half-chord near the bottom; on a phone it's narrower and thinner
     this.compact = this.w < 600;
     this.lw = this.compact ? 22 : 34; // the arc's thickness
-    this.top = this.compact ? 60 : 78; this.ends = this.h - (this.compact ? 26 : 30);
+    this.top = this.compact ? 60 : 78; this.ends = this.h - (this.compact ? 34 : 40);
     const half = this.w * (this.compact ? 0.42 : 0.36), sag = Math.max(40, this.ends - this.top);
     this.half = half;
     this.R = (half * half + sag * sag) / (2 * sag);
@@ -143,7 +143,9 @@
     const grad = g.createLinearGradient(cx - this.half - lw, 0, cx + this.half + lw, 0);
     for (const [o, col] of STOPS) grad.addColorStop(o, col);
     const pg = this.pg || 0.9, zs = S * pg, inAward = this.p >= pg;
-    const th = Math.max(-S, Math.min(S, this.theta)), here = th >= zs ? C.gold : colourAt(frac(th));
+    // the tease: 0 while the reading is well short of the award zone, rising to 1 as it reaches the zone's edge
+    const tease = inAward ? 1 : this.reduced ? 0 : smooth(zs - S * 0.3, zs, this.aim(this.p) * S);
+    const th = Math.max(-S, Math.min(S, this.theta)), here = th >= zs ? C.award : colourAt(frac(th));
     const [hx, hy] = pt(th, rr); // where the needle meets the arc
 
     // a soft halo of light behind the needle, in the colour it points at
@@ -179,14 +181,20 @@
       g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
 
-    // the award zone: gold, a touch proud of the arc; glowing, pulsing and sparkling once the reading is in it
+    // the award zone: purple, a touch proud of the arc. As the needle nears it, it starts to breathe and shimmer
+    // (more the closer it gets); once the reading is in it, it glows, pulses and sparkles
     {
       const [ax, ay] = pt(zs, rr), [bx2, by2] = pt(S, rr), gg = g.createLinearGradient(ax, ay, bx2, by2);
-      for (const [o, col] of GOLD) gg.addColorStop(o, col);
+      for (const [o, col] of AWARD) gg.addColorStop(o, col);
+      const beat = 0.5 + 0.5 * Math.sin(this.t * (inAward ? 4 : 3 + 4 * tease));
       g.save();
-      if (inAward) { g.shadowColor = C.gold; g.shadowBlur = 24 + 10 * Math.sin(this.t * 4); }
-      g.lineCap = "round"; g.lineWidth = lw + 6; g.strokeStyle = gg; arc(zs + 0.006, S); g.stroke(); g.restore();
+      if (tease > 0) { g.shadowColor = C.award; g.shadowBlur = inAward ? 24 + 12 * beat : tease * (8 + 18 * beat); }
+      g.lineCap = "round"; g.lineWidth = lw + 6 + (inAward ? 2 : 3 * tease * beat); g.strokeStyle = gg; arc(zs + 0.006, S); g.stroke(); g.restore();
       g.lineCap = "round"; g.lineWidth = lw * 0.16; g.strokeStyle = "rgba(255,255,255,0.6)"; arc(zs + 0.01, S, rr + lw * 0.26); g.stroke();
+      if (tease > 0.05) { // a shimmer sweeping along the zone, towards the top end
+        const k = (this.t * (0.6 + 0.6 * tease)) % 1, a0 = zs + (S - zs) * k, a1 = Math.min(S, a0 + (S - zs) * 0.22);
+        g.lineWidth = lw * 0.7; g.strokeStyle = `rgba(255,255,255,${0.55 * tease * Math.sin(k * Math.PI)})`; arc(a0, a1); g.stroke();
+      }
       g.lineCap = "butt"; g.strokeStyle = "#fff"; g.lineWidth = 3;
       const [x1, y1] = pt(zs, rr - lw / 2 - 4), [x2, y2] = pt(zs, rr + lw / 2 + 4);
       g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
@@ -195,9 +203,11 @@
         for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? r1 * 0.45 : r1; g.lineTo(x + r * Math.cos(a), y + r * Math.sin(a)); }
         g.closePath(); g.fill();
       };
-      if (inAward && !this.reduced) for (let i = 0; i < 6; i++) { // twinkles around the zone
-        const k = (this.t * 0.9 + i / 6) % 1, a = zs + (S - zs) * ((i * 0.37) % 1), r = rr + (i % 2 ? 1 : -1) * (lw / 2 + 6 + k * 14);
-        const [sx, sy] = pt(a, r); g.globalAlpha = Math.sin(k * Math.PI); star(sx, sy, 3 + 3 * Math.sin(k * Math.PI), "#ffd24a"); g.globalAlpha = 1;
+      const twinkles = inAward ? 7 : tease > 0.3 ? 3 : 0; // a few faint ones as it nears, the full show once in
+      if (!this.reduced) for (let i = 0; i < twinkles; i++) {
+        const k = (this.t * 0.9 + i / twinkles) % 1, a = zs + (S - zs) * ((i * 0.37) % 1), r = rr + (i % 2 ? 1 : -1) * (lw / 2 + 6 + k * 14);
+        const [sx, sy] = pt(a, r); g.globalAlpha = Math.sin(k * Math.PI) * (inAward ? 1 : tease * 0.7);
+        star(sx, sy, 3 + 3 * Math.sin(k * Math.PI), i % 2 ? C.spark : C.award); g.globalAlpha = 1;
       }
       // its label: a star and AWARD, just outside the arc
       const mid = (zs + S) / 2, [lx, ly] = pt(mid, rr + lw / 2 + (this.compact ? 16 : 20)), r1 = this.compact ? 5.5 : 7;
@@ -205,8 +215,8 @@
       g.font = `700 ${this.compact ? 10 : 12}px ` + TEXT; g.textAlign = "left"; g.textBaseline = "middle";
       if ("letterSpacing" in g) g.letterSpacing = "1.5px";
       const word = "AWARD", ww = g.measureText(word).width + r1 * 2 + 5, x0 = -ww / 2;
-      star(x0 + r1, 0, r1, inAward ? C.gold : "#e3b23c");
-      g.fillStyle = C.goldInk; g.fillText(word, x0 + r1 * 2 + 5, 0.5);
+      star(x0 + r1, 0, r1 * (1 + 0.3 * tease * beat), tease > 0 ? C.award : "#c79bf0"); // the star beats as the needle nears
+      g.fillStyle = C.awardInk; g.fillText(word, x0 + r1 * 2 + 5, 0.5);
       g.restore();
     }
 
@@ -225,6 +235,12 @@
       if (st.streak >= 2) bits.push(`${st.streak} in a row`);
       g.font = "700 13px " + TEXT; g.fillStyle = C.muted;
       g.fillText(bits.join("   ·   "), cx, y + (this.compact ? 20 : 26));
+      if (tease > 0.35) { // the tease, in words
+        g.globalAlpha = inAward ? 1 : 0.55 + 0.45 * Math.sin(this.t * 5);
+        g.font = "700 12px " + TEXT; g.fillStyle = C.award; if ("letterSpacing" in g) g.letterSpacing = "1.5px";
+        g.fillText(inAward ? "✦ IN THE AWARD ZONE ✦" : "✦ AWARD ZONE IN REACH ✦", cx, y + (this.compact ? 38 : 48));
+        if ("letterSpacing" in g) g.letterSpacing = "0px"; g.globalAlpha = 1;
+      }
     }
 
     // the needle: bold and tapered, outlined in white, glowing in the colour it points at
