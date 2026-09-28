@@ -6,7 +6,9 @@
    The candidate's first name rides on the needle tip; the room's names ride on badges that keep clear of each other. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
-  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd", award: "#a445ff", awardInk: "#6a1fb0", spark: "#ecd2ff" };
+  // drawn on a dark gradient card: light lines and text, bright colours
+  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", award: "#a445ff", awardInk: "#e6ccff", spark: "#ecd2ff",
+    up: "#34d77b", down: "#ff5a61", ink: "#ffffff", soft: "rgba(255,255,255,0.64)", faint: "rgba(255,255,255,0.14)", tease: "#cf96ff" };
   const AWARD = [[0, "#d9a6ff"], [0.5, "#a445ff"], [1, "#7a1fd6"]];
   const STOPS = [[0, "#e61e2a"], [0.24, "#ff5b36"], [0.5, "#ffb000"], [0.74, "#6fcf3c"], [1, "#12a150"]]; // left end → right end
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
@@ -159,29 +161,29 @@
     // a soft halo of light behind the needle, in the colour it points at
     const halo = g.createRadialGradient(hx, hy, 0, hx, hy, lw * 6);
     halo.addColorStop(0, here); halo.addColorStop(1, "rgba(255,255,255,0)");
-    g.globalAlpha = 0.16; g.fillStyle = halo; g.fillRect(0, 0, w, this.h); g.globalAlpha = 1;
+    g.globalAlpha = 0.24; g.fillStyle = halo; g.fillRect(0, 0, w, this.h); g.globalAlpha = 1;
 
     // instrument rings: a hairline outside the arc, and the tick ring inside it
-    g.lineWidth = 1; g.strokeStyle = "rgba(0,0,84,0.12)";
+    g.lineWidth = 1; g.strokeStyle = C.faint;
     arc(-S - 0.02, S + 0.02, rr + lw / 2 + 7); g.stroke();
     for (let i = 0; i <= 60; i++) {
       const a = -S + (2 * S * i) / 60, major = i % 10 === 0, mid = i % 5 === 0;
       const [x1, y1] = pt(a, rr - lw / 2 - 7), [x2, y2] = pt(a, rr - lw / 2 - (major ? 20 : mid ? 14 : 11));
-      g.strokeStyle = major ? "#6b6b8a" : mid ? "#9a9bb6" : "#c9cad9"; g.lineWidth = major ? 2 : 1;
+      g.strokeStyle = major ? "rgba(255,255,255,0.6)" : mid ? "rgba(255,255,255,0.36)" : "rgba(255,255,255,0.18)"; g.lineWidth = major ? 2 : 1;
       g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
 
     // the arc: a deep track, the whole scale softly over it, then the reading from the middle out to the needle, glowing
     g.lineCap = "round"; g.lineWidth = lw;
-    g.strokeStyle = "#e7e8f0"; arc(-S, S); g.stroke();
-    g.globalAlpha = 0.42; g.strokeStyle = grad; arc(-S, S); g.stroke(); g.globalAlpha = 1;
+    g.strokeStyle = "rgba(255,255,255,0.08)"; arc(-S, S); g.stroke();
+    g.globalAlpha = 0.58; g.strokeStyle = grad; arc(-S, S); g.stroke(); g.globalAlpha = 1;
     if (Math.abs(th) > 0.004) {
       g.save(); g.shadowColor = here; g.shadowBlur = 26; g.strokeStyle = grad;
       arc(Math.min(0, th), Math.max(0, th)); g.stroke(); g.restore();
     }
     // depth: a shine along the outer edge, a shade along the inner one (a glossy tube)
     g.lineWidth = lw * 0.16; g.strokeStyle = "rgba(255,255,255,0.45)"; arc(-S, S, rr + lw * 0.26); g.stroke();
-    g.lineWidth = lw * 0.12; g.strokeStyle = "rgba(0,0,84,0.08)"; arc(-S, S, rr - lw * 0.34); g.stroke();
+    g.lineWidth = lw * 0.12; g.strokeStyle = "rgba(0,0,0,0.2)"; arc(-S, S, rr - lw * 0.34); g.stroke();
     // fine white breaks at the thirds
     g.lineCap = "butt";
     for (const a of [-S / 3, S / 3]) {
@@ -234,18 +236,18 @@
       const st = this.stats, big = this.compact ? 40 : 62, y = this.top + drop * 0.9;
       g.textAlign = "center"; g.textBaseline = "alphabetic";
       if ("letterSpacing" in g) g.letterSpacing = "2.5px";
-      g.font = "700 11px " + TEXT; g.fillStyle = C.muted; g.fillText("POINTS", cx, y - big - 4);
+      g.font = "700 11px " + TEXT; g.fillStyle = C.soft; g.fillText("POINTS", cx, y - big - 4);
       if ("letterSpacing" in g) g.letterSpacing = "0px";
       const val = Math.round(this.pointsNow());
-      g.font = `700 ${big}px ` + DISPLAY; g.fillStyle = val > 0 ? C.green : val < 0 ? C.red : C.navy;
+      g.font = `700 ${big}px ` + DISPLAY; g.fillStyle = val > 0 ? C.up : val < 0 ? C.down : C.ink;
       g.fillText(signed(val), cx, y);
       const bits = [`Question ${Math.min(st.total, st.answered + 1)} of ${st.total}`];
       if (st.streak >= 2) bits.push(`${st.streak} in a row`);
-      g.font = "700 13px " + TEXT; g.fillStyle = C.muted;
+      g.font = "700 13px " + TEXT; g.fillStyle = C.soft;
       g.fillText(bits.join("   ·   "), cx, y + (this.compact ? 20 : 26));
       if (tease > 0.35) { // the tease, in words
         g.globalAlpha = inAward ? 1 : 0.55 + 0.45 * Math.sin(this.t * 5);
-        g.font = "700 12px " + TEXT; g.fillStyle = C.award; if ("letterSpacing" in g) g.letterSpacing = "1.5px";
+        g.font = "700 12px " + TEXT; g.fillStyle = C.tease; if ("letterSpacing" in g) g.letterSpacing = "1.5px";
         g.fillText(inAward ? "✦ IN THE AWARD ZONE ✦" : "✦ AWARD ZONE IN REACH ✦", cx, y + (this.compact ? 38 : 48));
         if ("letterSpacing" in g) g.letterSpacing = "0px"; g.globalAlpha = 1;
       }
@@ -317,11 +319,11 @@
     const inner = rr - drop * 0.3, [nx, ny] = pt(this.theta, rr + lw / 2 + 8), [bx, by] = pt(this.theta, inner);
     const px = Math.cos(ang(this.theta) + Math.PI / 2), py = Math.sin(ang(this.theta) + Math.PI / 2), wb = this.compact ? 4.5 : 7;
     const ng = g.createLinearGradient(bx, by, nx, ny);
-    ng.addColorStop(0, "rgba(0,0,84,0)"); ng.addColorStop(0.3, C.navy); ng.addColorStop(1, C.navy);
+    ng.addColorStop(0, "rgba(255,255,255,0)"); ng.addColorStop(0.3, "#fff"); ng.addColorStop(1, "#fff");
     g.save(); g.shadowColor = here; g.shadowBlur = 16;
     g.beginPath(); g.moveTo(bx + px * wb, by + py * wb); g.lineTo(nx, ny); g.lineTo(bx - px * wb, by - py * wb); g.closePath();
     g.fillStyle = ng; g.fill(); g.restore();
-    g.lineWidth = 1.5; g.strokeStyle = "rgba(255,255,255,0.9)"; g.lineJoin = "round"; g.stroke();
+    g.lineWidth = 1.5; g.strokeStyle = "rgba(0,0,40,0.55)"; g.lineJoin = "round"; g.stroke();
     // the bead: a white ring with a jewel of colour and a glint
     g.save(); g.shadowColor = "rgba(0,0,40,0.35)"; g.shadowBlur = 8; g.shadowOffsetY = 2;
     g.fillStyle = "#fff"; g.beginPath(); g.arc(hx, hy, lw / 2 - 1, 0, Math.PI * 2); g.fill(); g.restore();
@@ -356,11 +358,11 @@
     if (tag) {
       g.font = "700 13px " + TEXT; g.textAlign = "center"; g.textBaseline = "middle";
       g.save(); g.shadowColor = "rgba(0,0,40,0.3)"; g.shadowBlur = 8; g.shadowOffsetY = 2;
-      g.fillStyle = C.navy; g.beginPath();
+      g.fillStyle = "#fff"; g.beginPath();
       if (g.roundRect) g.roundRect(tag.x - tag.pw / 2, tag.y - tag.ph / 2, tag.pw, tag.ph, tag.ph / 2); else g.rect(tag.x - tag.pw / 2, tag.y - tag.ph / 2, tag.pw, tag.ph);
       g.fill(); g.restore();
-      g.fillStyle = C.navy; g.beginPath(); g.moveTo(tag.tx - 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx + 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx, tag.y + tag.ph / 2 + 6); g.closePath(); g.fill();
-      g.fillStyle = "#fff"; g.fillText(this.name, tag.x, tag.y + 1);
+      g.fillStyle = "#fff"; g.beginPath(); g.moveTo(tag.tx - 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx + 5, tag.y + tag.ph / 2 - 1); g.lineTo(tag.tx, tag.y + tag.ph / 2 + 6); g.closePath(); g.fill();
+      g.fillStyle = C.navy; g.fillText(this.name, tag.x, tag.y + 1);
     }
   };
 

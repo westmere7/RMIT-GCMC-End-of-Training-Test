@@ -1162,9 +1162,15 @@ body::after { width: 120px; height: 118px; left: 3%; top: 38%; animation: drift 
 .player { box-shadow: 0 3px 0 rgba(0, 0, 84, 0.08); }
 
 /* the test: the meter gets its own card; the timer is the scoreboard; answers are coloured tiles */
-.test > .meter-card { background: #fff; border-radius: 24px; padding: 4px 18px 0; margin: 0; box-shadow: 0 7px 0 var(--edge), 0 30px 60px -30px rgba(0, 0, 0, 0.65); }
-.meter-card .meter-face .brandmark { left: 6px; top: 14px; }
-.meter-card .meter-face .lamp { right: 6px; top: 14px; }
+.test > .meter-card {
+  background: radial-gradient(90% 130% at 50% 0%, #3524c9 0%, #16108a 38%, #0a0858 72%, #06063c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; padding: 4px 18px 0; margin: 0;
+  box-shadow: 0 7px 0 #00002a, 0 30px 60px -28px rgba(80, 60, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.meter-card .meter-face .brandmark { left: 6px; top: 14px; color: rgba(255, 255, 255, 0.55); }
+.meter-card .meter-face .lamp { right: 6px; top: 14px; color: rgba(255, 255, 255, 0.55); }
+.meter-card .meter-face .lamp i { background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.4); }
+.meter-card .meter-face .lamp.on i { background: var(--red); box-shadow: 0 0 10px 2px rgba(230, 30, 42, 0.7); }
 .timer { border-radius: 22px; background: linear-gradient(135deg, #2f22b8, #000054 70%); box-shadow: 0 7px 0 #00002a, 0 24px 40px -24px rgba(80, 60, 255, 0.8); }
 .timer .digits { font-family: var(--display); }
 .timer.warn { background: linear-gradient(135deg, #ff4a52, var(--red) 70%); box-shadow: 0 7px 0 #9c0f18; }
