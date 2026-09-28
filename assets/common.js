@@ -146,14 +146,20 @@
     return shuffle([...picked]).slice(0, n);
   }
 
-  /** The meter's reading, −1 … 1. Each answer moves it a fixed step until half the attempt is in, then it tracks
-      accuracy, with each critical miss counting `pen` extra wrong answers. The step is sized to the attempt, so a run of
-      right answers climbs steadily instead of pinning the needle early. */
-  function meterReading(right, wrong, critMisses, n, pen) {
-    const steps = Math.max(8, Math.round(n / 2)), k = pen == null ? 3 : pen;
-    return Math.max(-1, Math.min(1, (right - wrong - k * critMisses) / Math.max(right + wrong, steps)));
-  }
+  // ---------- the meter's reading, −1 … 1 ----------
+  // Each answer moves it a fixed step until half the attempt is in, then it tracks the running balance. The step is
+  // sized to the attempt, so a run of right answers climbs steadily instead of pinning the needle early.
+  const clamp1 = (x) => Math.max(-1, Math.min(1, x));
+  const stepsOf = (n) => Math.max(8, Math.round(n / 2));
+  /** On your own: right answers against wrong ones, critical questions counting double (as they do in the points).
+      Pass the weighted totals: a critical question adds 2. Half right sits in the middle, two thirds reaches the
+      welcome zone, 95% the green end. */
+  function meterReading(rightW, wrongW, n) { return clamp1((rightW - wrongW) / Math.max(rightW + wrongW, stepsOf(n))); }
+  /** With the team in: the taker's points against POINTS_PAR a question (a taker's points run −5…+10 a question, and
+      a strong taker averages about +3). Breaking even sits in the middle. */
+  const POINTS_PAR = 4;
+  function pointsReading(points, answered, n) { return clamp1(points / (POINTS_PAR * Math.max(answered, stepsOf(n)))); }
 
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading, pointsReading, POINTS_PAR };
 })(window);

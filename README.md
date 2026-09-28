@@ -90,7 +90,8 @@ The score is points, not a percentage.
   A teammate who gets about 70% right ends up around zero; better than that gains, worse loses.
 - **Critical questions count double**, both ways.
 - **Time running out:** the question on screen and any after it score nothing for anyone (they still count as wrong).
-- The meter and the confetti still follow the share of right answers ("Confetti from" in Settings).
+- **The meter** (taker's screen) shows where you stand. On your own it weighs right answers against wrong ones, critical questions counting double: half right sits in the middle, two thirds reaches "welcome", about 95% the green end (confetti, "Confetti from" in Settings). With the team in it follows the taker's points, against about +4 a question, so breaking even sits in the middle and it lands in the same zones as on your own for the same skill (see `node tests/simulate.js`). Under the arc it shows the points so far, the question and the current streak; each answer sends a ripple and its points up from the needle.
+- **Right or wrong** flashes up on the taker's screen after each answer, with the points (and, with the team in, how many teammates got it wrong). It fades by itself and never blocks a click.
 - Each result row's payload stores `points`, `mode` (`solo` or `group`), each answer's points, and in group play `room.people` (everyone's name, colour, points and right answers).
 
 ## Critical questions

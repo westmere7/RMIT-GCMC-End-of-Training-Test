@@ -95,38 +95,54 @@ test("more teammates getting it wrong never lowers the taker's points", () => {
 });
 
 // ---------- the meter ----------
-test("meter: stays within −1…1 and never goes down for more right answers", () => {
-  for (let c = 0; c <= N; c++)
-    for (let crit = 0; crit <= Math.min(CRIT, N - c); crit++) {
-      const p = A.meterReading(c, N - c, crit, N);
-      assert.ok(p >= -1 && p <= 1);
-      if (c < N && crit <= N - c - 1) assert.ok(A.meterReading(c + 1, N - c - 1, crit, N) >= p);
-    }
-  assert.equal(A.meterReading(N, 0, 0, N), 1, "a perfect paper pins it at the green end");
-  assert.equal(A.meterReading(0, N, CRIT, N), -1, "all wrong pins it at the red end");
+// weighted totals for a finished paper: c right of N, with the critical ones spread in proportion (critical ×2)
+const paper = (c, critMisses) => {
+  const w = N - c, cm = critMisses == null ? Math.round((w * CRIT) / N) : critMisses, cr = CRIT - cm;
+  return [c + cr, w + cm];
+};
+
+test("meter on your own: stays within −1…1 and climbs with every extra right answer", () => {
+  for (let c = 0; c <= N; c++) {
+    const p = A.meterReading(...paper(c), N);
+    assert.ok(p >= -1 && p <= 1);
+    if (c < N) assert.ok(A.meterReading(...paper(c + 1), N) >= p);
+  }
+  assert.equal(A.meterReading(N + CRIT, 0, N), 1, "a perfect paper pins it at the green end");
+  assert.equal(A.meterReading(0, N + CRIT, N), -1, "all wrong pins it at the red end");
 });
 
-test("meter: the zones line up with sensible accuracy bands (critical misses in proportion)", () => {
+test("meter on your own: half right is the middle, two thirds is welcome, a third is red", () => {
   const meter = new Meter(null, null, { left: "red", right: "welcome" });
-  const at = (c) => { const w = N - c; return A.meterReading(c, w, Math.round((w * CRIT) / N), N); };
-  assert.equal(meter.zone(at(Math.round(N * 0.45))), "red", "45% right: HR would like a word");
-  assert.equal(meter.zone(at(Math.round(N * 0.62))), "Too close to call", "62% right: the middle");
-  assert.equal(meter.zone(at(Math.round(N * 0.8))), "welcome", "80% right: welcome to the team");
+  const at = (share) => A.meterReading(...paper(Math.round(N * share)), N);
+  assert.equal(meter.zone(at(0.3)), "red");
+  assert.equal(meter.zone(at(0.5)), "Too close to call");
+  assert.ok(Math.abs(at(0.5)) < 0.1, "half right sits in the middle");
+  assert.equal(meter.zone(at(0.7)), "welcome");
 });
 
-test("meter: confetti (the green end) needs about 95%, and a critical miss keeps you out", () => {
-  const meterGreen = (c, crit) => { const m = new Meter(null, null, {}); m.setThreshold(95); return A.meterReading(c, N - c, crit, N) >= m.pg; };
-  assert.ok(meterGreen(45, 0) && meterGreen(44, 0) && meterGreen(43, 0), "43+ right with no critical miss");
-  assert.ok(!meterGreen(42, 0), "42 of 45 (93%) falls just short");
-  assert.ok(!meterGreen(44, 1), "one critical miss is enough to miss the green");
+test("meter on your own: confetti needs about 95%, and a critical miss costs as much as two misses", () => {
+  const m = new Meter(null, null, {}); m.setThreshold(95);
+  const green = (c, cm) => A.meterReading(...paper(c, cm), N) >= m.pg;
+  assert.ok(green(45, 0) && green(43, 0), "43 of 45 with no critical miss");
+  assert.ok(!green(42, 0), "42 of 45 (93%) falls just short");
+  assert.ok(green(44, 1), "44 right, the miss a critical one: like 43 right");
+  assert.ok(!green(43, 1), "43 right with a critical miss: like 42 right");
 });
 
 test("meter: early on, one answer moves it a small, steady step", () => {
-  const first = A.meterReading(1, 0, 0, N);
-  assert.ok(first > 0 && first < 0.06, "one right answer is a nudge, not a jump");
-  assert.ok(A.meterReading(5, 0, 0, N) < 0.25, "five in a row is still well short of the welcome zone");
-  assert.ok(A.meterReading(10, 0, 0, N) >= 1 / 3, "ten in a row reaches it");
-  assert.ok(A.meterReading(0, 1, 1, N) > -0.2, "one early critical miss isn't the end of the world");
+  assert.ok(A.meterReading(1, 0, N) > 0 && A.meterReading(1, 0, N) < 0.06, "one right answer is a nudge, not a jump");
+  assert.ok(A.meterReading(5, 0, N) < 0.25, "five in a row is still short of the welcome zone");
+  assert.ok(A.meterReading(10, 0, N) >= 1 / 3, "ten in a row reaches it");
+  assert.ok(A.meterReading(0, 2, N) > -0.2, "one early critical miss isn't the end of the world");
+  assert.ok(A.pointsReading(1, 1, N) < 0.02 && A.pointsReading(10, 1, N) < 0.15, "with a team: one answer is a nudge, even at +10");
+});
+
+test("meter with a team: it follows the points, breaking even in the middle", () => {
+  assert.equal(A.pointsReading(0, 20, N), 0);
+  assert.ok(A.pointsReading(40, 20, N) > 0 && A.pointsReading(-40, 20, N) < 0);
+  assert.equal(A.pointsReading(A.POINTS_PAR * N, N, N), 1, "par every question pins the green end");
+  assert.equal(A.pointsReading(-1000, N, N), -1);
+  for (let pts = -100; pts < 200; pts += 7) assert.ok(A.pointsReading(pts + 1, 30, N) >= A.pointsReading(pts, 30, N));
 });
 
 // ---------- reasonable ranges, from simulated sittings ----------
@@ -172,4 +188,18 @@ test("simulated: teammates land either side of zero (a typical teammate breaks e
   assert.ok(mean(0.5) < 0, "a weak teammate loses points");
   assert.ok(Math.abs(mean(0.7)) < 20, `a 70% teammate is around zero (${mean(0.7).toFixed(0)})`);
   assert.ok(mean(0.85) > 0, "a strong teammate gains");
+});
+
+test("simulated: with a team, the meter spreads players out sensibly", () => {
+  const meter = new Meter(null, null, { left: "red", right: "welcome" }); meter.setThreshold(95);
+  const mean = (taker) => stats(simulate({ taker, team: [0.7, 0.7, 0.7] }).map((s) => s.meter)).mean;
+  assert.ok(mean(0.3) < -1 / 3, `a weak taker lands in the red (${mean(0.3).toFixed(2)})`);
+  assert.ok(Math.abs(mean(0.5)) < 0.2, `a coin-flip taker sits in the middle (${mean(0.5).toFixed(2)})`);
+  assert.ok(mean(0.8) >= 1 / 3 && mean(0.8) < meter.pg, `a good taker is welcome, short of confetti (${mean(0.8).toFixed(2)})`);
+  assert.ok(mean(0.97) >= 0.85, `a near-perfect taker is at the green end (${mean(0.97).toFixed(2)})`);
+});
+
+test("simulated: on your own, the meter lands in the same zones by accuracy", () => {
+  const mean = (taker) => stats(simulate({ taker }).map((s) => s.meter)).mean;
+  assert.ok(mean(0.3) < -1 / 3 && Math.abs(mean(0.5)) < 0.15 && mean(0.8) >= 1 / 3);
 });

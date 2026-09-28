@@ -283,7 +283,7 @@ button { cursor: pointer; }
 .meter-card .meter-face { background: none; border: 0; border-radius: 0; overflow: visible; }
 .meter-card .meter-face .brandmark { left: 0; top: 4px; }
 .meter-card .meter-face .lamp { right: 0; top: 5px; }
-.meter-face canvas { height: 260px; }
+.meter-face canvas { height: 300px; }
 .q-card { margin-top: 0; }
 .name-step { animation: rise 0.35s ease both; }
 .name-step .hint { margin-top: 2px; }
@@ -755,7 +755,7 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
   .signature { grid-template-columns: 1fr; gap: 14px; }
 
   /* the meter: a little shorter; its labels move under the arc (see meter.js) */
-  .meter-face canvas { height: 200px; }
+  .meter-face canvas { height: 236px; }
   .meter-card .meter-face .brandmark, .meter-card .meter-face .lamp { font-size: 9px; }
   .test > .side > .timer { top: 68px; }
   .timer { padding: 10px 14px; border-radius: var(--radius); }
@@ -1063,4 +1063,30 @@ button.qr::after { content: ""; position: absolute; right: -6px; bottom: -6px; w
   .qr-pop[open] { flex-direction: column; gap: 20px; text-align: center; padding: 48px 20px 24px; }
   .qr-pop-qr { width: min(80vw, 60vh); }
   .qr-pop-label { margin-top: 0; }
+}
+
+/* ---------- right or wrong: a quick overlay on the taker's screen ---------- */
+.verdict { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; pointer-events: none; }
+.verdict.ok { background: radial-gradient(circle at 50% 45%, rgba(18, 161, 80, 0.26), rgba(18, 161, 80, 0) 62%); }
+.verdict.no { background: radial-gradient(circle at 50% 45%, rgba(230, 30, 42, 0.24), rgba(230, 30, 42, 0) 62%); }
+.verdict.show { animation: verdict-bg 1.25s ease both; }
+.verdict-card { display: grid; justify-items: center; gap: 4px; min-width: 280px; padding: 30px 48px 26px; background: #fff; border-radius: 20px; box-shadow: 0 30px 80px -24px rgba(0, 0, 40, 0.55); }
+.verdict.show .verdict-card { animation: verdict-pop 1.25s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+.verdict-mark { display: grid; place-items: center; width: 92px; height: 92px; border-radius: 50%; color: #fff; font-size: 50px; font-weight: 700; line-height: 1; margin-bottom: 10px; }
+.verdict.ok .verdict-mark { background: #12a150; box-shadow: 0 0 0 10px rgba(18, 161, 80, 0.16); }
+.verdict.ok .verdict-mark::before { content: "✓"; }
+.verdict.no .verdict-mark { background: var(--red); box-shadow: 0 0 0 10px rgba(230, 30, 42, 0.14); }
+.verdict.no .verdict-mark::before { content: "✕"; font-size: 40px; }
+.verdict-card b { font-family: var(--display); font-size: 42px; line-height: 1.05; color: var(--ink); }
+#verdictPts { font-family: var(--display); font-size: 24px; }
+.verdict.ok #verdictPts { color: #12a150; }
+.verdict.no #verdictPts { color: var(--red); }
+.verdict-card small { font-size: 14px; color: var(--muted); margin-top: 4px; }
+.verdict-card small:empty { display: none; }
+@keyframes verdict-pop { 0% { opacity: 0; transform: scale(0.7); } 14% { opacity: 1; transform: scale(1.05); } 24% { transform: scale(1); } 78% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-10px) scale(0.97); } }
+@keyframes verdict-bg { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+@media (max-width: 640px) {
+  .verdict-card { min-width: 0; padding: 24px 32px 20px; }
+  .verdict-mark { width: 72px; height: 72px; font-size: 40px; }
+  .verdict-card b { font-size: 34px; }
 }

@@ -31,7 +31,7 @@ function rng(seed) {
  * Returns the taker's and each teammate's points and right answers, and the meter's reading at the end.
  */
 function sit({ A, G }, random, { n = 45, crit = 9, taker = 0.8, team = [], spread = 0.2 }) {
-  let tp = 0, tc = 0, tw = 0, tcrit = 0;
+  let tp = 0, tc = 0, tw = 0, rw = 0, ww = 0;
   const mp = team.map(() => 0), mc = team.map(() => 0);
   for (let i = 0; i < n; i++) {
     const critical = i < crit, shift = (random() * 2 - 1) * spread;
@@ -39,9 +39,11 @@ function sit({ A, G }, random, { n = 45, crit = 9, taker = 0.8, team = [], sprea
     const tr = right(taker), mr = team.map(right);
     const pts = G.points(critical, tr, mr);
     tp += pts.taker; pts.members.forEach((d, k) => { mp[k] += d; if (mr[k]) mc[k]++; });
-    if (tr) tc++; else { tw++; if (critical) tcrit++; }
+    if (tr) { tc++; rw += critical ? 2 : 1; } else { tw++; ww += critical ? 2 : 1; }
   }
-  return { takerPoints: tp, takerRight: tc, meter: A.meterReading(tc, tw, tcrit, n), memberPoints: mp, memberRight: mc };
+  // the meter: on your own, right against wrong (critical ×2); with a team, the taker's points
+  const meter = team.length ? A.pointsReading(tp, n, n) : A.meterReading(rw, ww, n);
+  return { takerPoints: tp, takerRight: tc, meter, memberPoints: mp, memberRight: mc };
 }
 
 function stats(xs) {

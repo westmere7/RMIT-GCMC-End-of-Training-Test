@@ -351,16 +351,47 @@
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.setThreshold((DATA.settings || {}).confettiThreshold); meter.greenLit = score().p >= (meter.pg || 0.9);
     meter.onGreen = (pt) => confetti({ x: pt.x, y: pt.y, n: 90, life: 2.6 });
-    meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start();
+    meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start(); meterInfo();
     renderQuestion(); runClock();
     if (HOSTING()) { renderPlayers(); startPolling(1000, (gone) => (gone ? roomGone() : syncTaker())); }
   }
 
   // ---------- scoring ----------
   function score() {
-    let c = 0, w = 0, crit = 0;
-    QS().forEach((q) => { const r = S.responses[q.id]; if (!r) return; if (r.correct) c++; else { w++; if (q.critical) crit++; } });
-    return { c, w, crit, p: A.meterReading(c, w, crit, QS().length) };
+    let c = 0, w = 0, crit = 0, rw = 0, ww = 0;
+    QS().forEach((q) => {
+      const r = S.responses[q.id], k = q.critical ? 2 : 1; if (!r) return;
+      if (r.correct) { c++; rw += k; } else { w++; ww += k; if (q.critical) crit++; }
+    });
+    // the meter: with the team in it follows the taker's points; on your own, right against wrong (critical ×2)
+    const n = QS().length, pts = groupPoints();
+    return { c, w, crit, p: pts == null ? A.meterReading(rw, ww, n) : A.pointsReading(pts, c + w, n) };
+  }
+  const groupPoints = () => (!HOSTING() ? null : S.board ? S.board.rows[0].points : ROOM ? tally().rows[0].points : null);
+
+  // the readout under the meter (points, question, streak); after an answer (k), its ripple and points chip too
+  function meterInfo(k) {
+    if (!meter || S.preview || (HOSTING() && !ROOM)) return;
+    const qs = QS(), me = tally().rows[0];
+    let streak = 0;
+    for (const q of qs) { const r = S.responses[q.id]; if (!r) break; streak = r.correct ? streak + 1 : 0; }
+    meter.setStats({ points: me.points, answered: Object.keys(S.responses).length, total: qs.length, streak });
+    if (k != null) meter.pulse(me.deltas[k], !!(S.responses[qs[k].id] || {}).correct);
+    return me;
+  }
+
+  // right or wrong, big and quick, on the taker's screen only (it fades by itself and never blocks a click)
+  let verdictTimer = null;
+  function showVerdict(q, k, me) {
+    if (MEMBER() || S.preview || !me) return;
+    const r = S.responses[q.id] || {}, d = me.deltas[k] || 0, v = $("verdict");
+    const t = tally(), team = t.rows.slice(1), missed = team.filter((p) => p.cells[k] !== "ok").length;
+    v.className = "verdict " + (r.correct ? "ok" : "no");
+    $("verdictText").textContent = r.correct ? "Right" : r.skipped ? "Skipped" : "Wrong";
+    $("verdictPts").textContent = `${G.signed(d)} ${Math.abs(d) === 1 ? "point" : "points"}`;
+    $("verdictNote").textContent = !team.length ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`;
+    v.hidden = false; void v.offsetWidth; v.classList.add("show");
+    clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, reduced ? 900 : 1250);
   }
   // does the viewer's own share of right answers earn the distinction (the meter's confetti threshold)?
   const distinctionFor = (c, n) => (100 * c) / Math.max(1, n) >= ((DATA.settings || {}).confettiThreshold || 95);
@@ -681,8 +712,8 @@
     updateProgress();
     setTimeout(() => {
       if (S.index >= QS().length - 1) return finish(false);
-      S.index++; save(); renderQuestion();
-    }, 850);
+      S.index++; save(); renderQuestion(); meterInfo();
+    }, 1100);
   }
   function bounce(q, correct) {
     if (!meter) return;
@@ -691,6 +722,7 @@
     const hard = (q.critical && !correct) || (!S.lastJolt && Math.random() < 0.25);
     S.lastJolt = hard; save();
     if (hard) meter.jolt(correct ? 1 : -1); else meter.kick(correct ? 1 : -1);
+    showVerdict(q, S.index, meterInfo(S.index));
   }
   $("submitBtn").addEventListener("click", () => submit(false));
   $("skipBtn").addEventListener("click", () => submit(true));
@@ -740,6 +772,7 @@
     if (!ROOM || S.finished) return;
     if (ROOM.phase === "finished") return finish(!!ROOM.timedOut);
     if (ROOM.index !== S.index) { S.index = ROOM.index; save(); renderQuestion(); }
+    if (meter && !finish.busy) { meter.setScore(score().p); meterInfo(); } // after a refresh, the meter catches up with the room
     if (ROOM.phase === "reveal" && !revealShown) {
       const q = QS()[S.index], a = ANS[S.index] || {};
       if (!S.responses[q.id] && 0 in a) S.responses[q.id] = { response: a[0], correct: a[0] != null && A.isCorrect(q, a[0]), skipped: a[0] == null }; // refreshed mid-reveal
