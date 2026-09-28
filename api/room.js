@@ -48,8 +48,7 @@ async function snapshot(room, me, since, withPaper) {
     code, now, phase: st.phase || "lobby", index: st.index || 0, total: st.total || 0, clock: st.clock || null,
     roster: st.roster || null, timedOut: !!st.timedOut, revealed,
     host: { name: room.host_name, busy: room.host_busy_q, seen: Date.parse(room.host_seen_at) },
-    // teammates are known by colour until the end; names come out on the results
-    members: members.map((m) => ({ id: m.id, name: st.phase === "finished" || m === mine ? m.name : "", color: m.color, busy: m.busy_q, seen: Date.parse(m.seen_at) })),
+    members: members.map((m) => ({ id: m.id, name: m.name, color: m.color, busy: m.busy_q, seen: Date.parse(m.seen_at) })),
     isHost: !!me.host, me: mine ? { id: mine.id, name: mine.name, color: mine.color } : null,
     answered: [], answers: [], mine: null,
   };

@@ -101,7 +101,7 @@ The score is points, not a percentage.
 The test taker's briefing screen opens a room. It shows a QR code, a five-character room code and the `/join` address for laptops.
 
 - **Joining:** teammates scan the QR code (or open `/join` and type the code), then give a name and pick a colour. A colour someone has taken disappears from everyone else's list. The taker can remove anyone from the lobby with ×.
-- **Names stay hidden until the results.** Before then, teammates show up by colour only, in the lobby and during the test. The server doesn't send names out before the end either.
+- **Names and colours** show everywhere: in the lobby, on the taker's screen during the test, and on the results.
 - **Starting:** with nobody in the room, the test runs on its own, exactly as before. With one or more teammates, Start sends everyone the same paper: the same questions, in the same order, with the same option order. Nobody can join after the start.
 - **During the test:** the taker's screen is the main screen everyone watches. It shows each person as *Thinking…* (nothing picked yet), *Answering…* (picked something, not submitted) or *Answered*, and everyone's points so far. Teammates' screens show only the question, the clock and their own result.
 - **The taker's submit** shows the right answer on every screen, stops the clock, and marks anyone who hasn't answered as wrong. A teammate who has picked something but not pressed Submit has that pick counted as their answer (the page sends it as they go). Nobody can answer during that time. Only the taker has **Next**.

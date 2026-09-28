@@ -46,7 +46,7 @@
     for (const s of document.querySelectorAll(".screen")) s.hidden = s.id !== id;
     const signedIn = S && S.email;
     $("whoBox").hidden = !signedIn && !(MEMBER() && S.color); $("signOut").hidden = !signedIn;
-    if (MEMBER()) $("whoEmail").textContent = S.color ? `${G.colourName(S.color)} · Room ${S.code}` : "";
+    if (MEMBER()) $("whoEmail").textContent = S.name ? `${S.name} · Room ${S.code}` : "";
     if (signedIn) {
       $("whoEmail").textContent = S.name ? `${S.name} · ${S.email}` : S.email;
       const today = new Date().toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
@@ -180,13 +180,11 @@
       ...ROOM.members.filter(inRoster)];
   }
   const initial = (name) => esc((String(name || "?").trim()[0] || "?").toUpperCase());
-  // teammates go by their colour until the results page, where their names come out
-  const label = (p) => (p.taker ? p.name : G.colourName(p.color) || "Teammate");
   function playerLi(p, extra) {
     const me = MEMBER() ? S.memberId === p.id : p.taker;
     return `<li class="player${p.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(p.color)}" data-id="${p.id}">`
-      + `<span class="avatar" aria-hidden="true">${p.taker ? initial(p.name) : ""}</span>`
-      + `<span class="pname"><b>${esc(label(p))}</b>${p.taker ? "<small>Taking the test</small>" : me ? "<small>You</small>" : ""}</span>`
+      + `<span class="avatar" aria-hidden="true">${initial(p.name)}</span>`
+      + `<span class="pname"><b>${esc(p.name)}</b><small>${p.taker ? "Taking the test" : me ? "You" : esc(G.colourName(p.color))}</small></span>`
       + (extra || "") + "</li>";
   }
   const away = (p) => ROOM && ROOM.now - p.seen > 25000;
@@ -227,7 +225,7 @@
     $("lobbyN").textContent = n + 1;
     $("lobbySub").textContent = n ? `${n} ${n === 1 ? "teammate is" : "teammates are"} in. Start when everyone's here.` : "Waiting for the team to scan in. Or start on your own.";
     $("lobbyList").innerHTML = roomPlayers().map((p) => {
-      const li = playerLi(p, p.taker ? "" : `<button type="button" class="kick" data-kick="${p.id}" aria-label="Remove ${esc(label(p))}" title="Remove from the room">×</button>`);
+      const li = playerLi(p, p.taker ? "" : `<button type="button" class="kick" data-kick="${p.id}" aria-label="Remove ${esc(p.name)}" title="Remove from the room">×</button>`);
       return lobbySeen.has(p.id) ? li : li.replace('class="player', 'class="player new');
     }).join("")
       // empty seats, until someone scans in
@@ -846,10 +844,10 @@
     if (ROOM.phase === "lobby") {
       if (!me || editing) memberForm(taker);
       else {
-        memberScreen("wait", "You're in.", "");
+        memberScreen("wait", `You're in, ${me.name}.`, "");
         const badge = $("joinMe"); badge.style.setProperty("--c", me.color);
-        badge.querySelector("b").textContent = `You're ${G.colourName(me.color)}`;
-        $("joinWaitText").textContent = `Waiting for ${taker} to start. Keep this page open: the first question appears here. Everyone shows up by colour until the results, then names come out.`;
+        badge.querySelector(".avatar").textContent = (me.name[0] || "?").toUpperCase(); badge.querySelector("b").textContent = `${G.colourName(me.color)} is yours`;
+        $("joinWaitText").textContent = `Waiting for ${taker} to start. Keep this page open: the first question appears here.`;
       }
       return renderJoinRoom();
     }
