@@ -183,7 +183,7 @@ button { cursor: pointer; }
 .q-prompt { font-family: var(--display); color: var(--ink); font-size: 30px; line-height: 1.22; margin: 20px 0 26px; max-width: 34ch; }
 .q-prompt.fill { font-size: 28px; line-height: 1.7; max-width: 40ch; }
 .blank {
-  display: inline-block; width: 11ch; font-family: var(--text); font-weight: 700; font-size: 26px; color: var(--red);
+  display: inline-block; width: calc(max(14, var(--len, 0) + 2) * 1ch); max-width: 100%; font-family: var(--text); font-weight: 700; font-size: 26px; color: var(--red);
   border: 0; border-bottom: 3px solid var(--navy); background: var(--grey-50); padding: 0 10px; margin: 0 6px; text-align: center; border-radius: 2px 2px 0 0;
 }
 .blank:focus { outline: none; border-bottom-color: var(--red); background: #fff4f4; }
@@ -539,12 +539,8 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
 .kick { width: 28px; height: 28px; border-radius: 50%; border: 0; background: var(--grey-50); color: var(--muted); font-size: 18px; line-height: 1; }
 .kick:hover { background: var(--red); color: #fff; }
 
-.lobby { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); background: #fff; border-bottom: 1px solid var(--line); }
-.lobby-join { display: grid; grid-template-columns: 208px minmax(0, 1fr); gap: 28px; align-items: center; padding: 32px 36px 32px 48px; background: var(--grey-50); }
-.qr { width: 208px; aspect-ratio: 1; background: #fff; border-radius: var(--radius); padding: 6px; box-shadow: 0 1px 0 rgba(0, 0, 84, 0.08), 0 10px 30px -18px rgba(0, 0, 84, 0.5); }
+.qr { width: 184px; flex: none; aspect-ratio: 1; background: #fff; border-radius: var(--radius); padding: 6px; box-shadow: 0 1px 0 rgba(0, 0, 84, 0.08), 0 10px 30px -18px rgba(0, 0, 84, 0.5); }
 .qr svg { display: block; width: 100%; height: 100%; }
-.lobby-how h2 { font-size: 26px; margin-top: 8px; }
-.lobby-how > p:not(.eyebrow) { font-size: 15px; margin-top: 10px; max-width: 42ch; }
 .lobby-code { display: flex; align-items: baseline; gap: 12px; }
 .lobby-code span { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
 .lobby-code b { font-family: var(--display); font-size: 38px; line-height: 1; letter-spacing: 0.14em; color: var(--ink); }
@@ -552,25 +548,12 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
 .lobby-link a { color: var(--navy); font-weight: 700; overflow-wrap: anywhere; }
 .copy-btn { border: 1.5px solid var(--line); background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700; color: var(--navy); }
 .copy-btn:hover { border-color: var(--navy); }
-.lobby-room { padding: 32px 40px; border-left: 1px solid var(--line); display: grid; gap: 16px; align-content: start; }
 .lobby-room-head { display: grid; gap: 4px; }
 .lobby-room-head h2, .join-room h2 { font-size: 20px; display: flex; align-items: center; gap: 10px; }
 .lobby-room-head h2 b, .join-room h2 b { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px; background: var(--navy); color: #fff; font-family: var(--text); font-size: 14px; }
 .lobby-room-head span { font-size: 14px; color: var(--muted); }
-.lobby .players { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-.lobby-rules { grid-column: 1 / -1; padding: 26px 48px 30px; border-top: 1px solid var(--line); }
-.lobby-rules h2 { font-size: 20px; }
-.rules-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 48px; margin-top: 14px; }
-.rules-cols h3 { font-family: var(--text); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.rules-cols h3 i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); }
-.rules-cols h3 i.team { background: conic-gradient(#2563eb 0 25%, #16a34a 0 50%, #ea580c 0 75%, #9333ea 0); }
-.rules-cols ul { list-style: none; margin: 0; padding: 0; }
-.rules-cols li { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.rules-cols li b, .delta, .pts, .rev-pts { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--muted); white-space: nowrap; }
-.rules-cols li b { min-width: 36px; text-align: right; }
 .up { color: var(--ok) !important; }
 .down { color: var(--red-dark) !important; }
-.rules-note { font-size: 13px; color: var(--muted); margin-top: 10px; }
 
 /* joining from the QR code */
 .join { max-width: 620px; }
@@ -794,7 +777,7 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
   .q-card #qBody { padding: 0 16px 24px; }
   .q-card .q-prompt { font-size: 22px; line-height: 1.28; margin: 22px 0 20px; max-width: none; }
   .q-card .q-prompt.fill { font-size: 20px; line-height: 1.9; }
-  .blank { font-size: 19px; width: 9ch; padding: 0 6px; margin: 0 4px; }
+  .blank { font-size: 19px; width: calc(max(11, var(--len, 0) + 2) * 1ch); padding: 0 6px; margin: 0 4px; }
   .pick-how { flex-wrap: wrap; margin: -8px 0 16px; font-size: 13px; }
   .pick-how.multi, .pick-how.match { padding: 6px 12px 6px 10px; }
   .pick-how.match { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; border-radius: 14px; padding: 8px 14px 8px 10px; }
@@ -875,26 +858,16 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
 
 /* ---------- group play on smaller screens ---------- */
 @media (max-width: 1080px) {
-  .lobby { grid-template-columns: 1fr; }
-  .lobby-join { padding: 28px 36px; }
-  .lobby-room { border-left: 0; border-top: 1px solid var(--line); padding: 26px 36px; }
-  .lobby-rules { padding: 24px 36px 28px; }
   .board-row { grid-template-columns: 30px 40px minmax(0, 1fr) minmax(0, 1fr) 56px 84px; gap: 12px; }
   .board-row.taker { grid-template-columns: 0 48px minmax(0, 1fr) minmax(0, 1fr) 56px 96px; }
 }
 @media (max-width: 860px) {
   .test > .side > .players-card { order: 3; }
   .test > .side > .progress-card { order: 4; }
-  .rules-cols { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
-  .lobby-join { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 24px 20px; gap: 18px; }
   .qr { width: min(240px, 70vw); }
-  .lobby-how > p:not(.eyebrow) { margin-left: auto; margin-right: auto; }
   .lobby-code, .lobby-link { justify-content: center; }
-  .lobby-room { padding: 22px 20px; }
-  .lobby .players { grid-template-columns: 1fr; }
-  .lobby-rules { padding: 20px 20px 24px; }
   .join-card { padding: 24px 18px 22px; gap: 16px; }
   .join-card h1 { font-size: 28px; }
   .swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -931,4 +904,104 @@ html.joiner .q-card { min-height: 0; }
 @media (max-width: 640px) {
   html.joiner .test > .side > .timer { top: 68px; padding: 10px 14px; }
   html.joiner .timer .digits { font-size: 30px; }
+}
+
+/* ---------- briefing: landscape, for the main screen everyone watches ---------- */
+.brief { max-width: 1560px; display: grid; gap: 16px; padding-top: 24px; }
+.brief-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 40px; align-items: center; padding: 20px 32px; border-top: 4px solid var(--red); }
+.brief-head h1 { font-size: 38px; line-height: 1.05; margin-top: 6px; }
+.brief-head .lead { font-family: var(--display-light); font-size: 18px; color: var(--body); margin-top: 8px; max-width: 64ch; }
+.brief-facts { margin: 0; display: grid; grid-template-columns: repeat(4, auto); }
+.brief-facts div { padding: 2px 28px; border-left: 1px solid var(--line); }
+.brief-facts dt { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.brief-facts dd { margin: 4px 0 0; font-family: var(--display); font-size: 40px; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.brief-main { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 360px; gap: 16px; align-items: stretch; }
+.brief-main .lobby { display: contents; }
+.brief-main:not(.has-lobby) { grid-template-columns: minmax(0, 480px); justify-content: center; }
+.lobby-join { display: flex; gap: 24px; align-items: center; padding: 20px 26px; }
+.lobby-how { display: grid; gap: 12px; min-width: 0; }
+.lobby-how h2 { font-size: 26px; margin: 0; }
+.lobby-room { display: grid; gap: 14px; align-content: start; padding: 20px 24px; }
+.brief-main .players { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+.start-card { background: var(--navy); color: #fff; border-radius: var(--radius); padding: 22px 24px 18px; display: flex; flex-direction: column; gap: 14px; }
+.start-card h2 { color: #fff; font-size: 26px; }
+.start-who { display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.start-who b { font-family: var(--display); font-size: 20px; }
+.start-who span { font-size: 13px; color: var(--navy-30); }
+.start-card .confirm { margin: 0; }
+.start-card .btn { width: 100%; padding: 16px 24px; font-size: 17px; margin-top: auto; }
+.start-card .btn:disabled { background: rgba(255, 255, 255, 0.18); color: rgba(255, 255, 255, 0.6); }
+.start-card .error-msg { color: #ffb3b8; }
+.start-fine { font-size: 12px; color: var(--navy-30); }
+
+/* the points, as two grids: across is what the others did, down is what you did */
+.points-card { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) auto; gap: 36px; align-items: start; padding: 20px 28px; }
+.pts-grid { margin: 0; min-width: 0; }
+.pts-grid figcaption { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pts-grid figcaption b { font-family: var(--display); font-size: 18px; color: var(--ink); }
+.pts-grid table { width: 100%; border-collapse: separate; border-spacing: 6px; margin: -6px; table-layout: fixed; }
+.pts-grid th { font-weight: 700; vertical-align: bottom; padding: 0 0 2px; }
+.pts-grid thead th { text-align: center; }
+.pts-grid thead th:first-child, .pts-grid tbody th { width: 64px; }
+.pts-grid tbody th { vertical-align: middle; text-align: left; }
+.pts-grid th small { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.pts-grid td { height: 54px; border-radius: var(--radius); text-align: center; font-family: var(--display); font-size: 32px; line-height: 1; color: var(--muted); font-variant-numeric: tabular-nums; }
+.av { --c: var(--navy); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: #fff; font-family: var(--display); font-size: 12px; vertical-align: middle; }
+.mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 13px; font-weight: 700; line-height: 1; vertical-align: middle; }
+.mark.y { background: var(--ok); }
+.mark.y::before { content: "✓"; }
+.mark.n { background: var(--red); }
+.mark.n::before { content: "✕"; font-size: 11px; }
+thead .av + .mark { margin-left: -8px; width: 18px; height: 18px; font-size: 11px; box-shadow: 0 0 0 2px #fff; vertical-align: -6px; }
+.team-dots { display: inline-flex; gap: 3px; vertical-align: middle; }
+.team-dots i { width: 14px; height: 14px; border-radius: 50%; background: var(--grey); }
+.team-dots i.y { background: var(--ok); }
+.team-dots i.n { background: var(--red); }
+.team-dots i.b { background: #2563eb; } .team-dots i.p { background: #db2777; }
+figcaption .team-dots i { width: 18px; height: 18px; margin-right: -9px; box-shadow: 0 0 0 2px #fff; }
+figcaption .team-dots { margin-right: 8px; }
+.pts-foot { display: grid; gap: 12px; align-content: center; align-self: center; padding-left: 30px; border-left: 1px solid var(--line); font-size: 14px; color: var(--ink); font-weight: 700; }
+.pts-foot p { display: flex; align-items: center; gap: 8px; max-width: 22ch; }
+.pts-foot p b { font-family: var(--display); font-size: 26px; color: var(--red); }
+
+@media (max-width: 1280px) {
+  .brief-main { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .start-card { grid-column: 1 / -1; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(220px, 300px); column-gap: 24px; align-items: center; }
+  .start-card h2 { grid-column: 1; }
+  .start-who { grid-column: 1; padding: 0; border: 0; }
+  .start-card .confirm { grid-column: 2; grid-row: 1 / span 2; }
+  .start-card .btn { grid-column: 3; grid-row: 1 / span 2; margin: 0; }
+  .start-card .error-msg, .start-fine { grid-column: 1 / -1; }
+  .brief-main:not(.has-lobby) .start-card { display: flex; }
+  .points-card { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+  .pts-foot { grid-column: 1 / -1; grid-auto-flow: column; justify-content: start; gap: 28px; padding: 14px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .pts-foot p { max-width: none; }
+}
+@media (max-width: 860px) {
+  .brief-head { grid-template-columns: 1fr; gap: 18px; padding: 24px 24px; }
+  .brief-head h1 { font-size: 34px; }
+  .brief-facts div:first-child { border-left: 0; padding-left: 0; }
+  .brief-main { grid-template-columns: minmax(0, 1fr); }
+  .start-card, .brief-main:not(.has-lobby) .start-card { display: flex; }
+  .points-card { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .pts-foot { grid-auto-flow: row; }
+}
+@media (max-width: 640px) {
+  .brief { gap: 14px; }
+  .brief-head { padding: 20px 18px; }
+  .brief-head h1 { font-size: 28px; }
+  .brief-head .lead { font-size: 16px; }
+  .brief-facts { grid-template-columns: repeat(2, auto); justify-content: start; row-gap: 12px; }
+  .brief-facts div { padding: 0 20px 0 0; border-left: 0; }
+  .brief-facts dd { font-size: 30px; }
+  .lobby-join { flex-direction: column; text-align: center; padding: 22px 18px; }
+  .qr { width: min(240px, 70vw); }
+  .lobby-code, .lobby-link { justify-content: center; }
+  .lobby-room, .start-card, .points-card { padding: 20px 18px; }
+  .brief-main .players { grid-template-columns: 1fr; }
+  .pts-grid td { height: 52px; font-size: 24px; }
+  .pts-grid thead th:first-child, .pts-grid tbody th { width: 52px; }
+  .pts-grid th small { font-size: 10px; letter-spacing: 0.02em; }
 }

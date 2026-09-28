@@ -74,8 +74,6 @@
     $("dQ").textContent = n; $("dT").textContent = mins;
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
-    const nCrit = DATA.questions.filter((q) => q.critical).length;
-    $("dCritN").textContent = nCrit ? "Your paper may include some; they're flagged in red." : "";
     $("briefLead").textContent = "A friendly check-in on everything from your onboarding.";
 
     S = load();
@@ -192,7 +190,7 @@
   const lobbySeen = new Set();
   async function openLobby() {
     if (!G) return;
-    $("lobby").hidden = true;
+    $("lobby").hidden = true; $("lobbyRules").hidden = true; $("briefMain").classList.remove("has-lobby");
     try {
       if (S.group) {
         try { applyRoom(await G.get({ ...auth(), since: 0 })); }
@@ -208,9 +206,9 @@
     $("lobbyQr").innerHTML = G.qrSvg(url);
     $("lobbyCode").textContent = S.group.code;
     $("lobbyUrl").textContent = joinUrl().replace(/^https?:\/\//, ""); $("lobbyUrl").href = url;
-    $("lobbyRules").innerHTML = rulesHtml();
-    $("briefLead").textContent = "A friendly check-in on everything from your onboarding. Bring the team along if you like: they can scan in below.";
-    lobbySeen.clear(); $("lobby").hidden = false; renderLobby();
+    $("lobbyRules").innerHTML = pointsHtml(); $("lobbyRules").hidden = false;
+    $("briefLead").textContent = "A friendly check-in on everything from your onboarding. Bring the team along if you like: they can scan in.";
+    lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
     startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
   }
   $("lobbyCopy").addEventListener("click", async () => {
@@ -234,14 +232,40 @@
     b.disabled = true;
     try { await roomAct({ action: "kick", m: +b.dataset.kick }); renderLobby(); } catch (err) { b.disabled = false; }
   });
-  function rulesHtml() {
-    const row = (r) => `<li><span>${esc(r.text)}</span><b class="${r.pts > 0 ? "up" : r.pts < 0 ? "down" : ""}">${G.signed(r.pts)}</b></li>`;
-    return `<h2>How points work</h2>
-      <div class="rules-cols">
-        <div><h3><i style="--c:${G.TAKER_COLOUR}"></i>${esc(S.name || "The taker")}</h3><ul>${G.RULES.taker.map(row).join("")}</ul></div>
-        <div><h3><i class="team"></i>Everyone else</h3><ul>${G.RULES.member.map(row).join("")}</ul>
-          <p class="rules-note"><span class="crit-chip">Critical</span> questions count double. No answer by the time ${esc(S.name || "the taker")} submits counts as wrong.</p></div>
-      </div>`;
+  // the points rules as two grids: read across for what the others did, down for what you did (green earns, red costs)
+  function pointsHtml() {
+    const name = esc(S.name || "The taker");
+    const cell = (p) => {
+      const a = (0.1 + 0.45 * Math.min(1, Math.abs(p) / 10)).toFixed(2);
+      const bg = p > 0 ? `rgba(31, 157, 85, ${a})` : p < 0 ? `rgba(230, 30, 42, ${a})` : "var(--grey-50)";
+      return `<td class="${p > 0 ? "up" : p < 0 ? "down" : ""}" style="background:${bg}">${G.signed(p)}</td>`;
+    };
+    const mark = (ok) => `<span class="mark ${ok ? "y" : "n"}" aria-hidden="true"></span>`;
+    const team = (pattern) => `<span class="team-dots" aria-hidden="true">${[...pattern].map((c) => `<i class="${c}"></i>`).join("")}</span>`;
+    const taker = (right, others) => G.RULES.taker.find((r) => r.right === right && r.others === others).pts;
+    const member = (right, takerRight) => G.RULES.member.find((r) => r.right === right && (right || r.taker === takerRight)).pts;
+    const you = `<span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>`;
+    return `<figure class="pts-grid">
+        <figcaption>${you}<b>${name}</b></figcaption>
+        <table>
+          <thead><tr><th></th><th>${team("nnn")}<small>Team all wrong</small></th><th>${team("yny")}<small>Some wrong</small></th><th>${team("yyy")}<small>Team all right</small></th></tr></thead>
+          <tbody>
+            <tr><th>${mark(true)}<small>Right</small></th>${cell(taker(true, "wrong"))}${cell(taker(true, "some"))}${cell(taker(true, "right"))}</tr>
+            <tr><th>${mark(false)}<small>Wrong</small></th>${cell(taker(false, "wrong"))}${cell(taker(false, "some"))}${cell(taker(false, "right"))}</tr>
+          </tbody>
+        </table>
+      </figure>
+      <figure class="pts-grid">
+        <figcaption>${team("byp")}<b>Everyone else</b></figcaption>
+        <table>
+          <thead><tr><th></th><th>${you}${mark(true)}<small>${name} right</small></th><th>${you}${mark(false)}<small>${name} wrong</small></th></tr></thead>
+          <tbody>
+            <tr><th>${mark(true)}<small>Right</small></th>${cell(member(true, true))}${cell(member(true, false))}</tr>
+            <tr><th>${mark(false)}<small>Wrong</small></th>${cell(member(false, true))}${cell(member(false, false))}</tr>
+          </tbody>
+        </table>
+      </figure>
+      <div class="pts-foot"><p><span class="crit-chip">Critical</span><b>×2</b></p><p><span class="mark n" aria-hidden="true"></span>No answer when ${name} submits</p></div>`;
   }
 
   // ---------- briefing ----------
@@ -430,7 +454,8 @@
       p.append(parts[0] || "");
       const inp = document.createElement("input");
       inp.className = "blank"; inp.id = "answerInput"; inp.maxLength = 40; inp.autocomplete = "off"; inp.spellcheck = false; inp.setAttribute("aria-label", "Your answer");
-      inp.addEventListener("input", () => { current = inp.value; $("submitBtn").disabled = !A.normalize(current); reportBusy(); });
+      // the gap grows with the answer, so a long word never scrolls out of sight
+      inp.addEventListener("input", () => { current = inp.value; inp.style.setProperty("--len", inp.value.length); $("submitBtn").disabled = !A.normalize(current); reportBusy(); });
       p.append(inp, parts.slice(1).join("___") || "");
       body.append(p); setTimeout(() => inp.focus(), 30);
     } else {

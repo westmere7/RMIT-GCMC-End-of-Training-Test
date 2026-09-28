@@ -64,68 +64,51 @@
     </div>
   </section>
 
-  <!-- briefing -->
+  <!-- briefing: the room on the left, start on the right, the points underneath (it's the main screen everyone watches) -->
   <section class="screen" id="scrBrief" hidden>
-    <div class="container sheet">
-      <header class="sheet-head">
-        <div class="sheet-title">
+    <div class="container brief">
+      <header class="card brief-head">
+        <div class="brief-title">
           <p class="eyebrow" id="briefCode">Assessment</p>
           <h1 id="briefTitle">Ready when you are</h1>
           <p class="lead" id="briefLead"></p>
         </div>
-        <dl class="sheet-cand">
-          <div><dt>Playing today</dt><dd id="dCand">—</dd></div>
-          <div><dt>Date</dt><dd id="dDate">—</dd></div>
+        <dl class="brief-facts">
+          <div><dt>Questions</dt><dd id="dQ">30</dd></div>
+          <div><dt>Minutes</dt><dd id="dT">15</dd></div>
+          <div><dt>Categories</dt><dd id="dCats">8</dd></div>
+          <div><dt>Attempt</dt><dd id="dAttempt">1</dd></div>
         </dl>
       </header>
 
-      <dl class="particulars">
-        <div><dt>Questions</dt><dd id="dQ">30</dd></div>
-        <div><dt>Minutes</dt><dd id="dT">15</dd></div>
-        <div><dt>Categories</dt><dd id="dCats">8</dd></div>
-        <div><dt>Attempt</dt><dd id="dAttempt">1</dd></div>
-      </dl>
-
-      <!-- group play: the team scans in and answers alongside -->
-      <section class="lobby" id="lobby" hidden aria-labelledby="lobbyTitle">
-        <div class="lobby-join">
-          <div class="qr" id="lobbyQr"></div>
-          <div class="lobby-how">
-            <p class="eyebrow">Play along</p>
-            <h2 id="lobbyTitle">Scan to join the room</h2>
-            <p>The team answers the same questions on their phone or laptop. How they do moves your points, and how you do moves theirs.</p>
-            <p class="lobby-code"><span>Room</span><b id="lobbyCode">·····</b></p>
-            <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a> and type the code.</span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
+      <div class="brief-main" id="briefMain">
+        <!-- group play: the team scans in and answers alongside -->
+        <section class="lobby" id="lobby" hidden aria-labelledby="lobbyTitle">
+          <div class="card lobby-join">
+            <div class="qr" id="lobbyQr"></div>
+            <div class="lobby-how">
+              <p class="eyebrow">Play along</p>
+              <h2 id="lobbyTitle">Scan to join</h2>
+              <p class="lobby-code"><span>Room</span><b id="lobbyCode">·····</b></p>
+              <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a> and type the code.</span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
+            </div>
           </div>
-        </div>
-        <div class="lobby-room">
-          <div class="lobby-room-head"><h2>In the room <b id="lobbyN">1</b></h2><span id="lobbySub"></span></div>
-          <ul class="players" id="lobbyList"></ul>
-        </div>
-        <div class="lobby-rules" id="lobbyRules"></div>
-      </section>
-
-      <div class="sheet-body">
-        <section class="conditions">
-          <h2>How it works</h2>
-          <ol class="rules">
-            <li><span class="n">01</span><p><b>The clock.</b> It keeps running and hands your answers in at 00:00. With the team in, it pauses while each answer is on show.</p></li>
-            <li><span class="n">02</span><p><b>One go each.</b> An answer is locked in once you submit. Skipping counts as wrong.</p></li>
-            <li><span class="n">03</span><p><b>Typed answers.</b> A word or two is plenty. Capitals and accents don't matter.</p></li>
-            <li><span class="n">04</span><p><b>Points.</b> Right answers earn points. With the team in, what they get right or wrong moves your points too (see <i>How points work</i>).</p></li>
-            <li class="crit"><span class="n">05</span><p><b>Critical questions.</b> Flagged <span class="crit-chip">Critical</span>, they count double. <span id="dCritN"></span></p></li>
-            <li><span class="n">06</span><p><b>Shortcuts.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
-          </ol>
+          <div class="card lobby-room">
+            <div class="lobby-room-head"><h2>In the room <b id="lobbyN">1</b></h2><span id="lobbySub"></span></div>
+            <ul class="players" id="lobbyList"></ul>
+          </div>
         </section>
 
-        <aside class="declaration">
+        <aside class="start-card">
           <h2>All set?</h2>
-          <p>No trick questions, just what you've picked up so far. Missed something? That's what the results are for.</p>
+          <p class="start-who"><b id="dCand">—</b><span id="dDate">—</span></p>
           <label class="confirm"><input type="checkbox" id="agree"> <span>I'll answer from memory: no notes, no peeking.</span></label>
           <button class="btn" id="startBtn" disabled><span id="startLabel">Start assessment</span> <span aria-hidden="true">→</span></button>
           <p class="error-msg" id="startError" role="alert"></p>
-          <p class="fineprint">Your result goes to your training record. You can retake it any time.</p>
+          <p class="start-fine">Saved to your training record. Retakes allowed.</p>
         </aside>
+
+        <section class="card points-card" id="lobbyRules" hidden aria-label="How points work"></section>
       </div>
     </div>
   </section>
