@@ -1,7 +1,7 @@
 // GET  /api/questions  -> the question document (from Supabase; falls back to the bundled data/questions.json)
 // PUT  /api/questions  -> save it (no sign-in: anyone with the editor page can save).
 //      Send the revision you loaded; if someone saved in between you get 409 (add ?force=1 to overwrite).
-const { configured, readDoc, writeDoc, readJson, send } = require("./_store");
+const { configured, readDoc, writeDoc, readJson, send, isEditor } = require("./_store");
 
 const fs = require("fs");
 const path = require("path");
@@ -27,6 +27,7 @@ module.exports = async (req, res) => {
     }
     if (req.method === "PUT") {
       if (!configured()) return send(res, 503, { error: "Supabase isn't set up yet (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)." });
+      if (!(await isEditor(req))) return send(res, 401, { error: "Only the editor's private link can save. Open the editor from that link." });
       const doc = await readJson(req);
       if (!doc || !Array.isArray(doc.questions)) return send(res, 400, { error: "Expected an object with a 'questions' list." });
       const current = (await readDoc()) || null;

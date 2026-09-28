@@ -44,6 +44,7 @@
         <button class="tab" role="tab" id="tabBtnQuestions" data-tab="questions" aria-selected="true">Questions <b id="tabQCount"></b></button>
         <button class="tab" role="tab" id="tabBtnSettings" data-tab="settings" aria-selected="false">Settings</button>
         <button class="tab" role="tab" id="tabBtnPeople" data-tab="people" aria-selected="false">People <b id="tabPCount"></b></button>
+        <button class="tab" role="tab" id="tabBtnTeam" data-tab="team" aria-selected="false">Team <b id="tabTCount"></b></button>
       </nav>
       <span id="saveState" class="save-state">Loading…</span>
       <span class="spacer"></span>
@@ -162,6 +163,36 @@
     </section>
 
     <!-- People -->
+    <!-- Team: questions sent in through private links, and the links themselves -->
+    <section class="settings" data-panel="team" role="tabpanel" aria-labelledby="tabBtnTeam" hidden>
+      <div class="card set-group">
+        <div class="set-intro">
+          <h3>Waiting for review</h3>
+          <p>Questions the team sent through their links. They can't see the bank. Add one to open it in the editor, check it, then save.</p>
+          <p class="help" id="teamState"></p>
+        </div>
+        <div class="set-fields one" id="inboxList"></div>
+      </div>
+      <div class="card set-group">
+        <div class="set-intro">
+          <h3>Team links</h3>
+          <p>Each person gets their own link to a page where they can write questions and their answers. No sign-in, and they never see the existing questions.</p>
+          <p class="help">Keep links private. Turning one off stops it straight away; what they sent stays.</p>
+        </div>
+        <div class="set-fields one">
+          <form class="cand-row new team-add" id="teamForm">
+            <input class="input" id="teamName" placeholder="Their name, e.g. Trinh" aria-label="Their name" maxlength="60" autocomplete="off">
+            <button class="btn ghost small" id="teamAdd" type="submit">Make their link</button>
+          </form>
+          <div id="teamLinks" class="cand-list"></div>
+          <div class="editor-link" id="editorLink" hidden>
+            <span><b>Your editor link</b> opens this editor on another browser. Don't share it with the team.</span>
+            <button class="btn quiet small" id="editorLinkCopy" type="button">Copy editor link</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="settings" data-panel="people" role="tabpanel" aria-labelledby="tabBtnPeople" hidden>
       <div class="card set-group">
         <div class="set-intro">

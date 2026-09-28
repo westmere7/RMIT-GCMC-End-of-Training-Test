@@ -22,6 +22,9 @@
   "functions": {
     "api/questions.js": {
       "includeFiles": "data/questions.json"
+    },
+    "api/contribute.js": {
+      "includeFiles": "data/questions.json"
     }
   }
 }

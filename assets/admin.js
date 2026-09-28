@@ -6,11 +6,24 @@
   const esc = A.escapeHtml;
   let D = null, dirty = false;
 
-  function setState(text, cls) { const el = $("saveState"); el.textContent = text; el.className = "save-state " + (cls || ""); }
+  // ---------- private links (no sign-in): the editor's key rides in its link; each team member has their own page link ----------
+  const CONTRIB = document.body.dataset.mode === "contribute"; // contribute.html: one question at a time, never the bank
+  const TEAM_TOKEN = CONTRIB ? new URLSearchParams(location.search).get("t") || "" : "";
+  let editorKey = "";
+  if (!CONTRIB) {
+    const m = location.hash.match(/[#&]key=([^&]+)/), fromLink = m ? decodeURIComponent(m[1]) : "";
+    try { if (fromLink) localStorage.setItem("gcmc-editor-key", fromLink); editorKey = fromLink || localStorage.getItem("gcmc-editor-key") || ""; }
+    catch (e) { editorKey = fromLink; }
+    if (m) history.replaceState(null, "", location.pathname + location.search); // keep the key out of the address bar
+  }
+  const keyHeader = () => (editorKey ? { "x-editor-key": editorKey } : {});
+
+  function setState(text, cls) { const el = $("saveState"); if (!el) return; el.textContent = text; el.className = "save-state " + (cls || ""); }
   let baseline = "";
   const snapshot = () => JSON.stringify(D, (k, v) => (k === "revision" || k === "updatedAt" ? undefined : v));
   function setBaseline() { baseline = snapshot(); dirty = false; $("saveBtn").disabled = true; }
   function markDirty() {
+    if (CONTRIB) return saveDraft(); // the draft is kept in this browser until it's sent
     dirty = snapshot() !== baseline;
     $("saveBtn").disabled = !dirty;
     if (dirty) setState("Unsaved changes", "dirty");
@@ -60,6 +73,7 @@
     renderGate();
   }
   function renderBank() {
+    if (CONTRIB) return;
     const n = D.questions.length, per = A.perAttemptOf(D.settings, n), na = D.questions.filter((q) => q.always).length;
     const cats = new Set(D.questions.map(A.categoryOf));
     const nc = D.questions.filter((q) => q.critical).length, pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
@@ -110,7 +124,7 @@
         el("span.set", { text: c.updated_at ? "Saved " + new Date(c.updated_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "" }), del));
     });
   }
-  $("cAdd").onclick = async () => {
+  if (!CONTRIB) $("cAdd").onclick = async () => {
     const name = $("cName").value.trim(), email = A.normEmail($("cEmail").value);
     if (!name || !email) { setState("Enter a first name and an email.", "dirty"); return; }
     try { await peopleCall("POST", { name, email_sha256: await A.sha256(email) }); } catch (e) { setState(e.message, "dirty"); return; }
@@ -220,6 +234,7 @@
   }
 
   function renderList() {
+    if (CONTRIB) return;
     const n = D.questions.length;
     $("tabQCount").textContent = n; $("qCount").textContent = n;
     renderBank(); renderFilters();
@@ -262,9 +277,9 @@
       <span class="qrow-body"><span class="qrow-text${text ? "" : " empty"}">${esc(text || "New question")}</span>
       <span class="qrow-meta"><span class="qrow-cat">${esc(A.categoryOf(q))}</span><span class="qrow-type t-${q.type}">${TYPE_NAME[q.type] || q.type}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}${q.always ? '<span class="qrow-always">Always</span>' : ""}${bad ? '<span class="qrow-bad">Needs fixing</span>' : ""}</span></span>`;
   }
-  function refreshRow(q) { const b = rowOf(q.id); if (b) paintRow(b, q); renderFilterCounts(); }
-  const rowOf = (id) => $("qList").querySelector(`.qrow[data-id="${CSS.escape(id)}"]`);
-  const visibleIds = () => [...$("qList").querySelectorAll(".qrow")].map((b) => b.dataset.id);
+  function refreshRow(q) { if (CONTRIB) return; const b = rowOf(q.id); if (b) paintRow(b, q); renderFilterCounts(); }
+  const rowOf = (id) => $("qList") && $("qList").querySelector(`.qrow[data-id="${CSS.escape(id)}"]`);
+  const visibleIds = () => [...($("qList") ? $("qList").querySelectorAll(".qrow") : [])].map((b) => b.dataset.id);
 
   function select(id, opts) {
     opts = opts || {};
@@ -290,13 +305,13 @@
     $("qSearch").value = ""; renderList();
     const row = selId && rowOf(selId); if (row) row.scrollIntoView({ block: "nearest" });
   }
-  $("qSearch").oninput = (e) => { F.q = e.target.value.trim().toLowerCase(); renderList(); };
-  $("fCat").onchange = (e) => { F.cat = e.target.value; renderList(); };
-  $("fType").onchange = (e) => { F.type = e.target.value; renderList(); };
-  $("fCrit").onclick = () => { F.crit = !F.crit; renderList(); };
-  $("fBad").onclick = () => { F.bad = !F.bad; renderList(); };
-  $("fAlways").onclick = () => { F.always = !F.always; renderList(); };
-  $("fClear").onclick = clearFilters;
+  if (!CONTRIB) $("qSearch").oninput = (e) => { F.q = e.target.value.trim().toLowerCase(); renderList(); };
+  if (!CONTRIB) $("fCat").onchange = (e) => { F.cat = e.target.value; renderList(); };
+  if (!CONTRIB) $("fType").onchange = (e) => { F.type = e.target.value; renderList(); };
+  if (!CONTRIB) $("fCrit").onclick = () => { F.crit = !F.crit; renderList(); };
+  if (!CONTRIB) $("fBad").onclick = () => { F.bad = !F.bad; renderList(); };
+  if (!CONTRIB) $("fAlways").onclick = () => { F.always = !F.always; renderList(); };
+  if (!CONTRIB) $("fClear").onclick = clearFilters;
   document.querySelectorAll(".qx-view [data-view]").forEach((b) => { b.onclick = () => {
     view = b.dataset.view; try { localStorage.setItem("gcmc-editor-view", view); } catch (e) { /* not remembered */ }
     renderList(); const r = selId && rowOf(selId); if (r) r.scrollIntoView({ block: "center" });
@@ -314,7 +329,7 @@
     markDirty(); renderList(); select(q.id, { focus: true });
     toast(`Added question ${numOf(q)} to ${cat}.`);
   }
-  $("newQ").onclick = () => newQuestion();
+  if (!CONTRIB) $("newQ").onclick = () => newQuestion();
 
   function duplicate(q) {
     const c = JSON.parse(JSON.stringify(q)); c.id = newId();
@@ -326,6 +341,7 @@
     const i = D.questions.indexOf(q), ids = visibleIds(), k = ids.indexOf(q.id);
     const next = ids[k + 1] || ids[k - 1] || null;
     D.questions.splice(i, 1); markDirty(); renderList(); select(next, { keepScroll: true });
+    if (approvals.has(q.id)) loadTeam(); // a team question taken back out goes back to the inbox
     toast(`Deleted question ${i + 1}.`, { label: "Undo", fn: () => { D.questions.splice(i, 0, q); markDirty(); renderList(); select(q.id); } });
   }
 
@@ -371,10 +387,15 @@
 
     // head: where you are, and what you can do with this question
     const ids = visibleIds(), k = ids.indexOf(q.id);
+    if (CONTRIB) card.append(el("header.qed-head", {},
+      el("div.qed-where", {}, el("p.eyebrow", { text: "Your question" }), el("span.qed-id", { text: "Saved in this browser until you send it" })),
+      el("div.qed-tools", {},
+        el("button.btn.ghost.small", { type: "button", text: "Preview", title: "See it as candidates will (Alt+P)", onclick: () => openPreview(q, "Your question") }),
+        el("button.btn.quiet.small.danger", { type: "button", text: "Start over", onclick: () => { if (confirm("Clear this question and start again?")) startOver(q); } }))));
     const nav = el("div.qed-nav", {},
       el("button.icon-btn", { type: "button", text: "‹", title: "Previous question", "aria-label": "Previous question", disabled: k <= 0, onclick: () => step(-1) }),
       el("button.icon-btn", { type: "button", text: "›", title: "Next question", "aria-label": "Next question", disabled: k < 0 || k >= ids.length - 1, onclick: () => step(1) }));
-    card.append(el("header.qed-head", {},
+    if (!CONTRIB) card.append(el("header.qed-head", {},
       el("div.qed-where", {}, el("p.eyebrow", { text: `Question ${numOf(q)} of ${D.questions.length}` }), el("span.qed-id", { text: "ID " + q.id })),
       el("div.qed-tools", {}, nav,
         el("button.btn.ghost.small", { type: "button", text: "Preview", title: "See it as candidates will (Alt+P)", onclick: () => openPreview(q) }),
@@ -385,7 +406,7 @@
     const cat = el("select.input", { id: "qCat" });
     const catList = A.categoriesOf(D.settings), cur = A.categoryOf(q);
     for (const c of catList.includes(cur) ? catList : [...catList, cur]) cat.add(new Option(c, c, false, c === cur));
-    cat.onchange = () => { q.category = cat.value; markDirty(); renderList(); $("addAnother").textContent = `+ Add another to ${q.category}`; const r = rowOf(q.id); if (r) r.scrollIntoView({ block: "nearest" }); };
+    cat.onchange = () => { q.category = cat.value; markDirty(); renderList(); const aa = $("addAnother"); if (aa) aa.textContent = `+ Add another to ${q.category}`; const r = rowOf(q.id); if (r) r.scrollIntoView({ block: "nearest" }); };
     const flag = (cls, key, html, title, after) => {
       const box = el("input", { type: "checkbox", checked: !!q[key] });
       box.onchange = () => { if (box.checked) q[key] = true; else delete q[key]; if (after) after(box.checked); markDirty(); refreshRow(q); renderBank(); };
@@ -394,7 +415,7 @@
     const pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
     const flags = el("div.flags", {},
       flag("crit", "critical", `<b>Critical</b> −${pen}`, `A wrong or skipped answer loses ${pen} extra marks`, (on) => card.classList.toggle("critical", on)),
-      flag("always", "always", "<b>Always in</b>", "Always include: this question is in every attempt, whatever the random draw picks"));
+      CONTRIB ? null : flag("always", "always", "<b>Always in</b>", "Always include: this question is in every attempt, whatever the random draw picks"));
     const type = el("select.input", { id: "qType" });
     for (const [v, l] of TYPES) type.add(new Option(l, v, false, v === q.type));
     type.onchange = () => { setType(q, type.value); const t = $("qType"); if (t) t.focus(); };
@@ -430,7 +451,9 @@
     renderAnswers(q, ans);
 
     // footer: is it ready, and a quick way to keep going
-    card.append(el("footer.qed-foot", {}, el("div.qed-status", { id: "qStatus", role: "status" }),
+    if (CONTRIB) card.append(el("footer.qed-foot", {}, el("div.qed-status", { id: "qStatus", role: "status" }),
+      el("button.btn", { type: "button", id: "sendBtn", text: "Send to the bank", onclick: sendQuestion })));
+    else card.append(el("footer.qed-foot", {}, el("div.qed-status", { id: "qStatus", role: "status" }),
       el("button.btn.ghost.small", { type: "button", id: "addAnother", text: `+ Add another to ${A.categoryOf(q)}`, title: "Same category and type (Alt+N)", onclick: () => newQuestion({ cat: A.categoryOf(q), type: q.type }) })));
     box.append(card);
     refreshStatus();
@@ -440,7 +463,8 @@
     const q = byId(selId), box = $("qStatus"); if (!q || !box) return;
     const p = problems(q);
     box.className = "qed-status " + (p.length ? "bad" : "ok");
-    box.innerHTML = p.length ? `<b>Needs fixing</b><ul>${p.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "<b>Ready</b><span>This question can go in the test.</span>";
+    box.innerHTML = p.length ? `<b>Needs fixing</b><ul>${p.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<b>Ready</b><span>${CONTRIB ? "You can send it." : "This question can go in the test."}</span>`;
+    const send = $("sendBtn"); if (send) send.disabled = p.length > 0;
   }
   const changed = (q) => { markDirty(); refreshRow(q); refreshStatus(); };
   // re-render only the answer block, and put the cursor back where it's wanted
@@ -517,7 +541,8 @@
   async function uploadImage(file, maxSide) {
     const blob = await toWebp(file, maxSide);
     let res;
-    try { res = await fetch("/api/images", { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: blob }); }
+    const url = "/api/images" + (CONTRIB ? "?t=" + encodeURIComponent(TEAM_TOKEN) : "");
+    try { res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/octet-stream", ...keyHeader() }, body: blob }); }
     catch (e) { throw new Error("Couldn't reach the server to upload the image."); }
     if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("Images can only be uploaded where the live API runs (the Vercel site or the local server).");
     const data = await res.json();
@@ -662,18 +687,19 @@
 
   // ----- preview: the open question in the real test page, unsaved edits included; nothing is recorded -----
   let closePreview = () => {};
-  function openPreview(q) {
+  function openPreview(q, title) {
     closePreview();
+    title = title || "Question " + numOf(q);
     // the test's desktop layout, scaled down to fit; on a phone, the phone layout at full size
     const widthFor = () => (holder.clientWidth < 760 ? holder.clientWidth : 1280);
-    const frame = el("iframe", { src: "./?preview=1", title: "Preview of question " + numOf(q) });
+    const frame = el("iframe", { src: "./?preview=1", title: "Preview: " + title });
     const holder = el("div.pv-frame", {}, frame);
     const p = problems(q);
     const shut = el("button.btn.small", { type: "button", text: "Close" });
-    const shell = el("div.pv", { role: "dialog", "aria-modal": "true", "aria-label": "Preview of question " + numOf(q) },
+    const shell = el("div.pv", { role: "dialog", "aria-modal": "true", "aria-label": "Preview: " + title },
       el("div.pv-in", {},
         el("div.pv-bar", {},
-          el("div.pv-title", { html: `<b>Preview · Question ${numOf(q)}</b><span>As candidates see it, with your unsaved changes. Answer it to check the marking; nothing is recorded.</span>` }),
+          el("div.pv-title", { html: `<b>Preview · ${esc(title)}</b><span>As candidates see it, with your unsaved changes. Answer it to check the marking; nothing is recorded.</span>` }),
           shut),
         p.length ? el("p.pv-warn", { text: "Still needs fixing: " + p.join(" ") }) : null,
         holder));
@@ -693,6 +719,188 @@
     addEventListener("message", onMsg); addEventListener("keydown", onKey, true); addEventListener("resize", fit);
     document.body.append(shell); document.body.classList.add("pv-open");
     fit(); shut.focus();
+  }
+
+  // ---------- private links: the editor's key check, and the Team tab (inbox of sent-in questions, team links) ----------
+  async function checkKey() {
+    let res;
+    try { res = await fetch("/api/editor", { headers: keyHeader(), cache: "no-store" }); } catch (e) { return true; }
+    if (res.status !== 401) return true; // the key is fine, or there's no API here (offline)
+    showLock(editorKey ? "That key doesn't open the editor. Paste the current editor link." : "");
+    return false;
+  }
+  function showLock(msg) {
+    const box = $("edLoading"); box.hidden = false; box.classList.add("failed", "locked");
+    $("edLoadTitle").textContent = "This editor opens from its private link";
+    $("edLoadMsg").textContent = msg || "Open it from the link you were given, or paste that link (or its key) here.";
+    $("edRetry").hidden = true;
+    const inner = box.querySelector(".ed-loading-in"), old = inner.querySelector(".lock-form"); if (old) old.remove();
+    const input = el("input.input", { id: "lockKey", type: "password", placeholder: "Paste the editor link or key", autocomplete: "off", "aria-label": "Editor link or key" });
+    const form = el("form.lock-form", {}, input, el("button.btn.small", { type: "submit", text: "Open the editor" }));
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const v = input.value.trim(), m = v.match(/key=([^&\s]+)/), k = m ? decodeURIComponent(m[1]) : v;
+      if (!k) return;
+      try { localStorage.setItem("gcmc-editor-key", k); location.reload(); } catch (er) { location.hash = "key=" + encodeURIComponent(k); location.reload(); }
+    };
+    inner.append(form); input.focus();
+  }
+
+  let inbox = [], team = [], teamErr = "";
+  const approvals = new Map(); // bank question id → submission id, confirmed as approved once the bank is saved
+  async function teamCall(method, url, body) {
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json", ...keyHeader() }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("no api");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Request failed (" + res.status + ").");
+    return data;
+  }
+  async function loadTeam() {
+    try {
+      [inbox, team] = await Promise.all([teamCall("GET", "/api/submissions?status=pending"), teamCall("GET", "/api/contributors")]);
+      teamErr = "";
+      // ones added to the bank but not saved yet stay out of the inbox, unless they were deleted again
+      const taken = new Set([...approvals].filter(([qid]) => byId(qid)).map(([, sid]) => sid)); inbox = inbox.filter((s) => !taken.has(s.id));
+    } catch (e) { teamErr = e.message === "no api" ? "Team links and the inbox need the live site (Vercel) or the local dev server." : e.message; inbox = []; team = []; }
+    renderTeam();
+  }
+  const ago = (iso) => {
+    const s = (Date.now() - new Date(iso)) / 1000;
+    return s < 60 ? "just now" : s < 3600 ? Math.round(s / 60) + " min ago" : s < 86400 ? Math.round(s / 3600) + " h ago" : new Date(iso).toLocaleDateString("en-AU", { day: "numeric", month: "short" });
+  };
+  const linkFor = (token) => `${location.origin}/contribute.html?t=${token}`;
+  async function copy(text, what) {
+    try { await navigator.clipboard.writeText(text); toast(`Copied ${what}.`); }
+    catch (e) { prompt("Copy this " + what + ":", text); }
+  }
+
+  function renderTeam() {
+    $("tabTCount").textContent = inbox.length || "";
+    const ibox = $("inboxList"), lbox = $("teamLinks");
+    ibox.innerHTML = ""; lbox.innerHTML = "";
+    $("teamState").textContent = teamErr;
+    $("teamAdd").disabled = !!teamErr;
+    if (!teamErr && !inbox.length) ibox.append(el("p.team-empty", { text: "Nothing waiting. Questions sent through a team link show up here." }));
+    for (const s of inbox) {
+      const q = s.question || {};
+      const answer = A.imageAnswers(q) ? `Picture ${(q.correct || []).map((i) => i + 1).join(", ")}` : A.correctText(q);
+      const pics = A.imageAnswers(q) ? el("div.sub-pics", {}, ...(q.options || []).map((u, i) => el("img" + ((q.correct || []).includes(i) ? ".right" : ""), { src: u, alt: "Picture " + (i + 1) }))) : null;
+      const qpic = q.type === "image" && !A.imageAnswers(q) && q.image ? el("img.sub-qpic", { src: q.image, alt: "" }) : null;
+      ibox.append(el("article.sub-item", {},
+        el("div.sub-meta", { html: `<b>${esc(s.contributor_name)}</b><span>${esc(ago(s.created_at))}</span><span>${esc(A.categoryOf(q))}</span><span class="qrow-type t-${esc(q.type)}">${esc(TYPE_NAME[q.type] || q.type)}</span>${q.critical ? '<span class="qrow-crit">Critical</span>' : ""}` }),
+        el("p.sub-q", { text: q.prompt || "" }), qpic,
+        el("p.sub-a", {}, el("span", { text: "Answer: " }), el("b", { text: answer })), pics,
+        el("div.sub-actions", {},
+          el("button.btn.small", { type: "button", text: "Add to the bank", onclick: () => approve(s) }),
+          el("button.btn.ghost.small", { type: "button", text: "Preview", onclick: () => openPreview(q, "From " + s.contributor_name) }),
+          el("button.btn.quiet.small.danger", { type: "button", text: "Reject", onclick: () => reject(s) }))));
+    }
+    const live = team.filter((c) => !c.revoked_at), off = team.filter((c) => c.revoked_at);
+    if (!teamErr && !live.length) lbox.append(el("p.team-empty", { text: "No links yet. Add someone above to make their link." }));
+    for (const c of [...live, ...off]) {
+      const url = linkFor(c.token), dead = !!c.revoked_at;
+      lbox.append(el("div.link-item" + (dead ? ".off" : ""), {},
+        el("div.link-who", { html: `<b>${esc(c.name)}</b><span>${dead ? "Link turned off" : `${c.sent} sent${c.pending ? ` · ${c.pending} waiting` : ""}`}</span>` }),
+        dead ? el("span") : el("input.input.link-url", { value: url, readonly: true, "aria-label": `${c.name}'s link`, onfocus: (e) => e.target.select() }),
+        dead ? el("span") : el("div.link-tools", {},
+          el("button.btn.ghost.small", { type: "button", text: "Copy link", onclick: () => copy(url, c.name + "'s link") }),
+          el("button.btn.quiet.small.danger", { type: "button", text: "Turn off", title: "Their link stops working. What they already sent stays.", onclick: () => revoke(c) }))));
+    }
+    const mine = $("editorLink");
+    if (mine) {
+      mine.hidden = !editorKey || !!teamErr;
+      if (editorKey) $("editorLinkCopy").onclick = () => copy(`${location.origin}/admin.html#key=${encodeURIComponent(editorKey)}`, "the editor link");
+    }
+  }
+  function approve(s) {
+    const q = JSON.parse(JSON.stringify(s.question || {}));
+    q.id = newId();
+    if (!q.category) q.category = A.categoriesOf(D.settings)[0];
+    D.questions.push(q); approvals.set(q.id, s.id);
+    inbox = inbox.filter((x) => x.id !== s.id);
+    markDirty(); renderTeam(); setTab("questions"); renderList(); select(q.id);
+    toast(`Added ${s.contributor_name}'s question as number ${numOf(q)}. Check it, then save.`);
+  }
+  async function reject(s) {
+    try { await teamCall("PATCH", "/api/submissions", { ids: [s.id], status: "rejected" }); }
+    catch (e) { toast(e.message); return; }
+    inbox = inbox.filter((x) => x.id !== s.id); renderTeam();
+    toast(`Rejected ${s.contributor_name}'s question.`, { label: "Undo", fn: async () => { await teamCall("PATCH", "/api/submissions", { ids: [s.id], status: "pending" }).catch(() => {}); loadTeam(); } });
+  }
+  async function revoke(c) {
+    if (!confirm(`Turn off ${c.name}'s link? It stops working straight away. What they already sent stays.`)) return;
+    try { await teamCall("DELETE", "/api/contributors?t=" + encodeURIComponent(c.token)); } catch (e) { toast(e.message); return; }
+    loadTeam();
+  }
+  // approved questions are only confirmed once they're actually saved into the bank
+  async function confirmApprovals() {
+    const ids = [...approvals].filter(([qid]) => byId(qid)).map(([, sid]) => sid);
+    approvals.clear();
+    if (ids.length) await teamCall("PATCH", "/api/submissions", { ids, status: "approved" }).catch(() => {});
+    loadTeam();
+  }
+  if (!CONTRIB) {
+    $("teamForm").onsubmit = async (e) => {
+      e.preventDefault();
+      const name = $("teamName").value.trim(); if (!name) return;
+      let out;
+      try { out = await teamCall("POST", "/api/contributors", { name }); } catch (er) { toast(er.message); return; }
+      $("teamName").value = ""; await loadTeam();
+      copy(linkFor(out.token), out.name + "'s link");
+    };
+  }
+
+  // ---------- the team's "Submit a question" page (contribute.html): the same question form, one question at a time ----------
+  const DRAFT_KEY = "gcmc-contrib-draft-" + TEAM_TOKEN;
+  const sentHere = [];
+  function saveDraft() { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(byId(selId))); } catch (e) { /* not kept */ } }
+  async function contribCall(method, body) {
+    const res = await fetch("/api/contribute?t=" + encodeURIComponent(TEAM_TOKEN), { method, headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined, cache: "no-store" });
+    if (!(res.headers.get("content-type") || "").includes("json")) throw new Error("This page needs the live site.");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Something went wrong (" + res.status + ").");
+    return data;
+  }
+  const sentText = (n) => (n ? `You've sent ${n} ${n === 1 ? "question" : "questions"} so far. Thank you.` : "");
+  function startOver(q) {
+    const next = blank(q ? q.type : lastType, q ? A.categoryOf(q) : A.categoriesOf(D.settings)[0]);
+    next.id = "draft"; stash.clear(); ansRows = null; D.questions = [next]; selId = next.id; saveDraft(); renderEditor();
+    const p = $("qPrompt"); if (p) p.focus();
+  }
+  async function sendQuestion() {
+    const q = byId(selId), p = problems(q);
+    if (p.length) { toast(p[0]); return; }
+    const btn = $("sendBtn"); btn.disabled = true; btn.textContent = "Sending…";
+    const out = JSON.parse(JSON.stringify(q)); delete out.id;
+    let res;
+    try { res = await contribCall("POST", { question: out }); }
+    catch (e) { toast(e.message); btn.disabled = false; btn.textContent = "Send to the bank"; return; }
+    $("cSent").textContent = sentText(res.sent);
+    sentHere.unshift(q.prompt); $("cDone").hidden = false;
+    $("cDoneList").innerHTML = ""; sentHere.forEach((t) => $("cDoneList").append(el("li", { text: t })));
+    toast("Sent. It's waiting for review.");
+    startOver(q); scrollTo({ top: 0, behavior: "smooth" });
+  }
+  async function startContrib() {
+    let info;
+    try {
+      if (!TEAM_TOKEN) throw new Error("This page opens from your personal link. Ask for one if you don't have it.");
+      info = await contribCall("GET");
+    } catch (e) {
+      $("edLoading").classList.add("failed");
+      $("edLoadTitle").textContent = "This link isn't working";
+      $("edLoadMsg").textContent = e.message;
+      return;
+    }
+    D = { settings: { categories: info.categories, criticalPenalty: info.criticalPenalty }, questions: [] };
+    $("cHello").textContent = `Hi ${info.name}.`;
+    $("cSent").textContent = sentText(info.sent);
+    let q = null;
+    try { q = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (e) { q = null; }
+    if (!q || !q.type || !TYPE_NAME[q.type]) q = blank("single", A.categoriesOf(D.settings)[0]);
+    q.id = "draft"; D.questions = [q]; selId = q.id;
+    renderEditor();
+    $("edLoading").hidden = true;
   }
 
   // ---------- save / load ----------
@@ -722,7 +930,7 @@
     let res;
     try {
       res = await fetch("/api/questions" + (force ? "?force=1" : ""), {
-        method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data),
+        method: "PUT", headers: { "Content-Type": "application/json", ...keyHeader() }, body: JSON.stringify(data),
       });
     } catch (e) { res = null; }
     if (!res || res.status === 404 || res.status === 405 || !(res.headers.get("content-type") || "").includes("json")) {
@@ -733,7 +941,7 @@
     const body = await res.json().catch(() => ({}));
     if (res.status === 409) { showConflict(); $("saveBtn").disabled = false; return; }
     if (!res.ok) { setState(body.error || "Save failed (" + res.status + ").", "dirty"); $("saveBtn").disabled = false; return; }
-    D.revision = body.revision; setBaseline(); hideConflict(); stash.clear();
+    D.revision = body.revision; setBaseline(); hideConflict(); stash.clear(); confirmApprovals();
     setState(`Saved · revision ${body.revision} · ${new Date().toLocaleTimeString()}`, "ok");
   }
   function showConflict() {
@@ -741,10 +949,10 @@
     $("conflict").hidden = false;
   }
   function hideConflict() { $("conflict").hidden = true; }
-  $("saveBtn").onclick = () => save(false);
-  $("reloadLatest").onclick = async () => { D = await A.loadData(); stash.clear(); ansRows = null; renderAll(); setBaseline(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
-  $("overwrite").onclick = () => save(true);
-  $("edRetry").onclick = () => location.reload();
+  if (!CONTRIB) $("saveBtn").onclick = () => save(false);
+  if (!CONTRIB) $("reloadLatest").onclick = async () => { D = await A.loadData(); stash.clear(); ansRows = null; renderAll(); setBaseline(); hideConflict(); setState("Loaded the latest version · revision " + (D.revision || 0), "ok"); };
+  if (!CONTRIB) $("overwrite").onclick = () => save(true);
+  if (!CONTRIB) $("edRetry").onclick = () => location.reload();
 
   // ---------- dark theme switch ----------
   function initTheme() {
@@ -774,6 +982,7 @@
 
   // Ctrl/⌘+S saves; Alt+N starts a new question (same category and type as the open one)
   addEventListener("keydown", (e) => {
+    if (CONTRIB) { if (e.altKey && e.code === "KeyP" && D && byId(selId)) { e.preventDefault(); openPreview(byId(selId), "Your question"); } return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); if (!$("saveBtn").disabled) save(false); }
     else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyP" && D && byId(selId)) { e.preventDefault(); openPreview(byId(selId)); }
     else if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyN" && D) {
@@ -790,7 +999,7 @@
   document.querySelectorAll(".ed-tabs .tab").forEach((b) => { b.onclick = () => setTab(b.dataset.tab); });
 
   // the list sticks under the top bar and save bar, so it needs their height
-  const stick = () => document.documentElement.style.setProperty("--stick", document.querySelector(".topbar").offsetHeight + document.querySelector(".savebar").offsetHeight + "px");
+  const stick = () => !CONTRIB && document.documentElement.style.setProperty("--stick", document.querySelector(".topbar").offsetHeight + document.querySelector(".savebar").offsetHeight + "px");
   addEventListener("resize", stick);
 
   function renderAll() {
@@ -798,8 +1007,10 @@
     const want = decodeURIComponent(location.hash.slice(1));
     select(byId(selId) ? selId : byId(want) ? want : (D.questions[0] || {}).id || null, { keepScroll: true });
   }
-  (async () => {
+  if (CONTRIB) startContrib();
+  else (async () => {
     try {
+      if (!(await checkKey())) return;
       D = await A.loadData(); stick(); renderAll(); setBaseline(); setState("Up to date · revision " + (D.revision || 0), "ok");
       const missing = D.questions.filter((q) => !q.category);
       if (missing.length) {
@@ -807,7 +1018,7 @@
         renderList(); renderEditor(); markDirty();
         setState(`${missing.length} questions were given a category from their topic. Check them, then save to keep them.`, "dirty");
       }
-      loadPeople();
+      loadPeople(); loadTeam();
     }
     catch (e) {
       setState(e.message, "dirty");

@@ -3,7 +3,8 @@
 A timed onboarding test for GCMC Creative Services. Each attempt draws 30 questions at random from a shared bank, with at least one from every category. The team edits the bank through the editor page.
 
 - **Test:** `/`
-- **Editor:** `/admin.html` (not linked anywhere; share the link with the team. There's no sign-in, so anyone with the link can edit)
+- **Editor:** `/admin.html#key=…`, a private link (see below). Without its key the editor and its save endpoint refuse access.
+- **Send in a question:** `/contribute.html?t=…`, one private link per team member, made in the editor's Team tab.
 
 Sign-in is a testing build: any email and any staff ID get in. The first time someone signs in, they're asked for their first name, and it's remembered for next time. The name rides on the meter's needle and appears in the results.
 
@@ -16,6 +17,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
    - `assessment_results`: finished attempts (score, `by_category`, every answer)
    - views `assessment_leaderboard` (score, time, strongest and weakest category) and `assessment_category_scores` (one row per attempt per category)
    - `assessment_migrations`: which files in `supabase/migrations/` have been applied
+   - `assessment_contributors`, `assessment_submissions`, `assessment_secrets`: team links, the questions sent through them, and the editor key's fingerprint
    - Storage bucket `assessment-images`: question pictures (public to read, WebP only, 3 MB each)
 
    Row-level security is on with no policies, so only the server can touch the tables.
@@ -32,6 +34,13 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 - Every save bumps a revision number. If two people edit at once, the second one to save is asked to load the latest version or overwrite it, so nobody's changes vanish silently.
 - First names are saved straight away, from the sign-in page or the editor's People list. They're in their own table, so adding one never clashes with someone editing questions.
 - Each finished attempt is stored in `assessment_results`. Check the `assessment_leaderboard` view in Supabase to see everyone's scores.
+
+## Private links (no sign-in anywhere)
+
+- **The editor's link** carries its key: `https://<site>/admin.html#key=…`. The browser remembers the key after the first visit, and the key is removed from the address bar. Saving, uploading pictures, the Team inbox and team links all need it. Only its SHA-256 is stored (table `assessment_secrets`). Make a new key, which turns the old link off, with `node scripts/editor-key.js https://<site>`. Until a key is set, the editor is open.
+- **Team links:** in the editor's **Team** tab, add a person to get their link (`/contribute.html?t=…`). The link opens a page with the same question form as the editor: every type, pictures, Preview and the "needs fixing" checks. It never loads the bank, so they can't see existing questions. "Turn off" stops a link at once; what they sent stays.
+- **Reviewing:** sent-in questions wait in the Team tab. **Add to the bank** opens the question in the editor as a new question; it's marked approved once the bank is saved. **Reject** takes it out of the inbox (with Undo).
+- The test itself still downloads the whole bank to run (see `/api/questions`), so this keeps the bank out of sight rather than secret.
 
 ## Categories
 
@@ -81,7 +90,9 @@ Schema changes go in a new numbered file in `supabase/migrations/`, which is the
 - `index.html`, `assets/app.js`, `assets/meter.js`: the test
 - `admin.html`, `assets/admin.js`: the editor
 - `assets/common.js`: shared helpers (answer matching, categories, the random draw)
-- `api/questions.js`, `api/results.js`, `api/people.js`, `api/images.js`, `api/_store.js`: Vercel functions that talk to Supabase
+- `contribute.html`: the team's page for sending in questions (runs `assets/admin.js` in contribute mode)
+- `api/questions.js`, `api/results.js`, `api/people.js`, `api/images.js`, `api/contribute.js`, `api/submissions.js`, `api/contributors.js`, `api/editor.js`, `api/_store.js`: Vercel functions that talk to Supabase
+- `scripts/editor-key.js`: makes a new editor key and prints the editor link
 - `dev-server.js`: local server running those same functions, with auto-refresh
 - `server.py`: offline local server, file-based
 - `data/questions.json`: the seed question bank and settings

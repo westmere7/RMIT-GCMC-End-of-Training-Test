@@ -85,6 +85,74 @@ const people = {
   },
 };
 
+// ---------- private links: the editor's key, and one link per team member (no sign-in anywhere) ----------
+const crypto = require("crypto");
+const sha256 = (s) => crypto.createHash("sha256").update(String(s)).digest("hex");
+const TOKEN = /^[A-Za-z0-9_-]{20,64}$/;
+
+/** Is this request from the editor? It carries the editor's key in `x-editor-key`. With no key set yet, the editor is open. */
+async function isEditor(req) {
+  const rows = await rest("assessment_secrets?name=eq.editor_key&select=value");
+  const want = rows && rows[0] && rows[0].value;
+  if (!want) return true;
+  const got = String(req.headers["x-editor-key"] || "");
+  if (!got) return false;
+  const a = Buffer.from(sha256(got)), b = Buffer.from(want);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+async function setEditorKey(key) {
+  await rest("assessment_secrets?on_conflict=name", {
+    method: "POST", headers: { Prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({ name: "editor_key", value: sha256(key), updated_at: new Date().toISOString() }),
+  });
+}
+
+const contributors = {
+  async list() {
+    return (await rest("assessment_contributors?select=token,name,created_at,revoked_at&order=created_at.asc")) || [];
+  },
+  /** The person a link belongs to, or null if the link is unknown or was turned off. */
+  async byToken(t) {
+    if (!TOKEN.test(String(t || ""))) return null;
+    const rows = await rest(`assessment_contributors?token=eq.${t}&revoked_at=is.null&select=token,name`);
+    return (rows && rows[0]) || null;
+  },
+  async create(name) {
+    const token = crypto.randomBytes(18).toString("base64url");
+    await rest("assessment_contributors", { method: "POST", body: JSON.stringify({ token, name }) });
+    return token;
+  },
+  async revoke(t) {
+    if (!TOKEN.test(String(t || ""))) return;
+    await rest(`assessment_contributors?token=eq.${t}`, { method: "PATCH", body: JSON.stringify({ revoked_at: new Date().toISOString() }) });
+  },
+};
+
+const submissions = {
+  async add(who, question) {
+    const rows = await rest("assessment_submissions", {
+      method: "POST", headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ contributor_token: who.token, contributor_name: who.name, question }),
+    });
+    return rows && rows[0];
+  },
+  async list(status) {
+    const q = status ? `&status=eq.${encodeURIComponent(status)}` : "";
+    return (await rest(`assessment_submissions?select=id,contributor_token,contributor_name,question,status,created_at,reviewed_at&order=created_at.desc&limit=300${q}`)) || [];
+  },
+  async count(token) {
+    const rows = await rest(`assessment_submissions?contributor_token=eq.${token}&select=id`);
+    return (rows || []).length;
+  },
+  async setStatus(ids, status) {
+    const list = (ids || []).map(Number).filter((n) => Number.isInteger(n) && n > 0);
+    if (!list.length) return;
+    await rest(`assessment_submissions?id=in.(${list.join(",")})`, {
+      method: "PATCH", body: JSON.stringify({ status, reviewed_at: status === "pending" ? null : new Date().toISOString() }),
+    });
+  },
+};
+
 // Question images: WebP files in a public Storage bucket, named by their SHA-256 (the same image is stored once).
 const BUCKET = "assessment-images";
 const MAX_IMAGE = 3 * 1024 * 1024;
@@ -138,4 +206,5 @@ function send(res, code, payload) {
   res.end(JSON.stringify(payload));
 }
 
-module.exports = { configured, readDoc, writeDoc, insertResult, people, storeImage, MAX_IMAGE, readRaw, readJson, send };
+module.exports = { configured, readDoc, writeDoc, insertResult, people, storeImage, MAX_IMAGE, readRaw, readJson, send,
+  isEditor, setEditorKey, contributors, submissions };
