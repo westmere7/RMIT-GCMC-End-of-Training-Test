@@ -203,3 +203,13 @@ test("simulated: on your own, the meter lands in the same zones by accuracy", ()
   const mean = (taker) => stats(simulate({ taker }).map((s) => s.meter)).mean;
   assert.ok(mean(0.3) < -1 / 3 && Math.abs(mean(0.5)) < 0.15 && mean(0.8) >= 1 / 3);
 });
+
+test("award zone: it's exactly the top share of the arc set in the editor, and a perfect run sits inside it", () => {
+  for (const top of [5, 10, 20]) {
+    const m = new Meter(null, null, {}); m.setThreshold(100 - top);
+    const start = m.aim(m.pg); // where the zone starts, as a share of the half-span
+    assert.ok(Math.abs((1 - start) / 2 - top / 100) < 1e-9, `top ${top}%`);
+    assert.ok(m.aim(1) > start && m.aim(1) < 1, "a perfect reading lands inside the zone, off the stop");
+    for (let p = -1; p < 1; p += 0.01) assert.ok(m.aim(p + 0.01) > m.aim(p), "the needle never runs backwards");
+  }
+});

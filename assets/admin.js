@@ -58,7 +58,10 @@
     $("sPer").value = Math.max(A.MIN_PER_ATTEMPT, s.questionsPerAttempt || 30);
     $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(A.MIN_PER_ATTEMPT, +e.target.value || 30); markDirty(); renderBank(); };
     $("sPer").onchange = (e) => { e.target.value = s.questionsPerAttempt; }; // below 10 snaps back to 10
-    $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
+    // stored as the reading the zone starts at (95 = the top 5%); shown as the zone's size
+    $("sConf").value = 100 - (s.confettiThreshold == null ? 95 : s.confettiThreshold);
+    $("sConf").oninput = (e) => { const v = Math.max(1, Math.min(40, +e.target.value || 5)); s.confettiThreshold = 100 - v; markDirty(); };
+    $("sConf").onchange = (e) => { e.target.value = 100 - s.confettiThreshold; };
     $("sCritShare").value = A.criticalShareOf(s);
     $("sCritShare").oninput = (e) => { const v = e.target.value; s.criticalShare = v === "" ? 15 : Math.max(0, Math.min(100, +v || 0)); markDirty(); renderBank(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };

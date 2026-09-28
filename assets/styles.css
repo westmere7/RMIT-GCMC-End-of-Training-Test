@@ -283,7 +283,7 @@ button { cursor: pointer; }
 .meter-card .meter-face { background: none; border: 0; border-radius: 0; overflow: visible; }
 .meter-card .meter-face .brandmark { left: 0; top: 4px; }
 .meter-card .meter-face .lamp { right: 0; top: 5px; }
-.meter-face canvas { height: 300px; }
+.meter-face canvas { height: 330px; }
 .q-card { margin-top: 0; }
 .name-step { animation: rise 0.35s ease both; }
 .name-step .hint { margin-top: 2px; }
@@ -755,7 +755,7 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
   .signature { grid-template-columns: 1fr; gap: 14px; }
 
   /* the meter: a little shorter; its labels move under the arc (see meter.js) */
-  .meter-face canvas { height: 236px; }
+  .meter-face canvas { height: 250px; }
   .meter-card .meter-face .brandmark, .meter-card .meter-face .lamp { font-size: 9px; }
   .test > .side > .timer { top: 68px; }
   .timer { padding: 10px 14px; border-radius: var(--radius); }
@@ -1090,3 +1090,6 @@ button.qr::after { content: ""; position: absolute; right: -6px; bottom: -6px; w
   .verdict-mark { width: 72px; height: 72px; font-size: 40px; }
   .verdict-card b { font-size: 34px; }
 }
+
+/* ---------- the award (the meter ended in its award zone) ---------- */
+.badge.award { background: linear-gradient(135deg, #ffe07a, #f5b400 55%, #e08e00); color: var(--navy); box-shadow: 0 0 0 3px rgba(245, 180, 0, 0.25), 0 8px 20px -8px rgba(245, 180, 0, 0.8); }

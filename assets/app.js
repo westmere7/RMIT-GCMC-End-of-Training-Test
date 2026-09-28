@@ -393,8 +393,8 @@
     v.hidden = false; void v.offsetWidth; v.classList.add("show");
     clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, reduced ? 900 : 1250);
   }
-  // does the viewer's own share of right answers earn the distinction (the meter's confetti threshold)?
-  const distinctionFor = (c, n) => (100 * c) / Math.max(1, n) >= ((DATA.settings || {}).confettiThreshold || 95);
+  // the award: the meter ended in its award zone (the top of the meter; its size is a setting in the editor)
+  const awardLine = () => { const m = new Meter(null, null, {}); m.setThreshold((DATA.settings || {}).confettiThreshold); return m.pg; };
 
   /** Everyone's points, question by question. Questions the room never reached score nothing for anyone. */
   function tally() {
@@ -1050,6 +1050,7 @@
         email: S.email, name: S.name, assessment: DATA.settings.assessmentCode, attempt: S.attempt || 1,
         startedAt: new Date(S.startedAt).toISOString(), finishedAt: new Date(S.finishedAt).toISOString(),
         correct: sc.c, total: QS().length, criticalErrors: sc.crit, points: me.points, timedOut: S.timedOut, longestStreak: an.streak,
+        meter: +sc.p.toFixed(3), award: sc.p >= awardLine(),
         mode: HOSTING() ? "group" : "solo",
         room: HOSTING() ? { code: S.group.code, people: S.board.rows.slice(1).map(({ name, color, points, correct, crit }) => ({ name, color, points, correct, criticalErrors: crit })) } : undefined,
         byCategory: an.byCat.map(({ name, correct, total }) => ({ name, correct, total })),
@@ -1079,19 +1080,20 @@
     const bd = S.board || board(), taker = bd.rows[0], group = bd.rows.length > 1;
     const sc = score(), an = analyse();
     const name = S.name || "", tName = taker.name || name;
-    const distinction = distinctionFor(taker.correct, n);
+    // where the taker's meter ended: a teammate works it out from the taker's points
+    const reading = member ? A.pointsReading(taker.points, n, n) : sc.p, award = reading >= awardLine();
 
     if (member) {
       $("resTitle").textContent = `${tName} scored ${G.signed(taker.points)}.`;
-      $("resMsg").textContent = `${tName} got ${taker.correct} of ${n} right. Here's how the whole room did, and your own answers underneath.`;
+      $("resMsg").textContent = `${tName} got ${taker.correct} of ${n} right${award ? " and finished in the award zone" : ""}. Here's how the whole room did, and your own answers underneath.`;
     } else {
-      $("resTitle").textContent = distinction ? `Outstanding, ${name}. Welcome to the team.` : `Congratulations, ${name}. You've completed your onboarding.`;
-      $("resMsg").textContent = distinction
-        ? "A near-perfect result. The needle had nowhere left to go."
+      $("resTitle").textContent = award ? `Award winner, ${name}. Welcome to the team.` : `Congratulations, ${name}. You've completed your onboarding.`;
+      $("resMsg").textContent = award
+        ? "You finished in the award zone, at the very top of the meter. That deserves more than confetti."
         : S.timedOut ? "Time ran out before the last questions, but the hard part is done. The breakdown below shows where to look next."
         : "Everything you missed is something you'll pick up fast on real tasks. The breakdown below shows where to look next.";
     }
-    $("resBadge").hidden = !distinction;
+    $("resBadge").hidden = !award;
     const zt = $("resZone"); zt.hidden = member;
     if (!member) { zt.textContent = "Meter: " + new Meter(null, null, LABELS()).zone(sc.p); zt.className = "zone-tag" + (sc.p >= 1 / 3 ? " good" : sc.p <= -1 / 3 ? " bad" : ""); }
     $("resOf").textContent = `${taker.correct} of ${n} correct` + (group ? ` · ${plural(bd.rows.length - 1, "teammate", "teammates")} in the room` : "");
@@ -1111,7 +1113,7 @@
       strip.append(cell);
     });
 
-    renderRoomBoard(bd);
+    renderRoomBoard(bd, award);
 
     // the rest is about the viewer's own attempt; the team sees the room, then their own answers
     $("resStats").hidden = member; $("resGrid").hidden = member;
@@ -1145,11 +1147,11 @@
     }
 
     renderReview("wrong");
-    if (distinction && !member && !S.confettiShown) { S.confettiShown = true; save(); confetti(); }
+    if (award && !S.confettiShown) { S.confettiShown = true; save(); confetti(); }
   }
 
   // the whole room: the taker on top, then the team, best first
-  function renderRoomBoard(bd) {
+  function renderRoomBoard(bd, award) {
     const card = $("roomCard");
     card.hidden = bd.rows.length < 2;
     if (card.hidden) return;
@@ -1163,7 +1165,7 @@
       return `<div class="board-row${r.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(r.color)}">
         <span class="rank">${r.taker ? "" : rank < 3 && team.length > 1 ? medals[rank] : rank + 1}</span>
         <span class="avatar" aria-hidden="true">${initial(r.name)}</span>
-        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "Taking the test" : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
+        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "Taking the test" + (award ? " · 🏆 Award" : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
         ${cells(r)}
         <span class="right-n"><b>${r.correct}</b><small>of ${n}</small></span>
         <span class="pts ${r.points > 0 ? "up" : r.points < 0 ? "down" : ""}">${G.signed(r.points)}<small>${Math.abs(r.points) === 1 ? "point" : "points"}</small></span>

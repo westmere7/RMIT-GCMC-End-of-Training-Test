@@ -1,10 +1,12 @@
-/* The performance meter: a vibrant arc, red through amber to green, with a sprung needle that never quite sits still.
+/* The performance meter: a vibrant arc, red through amber to green and a gold award zone at the top end, with a sprung
+   needle that never quite sits still.
    setScore(p) moves the rest position (-1 … 1); kick(dir) flicks the needle on each answer; setStats() fills the
    readout under the arc (points, question, streak); pulse(delta, right) marks an answer with a ripple and a points chip
    at the needle tip. The candidate's first name rides on the needle tip. The arc flattens to fit whatever width it's given. */
 (function (global) {
   "use strict";
-  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd" };
+  const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", track: "#e8e9f0", muted: "#6b6b8a", tick: "#b9bacd", gold: "#f5b400", goldInk: "#9a6a00" };
+  const GOLD = [[0, "#ffe07a"], [0.5, "#f5b400"], [1, "#e08e00"]];
   const STOPS = [[0, "#e61e2a"], [0.24, "#ff5b36"], [0.5, "#ffb000"], [0.74, "#6fcf3c"], [1, "#12a150"]]; // left end → right end
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
   const DISPLAY = "'Museo-RMITVN 700', 'Museo 700', 'Museo', " + TEXT;
@@ -34,32 +36,33 @@
     this.w = Math.max(240, r.width); this.h = Math.max(140, r.height);
     this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // arc through three points: apex at `top`, ends at ±half-chord near the bottom; the sides hold the zone labels
-    // on a phone there's no room beside the arc, so it widens and the labels sit under its ends instead
+    // arc through three points: apex at `top`, ends at ±half-chord near the bottom; on a phone it's narrower and thinner
     this.compact = this.w < 600;
-    this.top = this.compact ? 52 : 64; this.ends = this.h - (this.compact ? 70 : 52);
-    const half = this.w * (this.compact ? 0.4 : 0.33), sag = Math.max(40, this.ends - this.top);
+    this.lw = this.compact ? 22 : 34; // the arc's thickness
+    this.top = this.compact ? 60 : 78; this.ends = this.h - (this.compact ? 26 : 30);
+    const half = this.w * (this.compact ? 0.42 : 0.36), sag = Math.max(40, this.ends - this.top);
     this.half = half;
     this.R = (half * half + sag * sag) / (2 * sag);
     this.span = Math.asin(Math.min(0.99, half / this.R));
     this.cx = this.w / 2; this.cy = this.top + this.R;
+    this.rr = this.R - this.lw / 2; // the arc's centre line
   };
   Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
-  // The last 5% of the arc is the confetti zone. `pct` is the confetti threshold (e.g. 95), so the reading that
-  // earns confetti lands exactly on its edge, and a perfect run parks the needle in the middle of it.
-  const GREEN = 0.9; // it starts at 90% of the half-span, i.e. the last 5% of the whole arc
-  Meter.prototype.setThreshold = function (pct) { this.pg = Math.max(0.05, Math.min(0.99, 2 * (pct == null ? 95 : pct) / 100 - 1)); };
+  // The award zone: the top of the meter, from the reading `pg` up. `pct` is the editor's setting (95 = the top 5% of
+  // the arc). A reading maps straight onto the arc, so the zone on screen is exactly that share of it; inside the zone
+  // it runs a little slower, so a perfect run sits well inside it rather than against the stop.
+  Meter.prototype.setThreshold = function (pct) { this.pg = Math.max(0.2, Math.min(0.98, 2 * (pct == null ? 95 : pct) / 100 - 1)); };
   Meter.prototype.aim = function (p) { // reading (-1…1) → share of the half-span
     const pg = this.pg || 0.9;
-    if (p <= 0) return p * GREEN;
-    if (p < pg) return (p / pg) * GREEN;
-    return GREEN + ((p - pg) / (1 - pg)) * 0.055;
+    if (p <= 0) return p * 0.97;
+    if (p < pg) return p;
+    return pg + (p - pg) * 0.6;
   };
-  Meter.prototype.greenPoint = function () { // page coordinates of the middle of the confetti zone
-    const a = this.span * 0.95, r = this.c.getBoundingClientRect(), rr = this.R - 9;
+  Meter.prototype.greenPoint = function () { // page coordinates of the middle of the award zone
+    const a = this.span * ((this.pg || 0.9) + 1) / 2, r = this.c.getBoundingClientRect(), rr = this.rr;
     return { x: r.left + this.cx + rr * Math.sin(a), y: r.top + this.cy - rr * Math.cos(a) };
   };
-  Meter.prototype.inGreen = function () { return this.theta >= this.span * GREEN; };
+  Meter.prototype.inGreen = function () { return this.theta >= this.span * (this.pg || 0.9); };
   Meter.prototype.setName = function (n) { this.name = String(n || "").trim(); };
   /** The readout under the arc: { points, answered, total, streak }. */
   Meter.prototype.setStats = function (s) {
@@ -131,129 +134,149 @@
   };
 
   Meter.prototype.draw = function () {
-    const g = this.ctx, w = this.w, cx = this.cx, cy = this.cy, R = this.R, S = this.span;
+    const g = this.ctx, w = this.w, cx = this.cx, cy = this.cy, R = this.R, S = this.span, lw = this.lw, rr = this.rr;
     g.clearRect(0, 0, w, this.h);
     const ang = (a) => -Math.PI / 2 + a; // 0 = straight up
     const pt = (a, r) => [cx + r * Math.cos(ang(a)), cy + r * Math.sin(ang(a))];
     const frac = (a) => (a + S) / (2 * S); // 0 at the left end, 1 at the right
-    const lw = this.compact ? 12 : 16, rr = R - 9; // the arc: its width and its radius
+    const arc = (a0, a1, r) => { g.beginPath(); g.arc(cx, cy, r == null ? rr : r, ang(a0), ang(a1)); };
     const grad = g.createLinearGradient(cx - this.half - lw, 0, cx + this.half + lw, 0);
     for (const [o, col] of STOPS) grad.addColorStop(o, col);
+    const pg = this.pg || 0.9, zs = S * pg, inAward = this.p >= pg;
+    const th = Math.max(-S, Math.min(S, this.theta)), here = th >= zs ? C.gold : colourAt(frac(th));
+    const [hx, hy] = pt(th, rr); // where the needle meets the arc
 
-    // the track: the whole scale, softly; then the reading, bright, from the middle out to the needle
-    g.lineCap = "round"; g.lineWidth = lw;
-    g.strokeStyle = C.track; g.beginPath(); g.arc(cx, cy, rr, ang(-S), ang(S)); g.stroke();
-    g.globalAlpha = 0.5; g.strokeStyle = grad; g.beginPath(); g.arc(cx, cy, rr, ang(-S), ang(S)); g.stroke(); g.globalAlpha = 1;
-    const th = Math.max(-S, Math.min(S, this.theta)), here = colourAt(frac(th));
-    if (Math.abs(th) > 0.004) {
-      g.save(); g.shadowColor = here; g.shadowBlur = 18;
-      g.strokeStyle = grad; g.beginPath(); g.arc(cx, cy, rr, ang(Math.min(0, th)), ang(Math.max(0, th))); g.stroke(); g.restore();
-    }
-    // zone marks: fine white breaks at the thirds, and the confetti zone at the green end
-    g.lineCap = "butt";
-    for (const a of [-S / 3, S / 3, S * GREEN]) {
-      const [x1, y1] = pt(a, rr - lw / 2 - 1), [x2, y2] = pt(a, rr + lw / 2 + 1);
-      g.strokeStyle = "rgba(255,255,255,0.95)"; g.lineWidth = 2; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
-    }
-    { // a small star over the confetti zone
-      const [sx, sy] = pt(S * 0.95, rr + lw / 2 + 12), r1 = this.compact ? 5 : 6, r2 = r1 * 0.45;
-      g.fillStyle = this.p >= (this.pg || 0.9) ? "#fac800" : C.tick; g.beginPath();
-      for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? r2 : r1; g.lineTo(sx + r * Math.cos(a), sy + r * Math.sin(a)); }
-      g.closePath(); g.fill();
-    }
-    // ticks, inside the arc
-    for (let i = 0; i <= 40; i++) {
-      const a = -S + (2 * S * i) / 40, major = i % 5 === 0;
-      const [x1, y1] = pt(a, rr - lw / 2 - 5), [x2, y2] = pt(a, rr - lw / 2 - (major ? 13 : 9));
-      g.strokeStyle = major ? "#8e8fae" : C.tick; g.lineWidth = major ? 1.5 : 1;
+    // a soft halo of light behind the needle, in the colour it points at
+    const halo = g.createRadialGradient(hx, hy, 0, hx, hy, lw * 6);
+    halo.addColorStop(0, here); halo.addColorStop(1, "rgba(255,255,255,0)");
+    g.globalAlpha = 0.16; g.fillStyle = halo; g.fillRect(0, 0, w, this.h); g.globalAlpha = 1;
+
+    // instrument rings: a hairline outside the arc, and the tick ring inside it
+    g.lineWidth = 1; g.strokeStyle = "rgba(0,0,84,0.12)";
+    arc(-S - 0.02, S + 0.02, rr + lw / 2 + 7); g.stroke();
+    for (let i = 0; i <= 60; i++) {
+      const a = -S + (2 * S * i) / 60, major = i % 10 === 0, mid = i % 5 === 0;
+      const [x1, y1] = pt(a, rr - lw / 2 - 7), [x2, y2] = pt(a, rr - lw / 2 - (major ? 20 : mid ? 14 : 11));
+      g.strokeStyle = major ? "#6b6b8a" : mid ? "#9a9bb6" : "#c9cad9"; g.lineWidth = major ? 2 : 1;
       g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
 
-    // zone labels, beside the arc ends (wrapped to the space available)
-    g.textAlign = "center"; g.textBaseline = "alphabetic";
-    const size = Math.round(Math.max(15, Math.min(24, w * 0.017))), lh = size * 1.2;
-    const room = Math.min(cx - this.half - 36, size * 8); // narrow column: up to four lines
-    const wrapTo = (text, width, max) => {
-      const words = String(text || "").toUpperCase().split(/\s+/).filter(Boolean), lines = [];
-      for (const wd of words) { const last = lines[lines.length - 1]; if (last && g.measureText(last + " " + wd).width <= width) lines[lines.length - 1] = last + " " + wd; else lines.push(wd); }
-      return lines.slice(0, max);
-    };
-    if (this.compact) { // under the arc ends, centred, up to two lines
-      g.font = "700 12px " + TEXT;
-      for (const [side, text, col] of [[-1, this.labels.left, C.red], [1, this.labels.right, C.green]]) {
-        const lines = wrapTo(text, w * 0.3, 2); if (!lines.length) continue;
-        const widest = Math.max(...lines.map((l) => g.measureText(l).width));
-        const lx = Math.max(widest / 2 + 4, Math.min(w - widest / 2 - 4, cx + side * this.half));
-        g.fillStyle = col; lines.forEach((ln, i) => g.fillText(ln, lx, this.ends + 36 + i * 14));
+    // the arc: a deep track, the whole scale softly over it, then the reading from the middle out to the needle, glowing
+    g.lineCap = "round"; g.lineWidth = lw;
+    g.strokeStyle = "#e7e8f0"; arc(-S, S); g.stroke();
+    g.globalAlpha = 0.42; g.strokeStyle = grad; arc(-S, S); g.stroke(); g.globalAlpha = 1;
+    if (Math.abs(th) > 0.004) {
+      g.save(); g.shadowColor = here; g.shadowBlur = 26; g.strokeStyle = grad;
+      arc(Math.min(0, th), Math.max(0, th)); g.stroke(); g.restore();
+    }
+    // depth: a shine along the outer edge, a shade along the inner one (a glossy tube)
+    g.lineWidth = lw * 0.16; g.strokeStyle = "rgba(255,255,255,0.45)"; arc(-S, S, rr + lw * 0.26); g.stroke();
+    g.lineWidth = lw * 0.12; g.strokeStyle = "rgba(0,0,84,0.08)"; arc(-S, S, rr - lw * 0.34); g.stroke();
+    // fine white breaks at the thirds
+    g.lineCap = "butt";
+    for (const a of [-S / 3, S / 3]) {
+      const [x1, y1] = pt(a, rr - lw / 2 - 1), [x2, y2] = pt(a, rr + lw / 2 + 1);
+      g.strokeStyle = "#fff"; g.lineWidth = 3; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    }
+
+    // the award zone: gold, a touch proud of the arc; glowing, pulsing and sparkling once the reading is in it
+    {
+      const [ax, ay] = pt(zs, rr), [bx2, by2] = pt(S, rr), gg = g.createLinearGradient(ax, ay, bx2, by2);
+      for (const [o, col] of GOLD) gg.addColorStop(o, col);
+      g.save();
+      if (inAward) { g.shadowColor = C.gold; g.shadowBlur = 24 + 10 * Math.sin(this.t * 4); }
+      g.lineCap = "round"; g.lineWidth = lw + 6; g.strokeStyle = gg; arc(zs + 0.006, S); g.stroke(); g.restore();
+      g.lineCap = "round"; g.lineWidth = lw * 0.16; g.strokeStyle = "rgba(255,255,255,0.6)"; arc(zs + 0.01, S, rr + lw * 0.26); g.stroke();
+      g.lineCap = "butt"; g.strokeStyle = "#fff"; g.lineWidth = 3;
+      const [x1, y1] = pt(zs, rr - lw / 2 - 4), [x2, y2] = pt(zs, rr + lw / 2 + 4);
+      g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+      const star = (x, y, r1, fill) => {
+        g.fillStyle = fill; g.beginPath();
+        for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, r = i % 2 ? r1 * 0.45 : r1; g.lineTo(x + r * Math.cos(a), y + r * Math.sin(a)); }
+        g.closePath(); g.fill();
+      };
+      if (inAward && !this.reduced) for (let i = 0; i < 6; i++) { // twinkles around the zone
+        const k = (this.t * 0.9 + i / 6) % 1, a = zs + (S - zs) * ((i * 0.37) % 1), r = rr + (i % 2 ? 1 : -1) * (lw / 2 + 6 + k * 14);
+        const [sx, sy] = pt(a, r); g.globalAlpha = Math.sin(k * Math.PI); star(sx, sy, 3 + 3 * Math.sin(k * Math.PI), "#ffd24a"); g.globalAlpha = 1;
       }
-    } else {
-      g.font = `700 ${size}px ` + TEXT;
-      for (const [side, text, col] of [[-1, this.labels.left, C.red], [1, this.labels.right, C.green]]) {
-        const lines = wrapTo(text, room, 4); if (!lines.length) continue;
-        g.fillStyle = col; g.textAlign = side < 0 ? "right" : "left";
-        const lx = side < 0 ? cx - this.half - 30 : cx + this.half + 30, y0 = this.ends - (lines.length - 1) * lh + 6;
-        lines.forEach((ln, i) => g.fillText(ln, lx, y0 + i * lh));
-      }
+      // its label: a star and AWARD, just outside the arc
+      const mid = (zs + S) / 2, [lx, ly] = pt(mid, rr + lw / 2 + (this.compact ? 16 : 20)), r1 = this.compact ? 5.5 : 7;
+      g.save(); g.translate(lx, ly); g.rotate(ang(mid) + Math.PI / 2);
+      g.font = `700 ${this.compact ? 10 : 12}px ` + TEXT; g.textAlign = "left"; g.textBaseline = "middle";
+      if ("letterSpacing" in g) g.letterSpacing = "1.5px";
+      const word = "AWARD", ww = g.measureText(word).width + r1 * 2 + 5, x0 = -ww / 2;
+      star(x0 + r1, 0, r1, inAward ? C.gold : "#e3b23c");
+      g.fillStyle = C.goldInk; g.fillText(word, x0 + r1 * 2 + 5, 0.5);
+      g.restore();
     }
 
     // the readout, under the arc: points (counting up), then where we are
     const drop = this.ends - this.top;
     if (this.stats) {
-      const s = this.stats, big = this.compact ? 34 : 48, y = this.top + drop * (this.compact ? 0.9 : 0.86);
+      const st = this.stats, big = this.compact ? 40 : 62, y = this.top + drop * 0.9;
       g.textAlign = "center"; g.textBaseline = "alphabetic";
-      g.font = "700 10px " + TEXT; g.fillStyle = C.muted;
-      g.fillText("POINTS", cx, y - big - 6);
+      if ("letterSpacing" in g) g.letterSpacing = "2.5px";
+      g.font = "700 11px " + TEXT; g.fillStyle = C.muted; g.fillText("POINTS", cx, y - big - 4);
+      if ("letterSpacing" in g) g.letterSpacing = "0px";
       const val = Math.round(this.pointsNow());
       g.font = `700 ${big}px ` + DISPLAY; g.fillStyle = val > 0 ? C.green : val < 0 ? C.red : C.navy;
       g.fillText(signed(val), cx, y);
-      const bits = [`Question ${Math.min(s.total, s.answered + 1)} of ${s.total}`];
-      if (s.streak >= 2) bits.push(`${s.streak} in a row`);
-      g.font = "700 12px " + TEXT; g.fillStyle = C.muted;
-      g.fillText(bits.join("  ·  "), cx, y + (this.compact ? 18 : 22));
+      const bits = [`Question ${Math.min(st.total, st.answered + 1)} of ${st.total}`];
+      if (st.streak >= 2) bits.push(`${st.streak} in a row`);
+      g.font = "700 13px " + TEXT; g.fillStyle = C.muted;
+      g.fillText(bits.join("   ·   "), cx, y + (this.compact ? 20 : 26));
     }
 
-    // the needle: tapered, from well below the readout up to the arc, with a soft glow in the colour it points at
-    const inner = R - drop * 0.34, [nx, ny] = pt(this.theta, rr + lw / 2 + 4), [bx, by] = pt(this.theta, inner);
-    const px = Math.cos(ang(this.theta) + Math.PI / 2), py = Math.sin(ang(this.theta) + Math.PI / 2), wb = this.compact ? 3 : 4;
+    // the needle: bold and tapered, outlined in white, glowing in the colour it points at
+    const inner = rr - drop * 0.3, [nx, ny] = pt(this.theta, rr + lw / 2 + 8), [bx, by] = pt(this.theta, inner);
+    const px = Math.cos(ang(this.theta) + Math.PI / 2), py = Math.sin(ang(this.theta) + Math.PI / 2), wb = this.compact ? 4.5 : 7;
     const ng = g.createLinearGradient(bx, by, nx, ny);
-    ng.addColorStop(0, "rgba(0,0,84,0)"); ng.addColorStop(0.35, C.navy); ng.addColorStop(1, C.navy);
-    g.save(); g.shadowColor = here; g.shadowBlur = 10;
-    g.fillStyle = ng; g.beginPath(); g.moveTo(bx + px * wb, by + py * wb); g.lineTo(nx, ny); g.lineTo(bx - px * wb, by - py * wb); g.closePath(); g.fill();
-    g.restore();
-    const [hx, hy] = pt(this.theta, rr); // a bead where the needle crosses the arc
-    g.fillStyle = "#fff"; g.beginPath(); g.arc(hx, hy, lw / 2 - 2, 0, Math.PI * 2); g.fill();
-    g.fillStyle = here; g.beginPath(); g.arc(hx, hy, lw / 2 - 5, 0, Math.PI * 2); g.fill();
+    ng.addColorStop(0, "rgba(0,0,84,0)"); ng.addColorStop(0.3, C.navy); ng.addColorStop(1, C.navy);
+    g.save(); g.shadowColor = here; g.shadowBlur = 16;
+    g.beginPath(); g.moveTo(bx + px * wb, by + py * wb); g.lineTo(nx, ny); g.lineTo(bx - px * wb, by - py * wb); g.closePath();
+    g.fillStyle = ng; g.fill(); g.restore();
+    g.lineWidth = 1.5; g.strokeStyle = "rgba(255,255,255,0.9)"; g.lineJoin = "round"; g.stroke();
+    // the bead: a white ring with a jewel of colour and a glint
+    g.save(); g.shadowColor = "rgba(0,0,40,0.35)"; g.shadowBlur = 8; g.shadowOffsetY = 2;
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(hx, hy, lw / 2 - 1, 0, Math.PI * 2); g.fill(); g.restore();
+    const jewel = g.createRadialGradient(hx - lw * 0.12, hy - lw * 0.12, 1, hx, hy, lw / 2 - 5);
+    jewel.addColorStop(0, "#fff"); jewel.addColorStop(0.25, here); jewel.addColorStop(1, here);
+    g.fillStyle = jewel; g.beginPath(); g.arc(hx, hy, Math.max(3, lw / 2 - 5), 0, Math.PI * 2); g.fill();
 
     // each answer: a ripple from the bead, and its points floating up from the tip
     for (const p of this.pulses) {
       const age = this.t - p.t0, col = p.right ? C.green : C.red;
       if (age < 0.9) {
         const k = age / 0.9;
-        g.strokeStyle = col; g.globalAlpha = (1 - k) * 0.8; g.lineWidth = 3;
-        g.beginPath(); g.arc(hx, hy, lw / 2 + k * 34, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1;
+        g.strokeStyle = col; g.globalAlpha = (1 - k) * 0.8; g.lineWidth = 4;
+        g.beginPath(); g.arc(hx, hy, lw / 2 + k * 56, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1;
       }
       const rise = 1 - Math.pow(1 - Math.min(1, age / 1.2), 3), fade = age < 1.1 ? 1 : 1 - (age - 1.1) / 0.5;
       const label = p.delta == null ? (p.right ? "✓" : "✕") : signed(p.delta);
-      g.font = `700 ${this.compact ? 16 : 20}px ` + DISPLAY;
-      const tw = g.measureText(label).width + 20, chh = this.compact ? 26 : 30;
-      const [tx, ty] = pt(this.theta, rr + 40 + rise * 26);
-      const cxp = Math.max(tw / 2 + 4, Math.min(w - tw / 2 - 4, tx + (this.theta >= 0 ? 44 : -44))), cyp = Math.max(chh / 2 + 2, ty);
-      g.globalAlpha = Math.max(0, fade); g.fillStyle = col; g.beginPath();
+      g.font = `700 ${this.compact ? 17 : 22}px ` + DISPLAY;
+      const tw = g.measureText(label).width + 22, chh = this.compact ? 28 : 34;
+      const [tx, ty] = pt(this.theta, rr + lw / 2 + 30 + rise * 26);
+      const cxp = Math.max(tw / 2 + 4, Math.min(w - tw / 2 - 4, tx + (this.theta >= 0 ? 58 : -58))), cyp = Math.max(chh / 2 + 2, ty);
+      g.globalAlpha = Math.max(0, fade);
+      g.save(); g.shadowColor = col; g.shadowBlur = 12;
+      g.fillStyle = col; g.beginPath();
       if (g.roundRect) g.roundRect(cxp - tw / 2, cyp - chh / 2, tw, chh, chh / 2); else g.rect(cxp - tw / 2, cyp - chh / 2, tw, chh);
-      g.fill(); g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(label, cxp, cyp + 1);
+      g.fill(); g.restore();
+      g.fillStyle = "#fff"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(label, cxp, cyp + 1);
       g.globalAlpha = 1;
     }
 
     // the candidate's first name, riding on the needle tip
     if (this.name) {
       g.font = "700 13px " + TEXT; g.textAlign = "center"; g.textBaseline = "middle";
-      const tw = g.measureText(this.name).width, pw = tw + 22, ph = 24;
-      const [tx, ty] = pt(this.theta, R + 18);
-      const pxx = Math.max(pw / 2 + 4, Math.min(w - pw / 2 - 4, tx)), pyy = Math.max(ph / 2 + 2, ty - 18);
+      const tw = g.measureText(this.name).width, pw = tw + 24, ph = 26;
+      const [tx, ty] = pt(this.theta, rr + lw / 2 + 12);
+      const pxx = Math.max(pw / 2 + 4, Math.min(w - pw / 2 - 4, tx)), pyy = Math.max(ph / 2 + 2, ty - 20);
+      g.save(); g.shadowColor = "rgba(0,0,40,0.3)"; g.shadowBlur = 8; g.shadowOffsetY = 2;
       g.fillStyle = C.navy; g.beginPath();
       if (g.roundRect) g.roundRect(pxx - pw / 2, pyy - ph / 2, pw, ph, ph / 2); else g.rect(pxx - pw / 2, pyy - ph / 2, pw, ph);
-      g.fill();
-      g.beginPath(); g.moveTo(tx - 5, pyy + ph / 2 - 1); g.lineTo(tx + 5, pyy + ph / 2 - 1); g.lineTo(tx, pyy + ph / 2 + 6); g.closePath(); g.fill();
+      g.fill(); g.restore();
+      g.fillStyle = C.navy; g.beginPath(); g.moveTo(tx - 5, pyy + ph / 2 - 1); g.lineTo(tx + 5, pyy + ph / 2 - 1); g.lineTo(tx, pyy + ph / 2 + 6); g.closePath(); g.fill();
       g.fillStyle = "#fff"; g.fillText(this.name, pxx, pyy + 1);
     }
   };
