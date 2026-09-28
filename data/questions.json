@@ -2383,8 +2383,6 @@
     {
       "id": "q190",
       "type": "match",
-      "category": "Brand",
-      "prompt": "Match each brand colour to its hex value.",
       "pairs": [
         {
           "left": "RMIT Red",
@@ -2402,13 +2400,13 @@
           "left": "Warm Grey",
           "right": "#E3E5E0"
         }
-      ]
+      ],
+      "prompt": "Match each brand colour to its hex value.",
+      "category": "Brand"
     },
     {
       "id": "q191",
       "type": "match",
-      "category": "Team",
-      "prompt": "Match each teammate to what you'd go to them for.",
       "pairs": [
         {
           "left": "Danh",
@@ -2434,13 +2432,13 @@
           "left": "Đức",
           "right": "Team growth and the bigger picture"
         }
-      ]
+      ],
+      "prompt": "Match each teammate to what you'd go to them for.",
+      "category": "Team"
     },
     {
       "id": "q192",
       "type": "match",
-      "category": "Work",
-      "prompt": "Match each workflow step to where it happens.",
       "pairs": [
         {
           "left": "Brief",
@@ -2462,13 +2460,13 @@
           "left": "Final",
           "right": "SharePoint"
         }
-      ]
+      ],
+      "prompt": "Match each workflow step to where it happens.",
+      "category": "Work"
     },
     {
       "id": "q193",
       "type": "match",
-      "category": "RMIT",
-      "prompt": "Match each part of the academic year to what it is.",
       "pairs": [
         {
           "left": "Semester 1",
@@ -2486,13 +2484,13 @@
           "left": "O-Week",
           "right": "Orientation: the week before semester, full of welcome events"
         }
-      ]
+      ],
+      "prompt": "Match each part of the academic year to what it is.",
+      "category": "RMIT"
     },
     {
       "id": "q194",
       "type": "match",
-      "category": "Work",
-      "prompt": "Match each step of building a display banner to what you do in it.",
       "pairs": [
         {
           "left": "Organise",
@@ -2510,13 +2508,13 @@
           "left": "Build in GWD",
           "right": "Animate, add the clickTag, and keep each HTML under 150 KB"
         }
-      ]
+      ],
+      "prompt": "Match each step of building a display banner to what you do in it.",
+      "category": "Work"
     },
     {
       "id": "q195",
       "type": "match",
-      "category": "Culture",
-      "prompt": "Match each meeting to how often it runs and what it's for.",
       "pairs": [
         {
           "left": "INTON stand-up",
@@ -2538,13 +2536,13 @@
           "left": "Kick-offs and wrap-ups",
           "right": "Per project: big campaigns start and end with one"
         }
-      ]
+      ],
+      "prompt": "Match each meeting to how often it runs and what it's for.",
+      "category": "Culture"
     },
     {
       "id": "q196",
       "type": "match",
-      "category": "RMIT",
-      "prompt": "Match each 2026 INTON event to when it runs.",
       "pairs": [
         {
           "left": "Shanghai Open Day",
@@ -2562,13 +2560,13 @@
           "left": "Design and Innovation Week, India",
           "right": "November"
         }
-      ]
+      ],
+      "prompt": "Match each 2026 INTON event to when it runs.",
+      "category": "RMIT"
     },
     {
       "id": "q197",
       "type": "match",
-      "category": "Platforms",
-      "prompt": "Match each channel to its typical reply time.",
       "pairs": [
         {
           "left": "Teams",
@@ -2582,13 +2580,13 @@
           "left": "Monday.com",
           "right": "1–3 days"
         }
-      ]
+      ],
+      "prompt": "Match each channel to its typical reply time.",
+      "category": "Platforms"
     },
     {
       "id": "q198",
       "type": "match",
-      "category": "Brand",
-      "prompt": "Match each date to what it marks.",
       "pairs": [
         {
           "left": "26 May",
@@ -2602,13 +2600,13 @@
           "left": "Early July",
           "right": "NAIDOC Week"
         }
-      ]
+      ],
+      "prompt": "Match each date to what it marks.",
+      "category": "Brand"
     },
     {
       "id": "q199",
       "type": "match",
-      "category": "RMIT",
-      "prompt": "Match each number to what it counts for First Peoples.",
       "pairs": [
         {
           "left": "65,000+",
@@ -2622,210 +2620,187 @@
           "left": "5",
           "right": "Kulin Nation language groups around Melbourne"
         }
-      ]
+      ],
+      "prompt": "Match each number to what it counts for First Peoples.",
+      "category": "RMIT"
     },
     {
       "id": "q200",
       "type": "single",
-      "category": "RMIT",
       "prompt": "Melbourne's weather is famous for…",
+      "correct": [
+        1
+      ],
       "options": [
         "Endless sunshine, like a tourism ad",
         "Four seasons in one day",
         "A monsoon season that lasts all year",
         "Politely waiting until you've had your coffee"
       ],
-      "correct": [
-        1
-      ]
-    },
-    {
-      "id": "q201",
-      "type": "single",
-      "category": "RMIT",
-      "prompt": "Which bushranger was hanged at the Old Melbourne Gaol, right next to the City campus?",
-      "options": [
-        "Francis Ormond",
-        "Mister Horse",
-        "Ned Kelly",
-        "Roy the platypus, on a technicality"
-      ],
-      "correct": [
-        2
-      ]
-    },
-    {
-      "id": "q202",
-      "type": "single",
-      "category": "RMIT",
-      "prompt": "How many students did the Working Men's College open with in 1887?",
-      "options": [
-        "3,200",
-        "Just Francis Ormond and a very keen dog",
-        "320",
-        "32"
-      ],
-      "correct": [
-        2
-      ]
+      "category": "RMIT"
     },
     {
       "id": "q203",
       "type": "single",
-      "category": "Brand",
       "prompt": "Who can give a Welcome to Country?",
+      "correct": [
+        1
+      ],
       "options": [
         "Anyone, as long as they're respectful",
         "Only a Traditional Owner or Elder of that land",
         "The most senior person in the meeting",
         "The event host, reading RMIT's script"
       ],
-      "correct": [
-        1
-      ],
+      "category": "Brand",
       "critical": true
     },
     {
       "id": "q204",
       "type": "single",
-      "category": "Brand",
       "prompt": "How should the Aboriginal flag be flown or shown?",
+      "correct": [
+        0
+      ],
       "options": [
         "Black on top, and never altered",
         "Red on top, and never altered",
         "Either way up, as long as it fits the layout",
         "Recoloured to match the campaign palette"
       ],
-      "correct": [
-        0
-      ],
+      "category": "Brand",
       "critical": true
     },
     {
       "id": "q205",
       "type": "single",
-      "category": "Brand",
       "prompt": "Which is the right way to refer to First Peoples?",
+      "correct": [
+        2
+      ],
       "options": [
         "“Aborigines”",
         "“ATSI”, to save space",
         "Aboriginal and Torres Strait Islander peoples, or First Nations peoples",
         "indigenous, in lower case"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q206",
       "type": "single",
-      "category": "Work",
       "prompt": "In the six-step workflow, where does your part start?",
+      "correct": [
+        3
+      ],
       "options": [
         "Step 1, Brief: you work out the timeline with the stakeholder",
         "Step 0: panic, then coffee",
         "Step 6, Final: you only close tickets",
         "Step 3, Produce"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q207",
       "type": "single",
-      "category": "Platforms",
       "prompt": "Where are brand assets synced across the team?",
+      "correct": [
+        0
+      ],
       "options": [
         "Adobe Shared Libraries",
         "A USB stick in Danh's drawer",
         "Monday.com, as attachments",
         "Your desktop, in a folder called final_FINAL_v3"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q208",
       "type": "single",
-      "category": "Platforms",
       "prompt": "What is Sub Machine for?",
+      "correct": [
+        1
+      ],
       "options": [
         "Ordering sandwiches for RM-Ate-T",
         "Subtitles for video, with presets",
         "Submitting tickets to ServiceNow",
         "After Effects animation presets"
       ],
-      "correct": [
-        1
-      ]
+      "category": "Platforms"
     },
     {
       "id": "q209",
       "type": "single",
-      "category": "Brand",
       "prompt": "For a navy duotone photo, which gradient map do you use?",
+      "correct": [
+        2
+      ],
       "options": [
         "Vintage Sepia",
         "Whichever looks moodiest",
         "Classic",
         "The one from your holiday photos"
       ],
-      "correct": [
-        2
-      ]
+      "category": "Brand"
     },
     {
       "id": "q210",
       "type": "single",
-      "category": "Culture",
       "prompt": "Before October, you send a Melbourne stakeholder a question after 14:00 your time. When should you expect an answer?",
+      "correct": [
+        0
+      ],
       "options": [
         "Tomorrow",
         "Within the hour",
         "Instantly: Melbourne never sleeps",
         "Next sprint, probably"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q211",
       "type": "single",
-      "category": "Aussie English",
       "prompt": "A stakeholder replies “No worries”. They mean…",
+      "correct": [
+        3
+      ],
       "options": [
         "They're secretly very worried",
         "They'd like a list of worries by EOD",
         "The project is cancelled",
         "You're welcome, or it's fine. Often both"
       ],
-      "correct": [
-        3
-      ]
+      "category": "Aussie English"
     },
     {
       "id": "q212",
       "type": "single",
-      "category": "Glossary",
       "prompt": "What's the range of an ATAR?",
+      "correct": [
+        0
+      ],
       "options": [
         "0.00 to 99.95",
         "1 to 10",
         "A to F, like a report card",
         "0 to 100 percent"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Glossary"
     },
     {
       "id": "q213",
       "type": "multi",
-      "category": "Work",
       "prompt": "Which are part of a typical INTON event kit?",
+      "correct": [
+        0,
+        1,
+        3,
+        4
+      ],
       "options": [
         "A 15″ promo video, then a remarketing cut",
         "Social statics in 9:16 and 1:1",
@@ -2833,18 +2808,18 @@
         "An eDM banner and email signature",
         "Print: A5 flyer, poster, pull-up banner and backdrop"
       ],
+      "category": "Work"
+    },
+    {
+      "id": "q214",
+      "type": "multi",
+      "prompt": "When writing about First Peoples, which words take a capital letter?",
       "correct": [
         0,
         1,
         3,
         4
-      ]
-    },
-    {
-      "id": "q214",
-      "type": "multi",
-      "category": "Brand",
-      "prompt": "When writing about First Peoples, which words take a capital letter?",
+      ],
       "options": [
         "Country",
         "Elders",
@@ -2853,18 +2828,18 @@
         "Aboriginal",
         "Pixel"
       ],
+      "category": "Brand"
+    },
+    {
+      "id": "q215",
+      "type": "multi",
+      "prompt": "What's on your week-one schedule?",
       "correct": [
         0,
         1,
         3,
         4
-      ]
-    },
-    {
-      "id": "q215",
-      "type": "multi",
-      "category": "Culture",
-      "prompt": "What's on your week-one schedule?",
+      ],
       "options": [
         "These four onboarding sessions",
         "The Monday Marketing meeting",
@@ -2873,18 +2848,17 @@
         "An RM-Ate-T hangout",
         "Redesigning the RMIT logo, just to warm up"
       ],
-      "correct": [
-        0,
-        1,
-        3,
-        4
-      ]
+      "category": "Culture"
     },
     {
       "id": "q216",
       "type": "multi",
-      "category": "Work",
       "prompt": "What must go on every INTON event piece?",
+      "correct": [
+        0,
+        2,
+        3
+      ],
       "options": [
         "The event name, city, date and venue",
         "A photo of the designer, for credit",
@@ -2892,35 +2866,30 @@
         "CRICOS",
         "An English tagline, even on Chinese assets"
       ],
-      "correct": [
-        0,
-        2,
-        3
-      ]
+      "category": "Work"
     },
     {
       "id": "q217",
       "type": "fill",
-      "category": "Platforms",
       "prompt": "Record every scope change on Monday. If it's not on Monday, it ___ happen.",
       "answers": [
         "didn't",
         "did not"
-      ]
+      ],
+      "category": "Platforms"
     },
     {
       "id": "q218",
       "type": "fill",
-      "category": "RMIT",
       "prompt": "RMIT's Melbourne campuses sit on the unceded lands of the eastern ___ Nation.",
       "answers": [
         "Kulin"
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q219",
       "type": "short",
-      "category": "RMIT",
       "prompt": "Name one of the two streets near the Brunswick campus known for cafés, boutiques and thrift stores.",
       "answers": [
         "Sydney Road",
@@ -2929,13 +2898,19 @@
         "Lygon Street",
         "Lygon St",
         "Lygon"
-      ]
+      ],
+      "category": "RMIT"
     },
     {
       "id": "q220",
       "type": "multi",
       "topic": "Photography",
       "prompt": "Which photo treatments are strictly forbidden according to RMIT brand guidelines?",
+      "correct": [
+        0,
+        1,
+        2
+      ],
       "options": [
         "Greyscale",
         "Red filter",
@@ -2943,43 +2918,22 @@
         "Navy + red duotone on campus buildings",
         "Candid shots of real students"
       ],
-      "correct": [
-        0,
-        1,
-        2
-      ],
       "category": "Brand",
       "critical": true
-    },
-    {
-      "id": "q221",
-      "type": "single",
-      "topic": "Brand · Colour",
-      "prompt": "What is the Pantone (PMS) reference for RMIT Red?",
-      "options": [
-        "PMS 485 C",
-        "PMS 2757 CP",
-        "PMS 7406",
-        "P 7527"
-      ],
-      "correct": [
-        0
-      ],
-      "category": "Brand"
     },
     {
       "id": "q222",
       "type": "single",
       "topic": "Workflow",
       "prompt": "In a project code like [26.0122.B], what does the trailing letter ('B') indicate?",
+      "correct": [
+        0
+      ],
       "options": [
         "The ticket's sequential order that day (the second ticket coded)",
         "The squad (B for Domestic)",
         "The priority tier (B for Medium)",
         "The design revision number"
-      ],
-      "correct": [
-        0
       ],
       "category": "Work"
     },
@@ -2988,22 +2942,20 @@
       "type": "single",
       "topic": "Platforms",
       "prompt": "Where on SharePoint are approved FAs and working files permanently archived?",
+      "correct": [
+        0
+      ],
       "options": [
         "The Design 2026 site under [CP] Melbourne",
         "The GCMC Public Downloads folder",
         "The Vietnam General Archive site",
         "OneDrive Personal Storage"
       ],
-      "correct": [
-        0
-      ],
       "category": "Platforms"
     },
     {
       "id": "q224",
       "type": "match",
-      "topic": "INTON Scholarships",
-      "prompt": "Match each scholarship to the INTON market it targets.",
       "pairs": [
         {
           "left": "China Pathway Scholarship",
@@ -3014,6 +2966,8 @@
           "right": "Indian subcontinent"
         }
       ],
+      "topic": "INTON Scholarships",
+      "prompt": "Match each scholarship to the INTON market it targets.",
       "category": "Work"
     },
     {
@@ -3021,14 +2975,14 @@
       "type": "single",
       "topic": "INTON markets",
       "prompt": "Which market joined INTON in 2026 with its first Information Day?",
+      "correct": [
+        0
+      ],
       "options": [
         "Kenya (Africa)",
         "Nigeria",
         "South Africa",
         "Ghana"
-      ],
-      "correct": [
-        0
       ],
       "category": "Team"
     },
@@ -3037,14 +2991,14 @@
       "type": "single",
       "topic": "Working with Melbourne",
       "prompt": "From 4 October, when Melbourne enters daylight saving (+4 hours ahead), what is the local cutoff time after which you should expect answers tomorrow?",
+      "correct": [
+        0
+      ],
       "options": [
         "13:00 (1:00 PM)",
         "14:00 (2:00 PM)",
         "12:00 (Noon)",
         "15:00 (3:00 PM)"
-      ],
-      "correct": [
-        0
       ],
       "category": "Culture"
     },
@@ -3053,14 +3007,14 @@
       "type": "single",
       "topic": "Team structure",
       "prompt": "Who is the Assistant Director of GCMC?",
+      "correct": [
+        0
+      ],
       "options": [
         "Alex BK",
         "Robert Fantozzi",
         "Ha Nguyen",
         "Đức Nguyen"
-      ],
-      "correct": [
-        0
       ],
       "category": "Team"
     },
@@ -3069,14 +3023,14 @@
       "type": "single",
       "topic": "Onboarding",
       "prompt": "What is scheduled for Week 2 of your onboarding?",
+      "correct": [
+        0
+      ],
       "options": [
         "Shadowing: join INTON stand-up and sprint planning, and pair with a senior on a live BAU task",
         "Taking full ownership of campaign deliverables independently",
         "Leading the fortnightly GCMC planning meeting",
         "Attending Domestic stand-ups"
-      ],
-      "correct": [
-        0
       ],
       "category": "Culture"
     },
@@ -3085,14 +3039,14 @@
       "type": "single",
       "topic": "INTON video",
       "prompt": "For INTON video campaigns, what are the standard cut lengths for prospecting and remarketing?",
+      "correct": [
+        0
+      ],
       "options": [
         "15″ prospecting video and 6″ remarketing cut",
         "30″ prospecting video and 15″ remarketing cut",
         "60″ prospecting video and 30″ remarketing cut",
         "6″ prospecting video and 15″ remarketing cut"
-      ],
-      "correct": [
-        0
       ],
       "category": "Work"
     },
@@ -3101,105 +3055,779 @@
       "type": "single",
       "topic": "Workload dashboard",
       "prompt": "Can team members view the GCMC Workload Report dashboard (mel-workload-report.vercel.app) without signing in?",
+      "correct": [
+        0
+      ],
       "options": [
         "Yes, viewing needs no sign-in",
         "No, it requires signing in with an RMIT staff account",
         "No, only managers can access it",
         "Yes, but only when connected to RMIT VPN"
       ],
-      "correct": [
-        0
-      ],
       "category": "Platforms"
     },
     {
       "id": "q231",
-      "category": "Culture",
       "type": "single",
       "prompt": "Why are the kangaroo and the emu featured on Australia's Coat of Arms?",
+      "correct": [
+        0
+      ],
       "options": [
         "Neither animal can easily walk backwards, symbolising progress and moving forward",
         "They are the two fastest land animals in Australia",
         "They were chosen by popular vote in Australia's first referendum",
         "They are the only animals found across every Australian state and territory"
       ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q232",
-      "category": "Culture",
       "type": "single",
       "prompt": "What makes Australia's platypus and echidna uniquely special among almost all other mammals in the world?",
+      "correct": [
+        0
+      ],
       "options": [
         "They lay eggs instead of giving birth to live young (monotremes)",
         "They can breathe underwater for several hours without surfacing",
         "They hibernate throughout the entire Australian summer",
         "They have no blood vessels in their outer skin"
       ],
-      "correct": [
-        0
-      ]
-    },
-    {
-      "id": "q233",
-      "category": "Culture",
-      "type": "single",
-      "prompt": "Which small Australian marsupial native to Rottnest Island is famous worldwide as the 'world's happiest animal' due to its smiling selfies?",
-      "options": [
-        "Quokka",
-        "Sugar glider",
-        "Bandicoot",
-        "Tree kangaroo"
-      ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q234",
-      "category": "Culture",
       "type": "single",
       "prompt": "What famous and uniquely odd characteristic belongs to the Australian wombat?",
+      "correct": [
+        0
+      ],
       "options": [
         "It produces cube-shaped droppings to stop them rolling off rocks and territory markers",
         "It has blue stripes under its fur visible only under moonlight",
         "It can leap over two metres high when startled",
         "It burrows only when the tide is going out"
       ],
-      "correct": [
-        0
-      ]
-    },
-    {
-      "id": "q235",
-      "category": "Culture",
-      "type": "single",
-      "prompt": "During Australian spring, why do pedestrians and cyclists often attach zip ties pointing up from their helmets?",
-      "options": [
-        "To deter territorial magpies from swooping during nesting season",
-        "To prevent swooping by fruit bats at dusk",
-        "To signal to trams that a bike is approaching",
-        "It is a traditional Melbourne Spring Racing Carnival dress code"
-      ],
-      "correct": [
-        0
-      ]
+      "category": "Culture"
     },
     {
       "id": "q236",
-      "category": "Culture",
       "type": "single",
-      "prompt": "Which iconic Australian bird is famous for a loud, echoing territorial call that sounds just like human laughter?",
+      "prompt": "Which iconic Australian bird is famous for a loud, echoing call that sounds just like human laughter?",
+      "correct": [
+        0
+      ],
       "options": [
-        "Laughing Kookaburra",
-        "Sulphur-crested Cockatoo",
+        "Kookaburra",
+        "Cockatoo",
         "Galah",
         "Rainbow Lorikeet"
       ],
+      "category": "Culture"
+    },
+    {
+      "id": "q237",
+      "type": "match",
+      "category": "Team",
+      "prompt": "Match each teammate to the one thing on their bucket list.",
+      "pairs": [
+        {
+          "left": "Danh",
+          "right": "Visit Chernobyl, Ukraine"
+        },
+        {
+          "left": "Trinh",
+          "right": "Travel to Japan"
+        },
+        {
+          "left": "Trân",
+          "right": "No more back pain"
+        },
+        {
+          "left": "Eden",
+          "right": "Reach 80 kg (healthily)"
+        }
+      ]
+    },
+    {
+      "id": "q238",
+      "type": "match",
+      "category": "Team",
+      "prompt": "Match each teammate to their kryptonite.",
+      "pairs": [
+        {
+          "left": "Danh",
+          "right": "Heat"
+        },
+        {
+          "left": "Trinh",
+          "right": "Hiking"
+        },
+        {
+          "left": "Trân",
+          "right": "Cockroaches"
+        },
+        {
+          "left": "Eden",
+          "right": "Sleeplessness"
+        },
+        {
+          "left": "Trúc",
+          "right": "Veggies"
+        }
+      ]
+    },
+    {
+      "id": "q239",
+      "type": "match",
+      "category": "Team",
+      "prompt": "Match each onboarding session to what it covers.",
+      "pairs": [
+        {
+          "left": "Session 1",
+          "right": "Settle in and RMIT background"
+        },
+        {
+          "left": "Session 2",
+          "right": "Brand and squads"
+        },
+        {
+          "left": "Session 3",
+          "right": "Platforms and workflow"
+        },
+        {
+          "left": "Session 4",
+          "right": "Tools, dashboard and wrap-up"
+        }
+      ]
+    },
+    {
+      "id": "q240",
+      "type": "match",
+      "category": "Team",
+      "prompt": "Match each GCMC role to the person in it.",
+      "pairs": [
+        {
+          "left": "Account Manager",
+          "right": "Olivia Villani"
+        },
+        {
+          "left": "Production Manager",
+          "right": "Robert Fantozzi"
+        },
+        {
+          "left": "Producer",
+          "right": "Hilary Jones"
+        },
+        {
+          "left": "Multimedia Lead",
+          "right": "Damian Sullivan"
+        },
+        {
+          "left": "Creative Design Lead",
+          "right": "Joane Chow"
+        }
+      ]
+    },
+    {
+      "id": "q241",
+      "type": "match",
+      "category": "RMIT",
+      "prompt": "Match each campus to what it's known for.",
+      "pairs": [
+        {
+          "left": "City",
+          "right": "Design, architecture, art and most of GCMC's world"
+        },
+        {
+          "left": "Bundoora",
+          "right": "Health, sciences and plenty of green space"
+        },
+        {
+          "left": "Brunswick",
+          "right": "Fashion and textiles"
+        },
+        {
+          "left": "Point Cook",
+          "right": "RMIT's aviation academy"
+        }
+      ]
+    },
+    {
+      "id": "q242",
+      "type": "match",
+      "category": "Brand",
+      "prompt": "Match each typeface to what it's used for.",
+      "pairs": [
+        {
+          "left": "Museo",
+          "right": "Headlines and features"
+        },
+        {
+          "left": "Helvetica Neue LT Pro",
+          "right": "Subheads and body copy"
+        },
+        {
+          "left": "Noto Sans",
+          "right": "Other languages (besides Vietnamese)"
+        },
+        {
+          "left": "Helvetica Neue 75 Bold",
+          "right": "URLs: lowercase, no www, one line"
+        }
+      ]
+    },
+    {
+      "id": "q243",
+      "type": "match",
+      "category": "Work",
+      "prompt": "Match each INTON market to the channels it runs on.",
+      "pairs": [
+        {
+          "left": "China",
+          "right": "WeChat, Red, Douyin, Weibo and Baidu"
+        },
+        {
+          "left": "South-East Asia",
+          "right": "Meta, TikTok and YouTube, with local-language CTAs"
+        },
+        {
+          "left": "India, Bangladesh and Sri Lanka",
+          "right": "Meta, YouTube, Snapchat and PMAX"
+        },
+        {
+          "left": "Kenya",
+          "right": "Print and eDMs, for now"
+        }
+      ]
+    },
+    {
+      "id": "q244",
+      "type": "match",
+      "category": "Platforms",
+      "prompt": "Match each Demand Tracker stage to what happens in it.",
+      "pairs": [
+        {
+          "left": "Incoming / New",
+          "right": "The ticket appears once the request form is completed"
+        },
+        {
+          "left": "Under assessment",
+          "right": "The Account Manager checks the brief and materials, and picks the team"
+        },
+        {
+          "left": "Ready to assign (VN)",
+          "right": "The ticket gets its project code"
+        },
+        {
+          "left": "Assigned to you",
+          "right": "Danh briefs, sets up the boards and assigns"
+        }
+      ]
+    },
+    {
+      "id": "q245",
+      "type": "match",
+      "category": "Platforms",
+      "prompt": "Match each part of Monday.com to what it is.",
+      "pairs": [
+        {
+          "left": "My work",
+          "right": "Your personal to-do list across all your boards"
+        },
+        {
+          "left": "Workspaces",
+          "right": "Global Marketing and Regional Hubs, showing the squads and their projects"
+        },
+        {
+          "left": "Project boards",
+          "right": "A squad's own workspace for tasks, progress and communication"
+        }
+      ]
+    },
+    {
+      "id": "q246",
+      "type": "match",
+      "category": "Culture",
+      "prompt": "Match each part of your first month to what happens in it.",
+      "pairs": [
+        {
+          "left": "Week 1",
+          "right": "Onboarding: these sessions, get-to-know lunches and an RM-Ate-T hangout"
+        },
+        {
+          "left": "Week 2",
+          "right": "Shadow: join the INTON stand-up and pair with a senior on a live BAU task"
+        },
+        {
+          "left": "Weeks 3–4",
+          "right": "Own small INTON BAU tickets, with senior review"
+        },
+        {
+          "left": "End of the month",
+          "right": "A 30-minute check-in with Danh and Đức"
+        }
+      ]
+    },
+    {
+      "id": "q247",
+      "type": "multi",
+      "category": "Team",
+      "prompt": "Besides INTON and Domestic, which teams might you also work for?",
+      "options": [
+        "BPX",
+        "Alumni",
+        "The RMIT rowing club",
+        "Brand",
+        "Vietnam Marketing",
+        "Melbourne's tram network"
+      ],
+      "correct": [
+        0,
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "q248",
+      "type": "multi",
+      "category": "Brand",
+      "prompt": "Where should the tagline appear?",
+      "options": [
+        "Pieces for external audiences",
+        "OOH",
+        "Internal pieces",
+        "Print",
+        "Campaign digital",
+        "Chinese assets"
+      ],
+      "correct": [
+        0,
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "q249",
+      "type": "multi",
+      "category": "Brand",
+      "prompt": "Which photos should you skip?",
+      "options": [
+        "Photos of staff who have left",
+        "Real students, not posed models",
+        "Old shoots whose model licences may have expired",
+        "Anything that could spark controversy",
+        "A range of cultures, ages and abilities"
+      ],
+      "correct": [
+        0,
+        2,
+        3
+      ]
+    },
+    {
+      "id": "q250",
+      "type": "multi",
+      "category": "Work",
+      "prompt": "Where does the SEA Roadshow hold its Information Days?",
+      "options": [
+        "Jakarta",
+        "Bangkok",
+        "Kuala Lumpur",
+        "Ho Chi Minh City",
+        "Singapore",
+        "Phnom Penh"
+      ],
+      "correct": [
+        0,
+        2,
+        3,
+        5
+      ]
+    },
+    {
+      "id": "q251",
+      "type": "multi",
+      "category": "RMIT",
+      "prompt": "RMIT's Acknowledgement of Country names which language groups of the eastern Kulin Nation?",
+      "options": [
+        "Woi wurrung",
+        "Gunaikurnai",
+        "Boon wurrung",
+        "Wiradjuri"
+      ],
+      "correct": [
+        0,
+        2
+      ]
+    },
+    {
+      "id": "q252",
+      "type": "fill",
+      "category": "RMIT",
+      "prompt": "On VTAC, Year 12s rank up to ___ course preferences.",
+      "answers": [
+        "eight",
+        "8"
+      ]
+    },
+    {
+      "id": "q253",
+      "type": "fill",
+      "category": "Team",
+      "prompt": "On the team slides, Eden also goes by ___.",
+      "answers": [
+        "Dzung",
+        "Dũng",
+        "Dung",
+        "Vu Duc Dung",
+        "Vũ Đức Dũng"
+      ]
+    },
+    {
+      "id": "q254",
+      "type": "short",
+      "category": "RMIT",
+      "prompt": "Birrarung is the Aboriginal name for which Melbourne river?",
+      "answers": [
+        "Yarra",
+        "The Yarra",
+        "Yarra River",
+        "The Yarra River"
+      ]
+    },
+    {
+      "id": "q255",
+      "type": "single",
+      "category": "Team",
+      "prompt": "Besides priorities, assignment and workflow, what else can you go to Danh for?",
+      "options": [
+        "Karaoke song choices",
+        "IT support and animal rescue",
+        "Fixing the office coffee machine",
+        "Naming the next mascot"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q256",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "Roughly how many students study across the Melbourne campuses?",
+      "options": [
+        "About 8,200",
+        "Still 320, same as in 1887",
+        "More than 82,000",
+        "Nobody knows: they keep taking the free tram"
+      ],
+      "correct": [
+        2
+      ]
+    },
+    {
+      "id": "q257",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "What are the Aboriginal and Torres Strait Islander children who were forcibly removed from their families, up until the 1960s, known as?",
+      "options": [
+        "The Stolen Generations",
+        "The Lost Colonies",
+        "The Kulin Nation",
+        "The First Fleet"
+      ],
       "correct": [
         0
+      ]
+    },
+    {
+      "id": "q258",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "Who is shown on screen in Federation Square, apologising to the Stolen Generations?",
+      "options": [
+        "Francis Ormond",
+        "Kevin Rudd",
+        "Larissa Behrendt",
+        "Daniel Featherstone"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q259",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "RMIT's Mapping the Digital Gap project is a partnership with which company?",
+      "options": [
+        "Optus",
+        "Telstra",
+        "Microsoft",
+        "Australia Post"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q260",
+      "type": "single",
+      "category": "Brand",
+      "prompt": "What do images of First Nations people who have died often carry?",
+      "options": [
+        "A warning",
+        "A watermark",
+        "A red border",
+        "Nothing: use them as normal"
+      ],
+      "correct": [
+        0
+      ],
+      "critical": true
+    },
+    {
+      "id": "q261",
+      "type": "single",
+      "category": "Brand",
+      "prompt": "You have a question about Indigenous content in a design. Who at RMIT can you ask?",
+      "options": [
+        "The Ngarara Willim Centre",
+        "ServiceNow",
+        "The Brand Hub",
+        "The Account Manager"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q262",
+      "type": "single",
+      "category": "Brand",
+      "prompt": "Which colour can the pixel never be?",
+      "options": [
+        "Red",
+        "White",
+        "Blue",
+        "Any colour, if you ask nicely"
+      ],
+      "correct": [
+        2
+      ]
+    },
+    {
+      "id": "q263",
+      "type": "single",
+      "category": "Brand",
+      "prompt": "Chinese assets can't carry the English tagline. What do you use instead?",
+      "options": [
+        "The logo on its own, or the localised version",
+        "The tagline in Comic Sans",
+        "A QR code that links to the tagline",
+        "Roy and Milo holding a sign with the tagline"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q264",
+      "type": "single",
+      "category": "Brand",
+      "prompt": "What does the CRICOS line on an asset show?",
+      "options": [
+        "RMIT's Wi-Fi password",
+        "That RMIT is approved to teach international students on a student visa",
+        "The designer's staff ID",
+        "That the asset has passed its review"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q265",
+      "type": "single",
+      "category": "Work",
+      "prompt": "SEA ads use local-language calls to action, such as…",
+      "options": [
+        "Khmer and Bahasa",
+        "Mandarin and Cantonese",
+        "Klingon and Elvish",
+        "Latin and Ancient Greek"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q266",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "When is INTON's peak season?",
+      "options": [
+        "January, while Melbourne is at the beach",
+        "Late August to September",
+        "Only during Lunar New Year",
+        "March to April"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q267",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "Which is Domestic's biggest campaign?",
+      "options": [
+        "Change of Preference",
+        "Always On",
+        "Open Day",
+        "VTAC"
+      ],
+      "correct": [
+        2
+      ]
+    },
+    {
+      "id": "q268",
+      "type": "single",
+      "category": "RMIT",
+      "prompt": "Domestic's Semester 2 intake ads for non-school leavers say…",
+      "options": [
+        "“Study in July”",
+        "“Apply for 2027”",
+        "“Come for the coffee”",
+        "“Study in December”"
+      ],
+      "correct": [
+        0
+      ]
+    },
+    {
+      "id": "q269",
+      "type": "single",
+      "category": "Platforms",
+      "prompt": "What are external drives for?",
+      "options": [
+        "They're the home for working files",
+        "The backup, not the home",
+        "Sending FAs to INTON stakeholders",
+        "Propping the office door open"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q270",
+      "type": "single",
+      "category": "Work",
+      "prompt": "Which work goes in the asset tracker?",
+      "options": [
+        "Everything, including BAU",
+        "Campaigns only, not BAU",
+        "Only work that's already approved",
+        "Your lunch orders"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q271",
+      "type": "single",
+      "category": "Work",
+      "prompt": "An INTON stakeholder approves your design out loud in the stand-up. What next?",
+      "options": [
+        "Nothing: a spoken yes is enough",
+        "Ask for a written approval too, to make sure",
+        "Mark it Done on both boards straight away",
+        "Screenshot the call as proof"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q272",
+      "type": "single",
+      "category": "Culture",
+      "prompt": "Who runs the INTON stand-up and INTON sprint planning?",
+      "options": [
+        "Danh",
+        "The INTON Segment Manager",
+        "The GCMC Coordinator (Liv)",
+        "Đức"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q273",
+      "type": "single",
+      "category": "Platforms",
+      "prompt": "In the workload dashboard, where do you see the Vietnam and Melbourne public holidays?",
+      "options": [
+        "The Task List",
+        "The Calendar",
+        "The GCMC Demand Tracker",
+        "Workday"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q274",
+      "type": "single",
+      "category": "Aussie English",
+      "prompt": "A stakeholder wants it “by EOD”. For you, that's…",
+      "options": [
+        "The end of your day, around 6 pm",
+        "Your early afternoon",
+        "First thing tomorrow",
+        "Whenever the coffee runs out"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q275",
+      "type": "single",
+      "category": "Culture",
+      "prompt": "What's a safe icebreaker with a Melbourne stakeholder?",
+      "options": [
+        "Ask for their ATAR",
+        "Ask them for a coffee tip",
+        "Rank their fonts out loud",
+        "Ask about their salary"
+      ],
+      "correct": [
+        1
+      ]
+    },
+    {
+      "id": "q276",
+      "type": "single",
+      "category": "Culture",
+      "prompt": "What's the team's line on humour?",
+      "options": [
+        "No jokes during office hours",
+        "Memes welcome, kept kind and inclusive",
+        "Puns only, and only on Fridays",
+        "Laughing is saved for RM-Ate-T"
+      ],
+      "correct": [
+        1
       ]
     }
   ]
