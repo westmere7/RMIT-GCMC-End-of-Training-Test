@@ -24,6 +24,12 @@
   const save = () => { if (PREVIEW) return; try { sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* storage unavailable: carry on in memory */ } };
   const load = () => { try { return JSON.parse(sessionStorage.getItem(KEY) || "null"); } catch (e) { return null; } };
   const signOut = () => { try { sessionStorage.removeItem(KEY); } catch (e) {} location.reload(); };
+  /** A button that's waiting on the network: a spinner, and no second click. */
+  function busy(btn, on) {
+    if (!btn) return;
+    btn.classList.toggle("is-loading", !!on); btn.disabled = !!on;
+    if (on) btn.setAttribute("aria-busy", "true"); else btn.removeAttribute("aria-busy");
+  }
 
   // ---------- group play: who's who ----------
   const MEMBER = () => !!(S && S.role === "member");
@@ -104,18 +110,17 @@
     const err = $("loginError"), btn = $("loginBtn");
     if (!email || !id) { err.textContent = "Enter your email and staff ID."; return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { err.textContent = "Enter a valid email address."; return; }
-    err.textContent = ""; btn.disabled = true;
+    err.textContent = ""; busy(btn, true);
     const hash = await A.sha256(email);
 
     if (!$("nameStep").hidden && pendingHash === hash) {
       const name = $("firstName").value.trim().replace(/\s+/g, " ").slice(0, 40);
-      if (!name) { err.textContent = "Tell us your first name."; btn.disabled = false; $("firstName").focus(); return; }
+      if (!name) { err.textContent = "Tell us your first name."; busy(btn, false); $("firstName").focus(); return; }
       try { await fetch("/api/people", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name, email_sha256: hash }) }); } catch (e) { /* remembered for this session only */ }
-      return enter(email, name);
+      busy(btn, false); return enter(email, name);
     }
-    btn.textContent = "Checking…";
     const known = await lookupName(hash);
-    btn.textContent = "Sign in"; btn.disabled = false;
+    busy(btn, false);
     if (known) return enter(email, known);
     pendingHash = hash;
     $("nameStep").hidden = false; $("firstName").value = guessName(email); $("firstName").select(); $("firstName").focus();
@@ -124,7 +129,7 @@
   $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
   function enter(email, name, attempt) {
     S = { email, name, attempt: attempt || 1, started: false, finished: false }; save();
-    $("startBtn").disabled = false; $("dAttempt").textContent = S.attempt;
+    busy($("startBtn"), false); $("startLabel").textContent = "Start assessment"; $("dAttempt").textContent = S.attempt;
     show("scrBrief");
     openLobby();
   }
@@ -232,7 +237,7 @@
   }
   $("lobbyList").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-kick]"); if (!b) return;
-    b.disabled = true;
+    busy(b, true);
     try { await roomAct({ action: "kick", m: +b.dataset.kick }); renderLobby(); } catch (err) { b.disabled = false; }
   });
   // the points rules, grouped by "you got it right / wrong", with the points first so they scan at a glance
@@ -313,7 +318,7 @@
       const order = qids.map((id) => orderFor(BYID[id], st)), limitMs = (st.timeLimitMinutes || 10) * 60000;
       if (S.group) {
         // the same paper, in the same order, for everyone in the room
-        const btn = $("startBtn"); btn.disabled = true; $("startLabel").textContent = "Starting…"; $("startError").textContent = "";
+        const btn = $("startBtn"); busy(btn, true); $("startLabel").textContent = "Starting…"; $("startError").textContent = "";
         stopPolling();
         try {
           const paper = { questions: qids.map((id) => BYID[id]), order, limitMs,
@@ -322,7 +327,7 @@
           if (d.solo) S.group = null; // nobody joined: on your own, as before
           else S.group.live = true;
         } catch (e) {
-          $("startError").textContent = "Couldn't start the room: " + e.message; btn.disabled = false;
+          $("startError").textContent = "Couldn't start the room: " + e.message; busy(btn, false);
           startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
           return renderLobby();
         }
@@ -421,7 +426,8 @@
     $("critNoticeText").textContent = GROUP() ? "Points count double here, right or wrong." : "It's worth 2 points instead of 1.";
     $("qMarks").innerHTML = q.critical ? `<span class="crit-chip">Critical</span><small>${GROUP() ? "Points ×2, right or wrong" : "2 points"}</small>` : GROUP() ? "Points ×1" : "1 point";
     setStatus("", MEMBER() ? `<span class="hint">Not submitted when ${esc(takerName())} submits? Your pick still counts.</span>` : '<span class="kbd">Press <b>Enter</b> to submit</span>');
-    $("submitBtn").hidden = false; $("skipBtn").hidden = MEMBER(); $("skipBtn").disabled = false; $("nextBtn").hidden = true;
+    busy($("submitBtn"), false); busy($("skipBtn"), false); busy($("nextBtn"), false);
+    $("submitBtn").hidden = false; $("skipBtn").hidden = MEMBER(); $("nextBtn").hidden = true;
     const body = $("qBody"); body.innerHTML = "";
     current = A.isChoiceQ(q) ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
     $("qCard").dataset.type = q.type;
@@ -701,23 +707,25 @@
 
   // ---------- group play: the taker's side ----------
   async function hostReveal(q, resp, skipped) {
-    $("skipBtn").disabled = true; setStatus("", "Showing everyone the answer…");
+    $("skipBtn").disabled = true; busy(skipped ? $("skipBtn") : $("submitBtn"), true); setStatus("", "Showing everyone the answer…");
     try { await roomAct({ action: "reveal", q: S.index, response: resp }); }
     catch (e) {
-      locked = false; $("qCard").classList.remove("locked"); $("skipBtn").disabled = false; $("submitBtn").disabled = false;
+      busy($("submitBtn"), false); busy($("skipBtn"), false);
+      locked = false; $("qCard").classList.remove("locked");
       return setStatus("error", "Couldn't reach the room. Try again.");
     }
     const correct = !skipped && A.isCorrect(q, resp);
     S.responses[q.id] = { response: resp, correct, skipped: !!skipped, at: Date.now() }; save();
     bounce(q, correct); updateProgress();
+    busy($("submitBtn"), false); busy($("skipBtn"), false);
     syncTaker();
   }
   async function nextQuestion() {
     if (!HOSTING() || !revealShown || $("nextBtn").disabled) return;
-    $("nextBtn").disabled = true;
+    busy($("nextBtn"), true);
     try { await roomAct({ action: "next", q: S.index }); }
-    catch (e) { $("nextBtn").disabled = false; return setStatus("error", "Couldn't reach the room. Try again."); }
-    $("nextBtn").disabled = false;
+    catch (e) { busy($("nextBtn"), false); return setStatus("error", "Couldn't reach the room. Try again."); }
+    if (ROOM.phase !== "finished") busy($("nextBtn"), false); // the last one keeps spinning while the results come in
     syncTaker();
   }
   // bring the taker's screen in line with the room (after a refresh, an action, or a poll)
@@ -827,6 +835,7 @@
     e.preventDefault();
     const v = $("codeInput").value;
     if (v.length < 4) { $("codeError").textContent = "Room codes are five letters and numbers."; return; }
+    busy($("codeBtn"), true);
     location.href = joinUrl(v);
   });
   let editing = false, pickedColour = null, gettingPaper = false;
@@ -910,28 +919,31 @@
     const name = $("joinName").value.trim().replace(/\s+/g, " ").slice(0, 24), err = $("joinError"), btn = $("joinBtn");
     if (!name) { err.textContent = "Tell us your name."; return $("joinName").focus(); }
     if (!pickedColour) { err.textContent = "Pick a colour."; return; }
-    err.textContent = ""; btn.disabled = true;
+    err.textContent = ""; busy(btn, true);
     try {
       await roomAct({ action: "join", name, color: pickedColour });
       try { localStorage.setItem("gcmc-member-name", name); } catch (e2) {}
       editing = false; $("joinForm").hidden = true;
     } catch (e2) { err.textContent = e2.message; $("joinSwatches").dataset.state = ""; }
-    btn.disabled = false;
+    busy(btn, false);
     syncMember();
   });
   $("joinChange").addEventListener("click", () => { editing = true; $("joinBtn").textContent = "Save"; syncMember(); });
   $("joinLeave").addEventListener("click", async () => {
+    busy($("joinLeave"), true);
     try { await roomAct({ action: "leave" }); } catch (e) {}
+    busy($("joinLeave"), false);
     editing = false; pickedColour = null; $("joinBtn").textContent = "Join the room"; syncMember();
   });
 
   async function memberSubmit(q, resp) {
     clearTimeout(draftTimer);
-    setStatus("", "Sending…");
-    try { await roomAct({ action: "answer", q: S.index, response: resp }); answerIn(q, resp); }
+    setStatus("", "Sending…"); busy($("submitBtn"), true);
+    try { await roomAct({ action: "answer", q: S.index, response: resp }); busy($("submitBtn"), false); answerIn(q, resp); }
     catch (e) {
-      if (e.status === 409) return setStatus("recorded", esc(e.message));
-      locked = false; $("qCard").classList.remove("locked"); $("submitBtn").disabled = false;
+      busy($("submitBtn"), false);
+      if (e.status === 409) { $("submitBtn").disabled = true; return setStatus("recorded", esc(e.message)); }
+      locked = false; $("qCard").classList.remove("locked");
       setStatus("error", "Couldn't send that. Try again.");
     }
   }
@@ -978,7 +990,7 @@
     if (S.finished || finish.busy) return;
     finish.busy = true; clearInterval(tick);
     if (HOSTING()) {
-      stopPolling(); locked = true; $("qCard").classList.add("locked"); $("nextBtn").disabled = true;
+      stopPolling(); locked = true; $("qCard").classList.add("locked"); busy($("nextBtn"), true);
       // close the room for everyone, and collect every answer
       for (let t = 0; t < 3; t++) {
         try { await roomAct({ action: "finish", timedOut: !!timedOut }); applyRoom(await G.get({ ...auth(), since: 0 })); break; }

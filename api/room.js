@@ -71,7 +71,7 @@ async function snapshot(room, me, since, withPaper) {
 async function act(body) {
   const action = String(body.action || "");
   if (action === "create") {
-    rooms.prune().catch(() => {});
+    await rooms.prune().catch(() => {});
     const hostKey = crypto.randomBytes(18).toString("base64url"), name = cleanName(body.name, 40) || "Candidate";
     for (let t = 0; ; t++) {
       const code = newCode();
@@ -170,8 +170,11 @@ module.exports = async (req, res) => {
       const me = await who(room, q);
       if (q.hb === "1") {
         const seen = new Date().toISOString();
-        if (me.host) await rooms.patchHost(code, { host_seen_at: seen });
-        else {
+        if (Math.random() < 0.05) await rooms.prune().catch(() => {}); // now and then, clear out rooms left behind
+        if (me.host) {
+          await rooms.patchHost(code, { host_seen_at: seen });
+          if ((room.state || {}).phase === "lobby") await rooms.pruneMembers(code);
+        } else {
           const m = (await rooms.members(code)).find((x) => x.device_hash === me.device);
           if (m) await rooms.patchMember(code, m.id, { seen_at: seen });
         }

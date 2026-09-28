@@ -19,7 +19,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
    - views `assessment_leaderboard` (score, time, strongest and weakest category) and `assessment_category_scores` (one row per attempt per category)
    - `assessment_migrations`: which files in `supabase/migrations/` have been applied
    - `assessment_contributors`, `assessment_submissions`, `assessment_secrets`: team links, the questions sent through them, and the editor key's fingerprint
-   - `assessment_rooms`, `assessment_room_members`, `assessment_room_answers`: group play (rooms are deleted two days after they were last used)
+   - `assessment_rooms`, `assessment_room_members`, `assessment_room_answers`: group play. Rooms clean themselves up: a lobby whose taker has gone for 30 minutes, a test nobody has driven for 3 hours, a finished room after 12 hours, and anything untouched for 2 days. A teammate whose page goes quiet in the lobby for 2 minutes gives their seat and colour back.
    - Storage bucket `assessment-images`: question pictures (public to read, WebP only, 3 MB each)
 
    Row-level security is on with no policies, so only the server can touch the tables.

@@ -179,9 +179,21 @@ const rooms = {
   async remove(code) {
     await rest(`assessment_rooms?code=eq.${code}`, { method: "DELETE" });
   },
-  /** Rooms nobody has touched for two days. */
+  /** Rooms left behind: a lobby its taker walked away from (30 minutes), a test its taker stopped driving (3 hours),
+      a finished one (12 hours: long enough for everyone to look at the results), and anything untouched for 2 days.
+      Their people and answers go with them. */
   async prune() {
-    await rest(`assessment_rooms?updated_at=lt.${new Date(Date.now() - 2 * 864e5).toISOString()}`, { method: "DELETE" });
+    const ago = (h) => new Date(Date.now() - h * 3600e3).toISOString(), del = { method: "DELETE" };
+    await Promise.all([
+      rest(`assessment_rooms?state->>phase=eq.lobby&host_seen_at=lt.${ago(0.5)}`, del),
+      rest(`assessment_rooms?state->>phase=in.(question,reveal)&host_seen_at=lt.${ago(3)}`, del),
+      rest(`assessment_rooms?state->>phase=eq.finished&updated_at=lt.${ago(12)}`, del),
+      rest(`assessment_rooms?updated_at=lt.${ago(48)}`, del),
+    ]);
+  },
+  /** Teammates whose page has gone quiet in the lobby (a closed tab, a locked phone) give their seat and colour back. */
+  async pruneMembers(code) {
+    await rest(`assessment_room_members?room=eq.${code}&seen_at=lt.${new Date(Date.now() - 120e3).toISOString()}`, { method: "DELETE" });
   },
   async members(code) {
     return (await rest(`assessment_room_members?room=eq.${code}&select=id,device_hash,name,color,busy_q,seen_at&order=id.asc`)) || [];

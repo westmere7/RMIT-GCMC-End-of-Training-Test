@@ -1012,3 +1012,18 @@ html.joiner .q-card { min-height: 0; }
   .brief-main .players { grid-template-columns: 1fr; }
   .pts-who { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* ---------- buttons waiting on the network: a spinner beside the label, the button keeps its colour ---------- */
+.btn.is-loading, .kick.is-loading { cursor: progress; }
+.btn.is-loading:disabled { background: var(--red); color: #fff; }
+.btn.navy.is-loading:disabled { background: var(--navy); }
+.btn.ghost.is-loading:disabled { background: transparent; color: var(--navy); }
+.btn.quiet.is-loading:disabled { background: transparent; color: var(--muted); }
+.btn.is-loading::before { content: ""; width: 16px; height: 16px; flex: none; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.7s linear infinite; }
+.btn.is-loading > [aria-hidden="true"] { display: none; } /* the arrow makes way for the spinner */
+.kick.is-loading { color: transparent; position: relative; }
+.kick.is-loading::after { content: ""; position: absolute; inset: 7px; border-radius: 50%; border: 2px solid var(--muted); border-right-color: transparent; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::before, .kick.is-loading::after { animation: spin 1.6s linear infinite !important; }
+}
