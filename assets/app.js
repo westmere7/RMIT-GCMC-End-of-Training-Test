@@ -208,6 +208,7 @@
     $("lobbyUrl").textContent = joinUrl().replace(/^https?:\/\//, ""); $("lobbyUrl").href = url;
     $("lobbyRules").innerHTML = pointsHtml(); $("lobbyRules").hidden = false;
     $("briefLead").textContent = "A friendly check-in on everything from your onboarding. Bring the team along if you like: they can scan in.";
+    $("startNote").textContent = "Start when everyone's in. Each question moves on when you submit it.";
     lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
     startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
   }
@@ -223,8 +224,10 @@
     $("lobbyList").innerHTML = roomPlayers().map((p) => {
       const li = playerLi(p, p.taker ? "" : `<button type="button" class="kick" data-kick="${p.id}" aria-label="Remove ${esc(label(p))}" title="Remove from the room">×</button>`);
       return lobbySeen.has(p.id) ? li : li.replace('class="player', 'class="player new');
-    }).join("");
-    for (const li of $("lobbyList").children) { if (away(roomPlayers().find((p) => p.id === +li.dataset.id) || {})) li.classList.add("away"); lobbySeen.add(+li.dataset.id); }
+    }).join("")
+      // empty seats, until someone scans in
+      + (n ? "" : '<li class="player ghost" aria-hidden="true"><span class="avatar"></span><span class="pname"><b>Waiting…</b></span></li>'.repeat(3));
+    for (const li of $("lobbyList").querySelectorAll("[data-id]")) { if (away(roomPlayers().find((p) => p.id === +li.dataset.id) || {})) li.classList.add("away"); lobbySeen.add(+li.dataset.id); }
     $("startLabel").textContent = n ? `Start with ${n} ${n === 1 ? "teammate" : "teammates"}` : "Start assessment";
   }
   $("lobbyList").addEventListener("click", async (e) => {
@@ -239,7 +242,8 @@
     const member = (right, takerRight) => G.RULES.member.find((r) => r.right === right && (right || r.taker === takerRight)).pts;
     const line = (pts, text) => `<li><b class="${pts > 0 ? "up" : pts < 0 ? "down" : ""}">${G.signed(pts)}</b><span>${text}</span></li>`;
     const group = (ok, lines) => `<div class="pts-group"><h4 class="${ok ? "y" : "n"}">${ok ? "Right" : "Wrong"}</h4><ul>${lines.join("")}</ul></div>`;
-    return `<div class="pts-who">
+    return `<h2 class="pts-title">How points work</h2>
+      <div class="pts-who">
         <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>${name}</h3>
         ${group(true, [line(taker(true, "wrong"), "the whole team got it wrong"), line(taker(true, "some"), "some of the team got it wrong"), line(taker(true, "right"), "the whole team got it right too")])}
         ${group(false, [line(taker(false, "wrong"), "the whole team got it wrong too"), line(taker(false, "some"), "some of the team got it right"), line(taker(false, "right"), "the whole team got it right")])}

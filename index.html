@@ -64,20 +64,20 @@
     </div>
   </section>
 
-  <!-- briefing: the room on the left, start on the right, the points underneath (it's the main screen everyone watches) -->
+  <!-- briefing: the main screen everyone watches. The room on the left, start on the right, the points underneath. -->
   <section class="screen" id="scrBrief" hidden>
     <div class="container brief">
       <header class="card brief-head">
         <div class="brief-title">
           <p class="eyebrow" id="briefCode">Assessment</p>
-          <h1 id="briefTitle">Ready when you are</h1>
+          <h1 id="briefTitle">Ready when you are, <em id="dCand">—</em>.</h1>
           <p class="lead" id="briefLead"></p>
+          <p class="brief-meta"><span id="dDate">—</span><span>Attempt <b id="dAttempt">1</b></span></p>
         </div>
         <dl class="brief-facts">
           <div><dt>Questions</dt><dd id="dQ">30</dd></div>
           <div><dt>Minutes</dt><dd id="dT">15</dd></div>
           <div><dt>Categories</dt><dd id="dCats">8</dd></div>
-          <div><dt>Attempt</dt><dd id="dAttempt">1</dd></div>
         </dl>
       </header>
 
@@ -89,8 +89,8 @@
             <div class="lobby-how">
               <p class="eyebrow">Play along</p>
               <h2 id="lobbyTitle">Scan to join</h2>
-              <p class="lobby-code"><span>Room</span><b id="lobbyCode">·····</b></p>
-              <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a> and type the code.</span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
+              <p class="lobby-code"><span>Room code</span><b id="lobbyCode">·····</b></p>
+              <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a></span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
             </div>
           </div>
           <div class="card lobby-room">
@@ -99,12 +99,13 @@
           </div>
         </section>
 
-        <aside class="start-card">
+        <aside class="card start-card">
+          <p class="eyebrow">Your test</p>
           <h2>All set?</h2>
-          <p class="start-who"><b id="dCand">—</b><span id="dDate">—</span></p>
+          <p class="start-note" id="startNote">The clock starts as soon as you do. Take your time with each one.</p>
           <button class="btn" id="startBtn"><span id="startLabel">Start assessment</span> <span aria-hidden="true">→</span></button>
           <p class="error-msg" id="startError" role="alert"></p>
-          <p class="start-fine">Saved to your training record. Retakes allowed.</p>
+          <p class="start-fine">Saved to your training record · Retakes allowed</p>
         </aside>
 
         <section class="card points-card" id="lobbyRules" hidden aria-label="How points work"></section>

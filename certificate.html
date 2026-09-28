@@ -8,7 +8,7 @@
   <meta name="robots" content="noindex">
   <style>
     :root {
-      --navy: #000054; --navy-30: #b2b2cb; --red: #e61e2a; --grey: #e3e5e0; --muted: #6b6b8a; --body: #33335f;
+      --navy: #000054; --navy-30: #b2b2cb; --red: #e61e2a; --grey: #e3e5e0; --line: #d9dbd4; --muted: #6b6b8a; --body: #33335f;
       --display: "Museo-RMITVN 700", "Museo 700", "Museo", "Helvetica Neue LT Pro", "Helvetica Neue", Arial, sans-serif;
       --display-light: "Museo-RMITVN 300", "Museo 300", "Museo", "Helvetica Neue LT Pro", "Helvetica Neue", Arial, sans-serif;
       --text: "Helvetica Neue LT Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -33,56 +33,45 @@
     .bar a { background: transparent; border: 1px solid rgba(255,255,255,.35); }
     .hint { color: var(--navy-30); font-size: 12px; width: 100%; margin: -4px 0 0; }
 
-    /* ---------- the sheet ---------- */
+    /* ---------- the sheet: A4 landscape, a quiet frame, lots of room ---------- */
     .stage { display: flex; justify-content: center; padding: 28px 16px 48px; }
     .scaler { transform-origin: top center; }
     .page {
-      width: 210mm; height: 297mm; background: #fff; position: relative; overflow: hidden;
+      width: 297mm; height: 210mm; background: #fff; position: relative; overflow: hidden;
       box-shadow: 0 2px 4px rgba(0,0,84,.08), 0 24px 60px -20px rgba(0,0,84,.35);
     }
     .frame { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .content { position: absolute; inset: 24mm 24mm 20mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .content { position: absolute; inset: 20mm 26mm 17mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
-    .logo { height: 13mm; margin-top: 2mm; }
-    .issuer { font-weight: 700; font-size: 8pt; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); margin-top: 3mm; }
-    .authority { font-weight: 700; font-size: 7.5pt; letter-spacing: .2em; text-transform: uppercase; color: var(--red); margin-top: 5mm; }
-    h1 { font-family: var(--display); color: var(--navy); font-size: 42pt; line-height: 1; margin: 2.5mm 0 0; letter-spacing: -.01em; }
-    .sub { font-family: var(--display-light); color: var(--navy); font-size: 19pt; margin-top: 1.5mm; }
-    .certify { font-size: 10.5pt; margin-top: 5.5mm; font-style: italic; }
-    .name { font-family: var(--display); color: var(--navy); font-size: 38pt; line-height: 1.1; margin-top: 2mm; padding: 0 8mm 2mm; border-bottom: .4mm solid var(--navy); min-width: 110mm; overflow-wrap: anywhere; }
-    .body { font-size: 10.5pt; line-height: 1.55; max-width: 138mm; margin-top: 5mm; text-wrap: balance; }
+    .top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+    .logo { height: 11mm; }
+    .issuer { font-weight: 700; font-size: 7.5pt; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+
+    .kicker { font-weight: 700; font-size: 10pt; letter-spacing: .36em; text-transform: uppercase; color: var(--red); margin-top: 10mm; }
+    .certify { font-family: var(--display-light); font-size: 14pt; color: var(--muted); margin-top: 7mm; }
+    .name { font-family: var(--display); color: var(--navy); font-size: 64pt; line-height: 1.02; letter-spacing: -.01em; margin-top: 2mm; max-width: 220mm; overflow-wrap: anywhere; }
+    .rule { width: 20mm; height: 1mm; background: var(--red); margin-top: 6mm; }
+    .body { font-size: 12pt; line-height: 1.55; max-width: 175mm; margin-top: 6mm; text-wrap: balance; }
     .body b { color: var(--navy); }
-    .body.tight { margin-top: 2.5mm; }
-    .score { display: flex; align-items: baseline; gap: 3mm; margin-top: 2.5mm; }
-    .score span { font-family: var(--display); color: var(--red); font-size: 30pt; line-height: 1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
-    .score small { font-weight: 700; font-size: 8pt; letter-spacing: .16em; text-transform: uppercase; color: var(--navy); }
-    .rank { font-family: var(--display); color: var(--red); font-size: 20pt; line-height: 1.15; margin-top: 4mm; }
-    .latin { font-weight: 700; font-size: 8.5pt; letter-spacing: .24em; text-transform: uppercase; color: var(--navy); margin-top: 2mm; }
-    .latin small { display: block; font-weight: 400; letter-spacing: .04em; text-transform: none; font-style: italic; color: var(--muted); font-size: 8.5pt; margin-top: 1mm; }
 
-    .powers { margin-top: 5.5mm; width: 140mm; text-align: left; }
-    .powers p { font-weight: 700; font-size: 7.5pt; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); text-align: center; margin: 0 0 2.5mm; }
-    .powers ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; counter-reset: p; }
-    .powers li { counter-increment: p; display: grid; grid-template-columns: 6mm 1fr; font-size: 8.8pt; line-height: 1.4; color: var(--body); }
-    .powers li::before { content: counter(p, upper-roman) "."; font-weight: 700; color: var(--red); font-size: 8pt; }
+    .results { display: grid; grid-template-columns: repeat(3, 1fr); width: 205mm; margin-top: 9mm; border-top: .25mm solid var(--line); border-bottom: .25mm solid var(--line); }
+    .results div { padding: 5.5mm 4mm 5mm; display: grid; gap: 1.5mm; align-content: center; }
+    .results div + div { border-left: .25mm solid var(--line); }
+    .results b { font-family: var(--display); color: var(--navy); font-size: 26pt; line-height: 1; font-variant-numeric: tabular-nums; }
+    .results b.pts { color: var(--red); }
+    .results b.latin { font-size: 17pt; line-height: 1.15; }
+    .results span { font-weight: 700; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
 
-    .signs { margin-top: auto; width: 100%; display: grid; grid-template-columns: 1fr 38mm 1fr; align-items: end; gap: 6mm; }
+    .signs { margin-top: auto; width: 100%; display: grid; grid-template-columns: 1fr 30mm 1fr; align-items: end; gap: 14mm; }
     .sig { text-align: center; }
-    .sig .line { border-bottom: .3mm solid var(--navy); height: 12mm; }
+    .sig .line { border-bottom: .3mm solid var(--navy); height: 10mm; margin: 0 8mm; }
     .sig b { display: block; font-size: 9.5pt; color: var(--navy); margin-top: 2mm; }
-    .sig span { display: block; font-size: 7.5pt; color: var(--muted); letter-spacing: .04em; }
-    .seal { width: 38mm; height: 39.3mm; justify-self: center; margin-bottom: -2mm; }
-    .witness { font-size: 7.8pt; color: var(--muted); margin-top: 3mm; display: flex; align-items: center; gap: 2.5mm; justify-content: center; }
-    .witness svg { width: 5mm; height: 5mm; }
+    .sig span { display: block; font-size: 7.5pt; color: var(--muted); letter-spacing: .04em; margin-top: .5mm; }
+    .seal { width: 30mm; height: 30mm; justify-self: center; }
+    .foot { margin-top: 5mm; font-size: 7pt; letter-spacing: .08em; color: var(--muted); }
+    .foot b { color: var(--navy); font-weight: 700; }
 
-    .foot { width: 100%; display: flex; justify-content: space-between; gap: 4mm; margin-top: 3.5mm; padding-top: 2.5mm; border-top: .2mm solid var(--grey); font-size: 6.5pt; letter-spacing: .06em; color: var(--muted); }
-    .foot b { color: var(--navy); }
-
-    .stamp { position: absolute; right: 19mm; top: 24mm; transform: rotate(-9deg); color: var(--red); border: .9mm solid var(--red); border-radius: 2mm; padding: 1.8mm 4mm 1.5mm; text-align: center; opacity: .88; filter: url(#rough); mix-blend-mode: multiply; }
-    .stamp b { display: block; font-family: var(--display); font-size: 17pt; letter-spacing: .08em; line-height: 1; }
-    .stamp span { display: block; font-weight: 700; font-size: 7pt; letter-spacing: .14em; margin-top: 1mm; border-top: .3mm solid var(--red); padding-top: 1mm; }
-
-    @page { size: A4 portrait; margin: 0; }
+    @page { size: A4 landscape; margin: 0; }
     @media print {
       body { background: #fff; }
       .bar { display: none; }
@@ -99,109 +88,65 @@
     <span class="spacer"></span>
     <span id="editors">
       <label>Name <input id="fName" value="Nghia" maxlength="40"></label>
-      <label>Score <input class="num" id="fC" type="number" min="0" value="28"> of <input class="num" id="fT" type="number" min="1" value="30"></label>
+      <label>Right <input class="num" id="fC" type="number" min="0" value="38"> of <input class="num" id="fT" type="number" min="1" value="45"></label>
+      <label>Points <input class="num" id="fP" type="number" value="37"></label>
       <label>Best at <input id="fBest" value="Brand"></label>
       <label>Date <input id="fDate" type="date"></label>
     </span>
     <a id="backBtn" href="./" hidden>Back to results</a>
-    <button id="printBtn" type="button">Print (A4 portrait)</button>
-    <p class="hint" id="hint">Preview only: nothing here is recorded. In the print dialog, choose A4, portrait, margins “None”, and turn on background graphics.</p>
+    <button id="printBtn" type="button">Print (A4 landscape)</button>
+    <p class="hint" id="hint">Preview only: nothing here is recorded. In the print dialog, choose A4, landscape, margins “None”, and turn on background graphics.</p>
   </div>
 
   <div class="stage"><div class="scaler" id="scaler">
     <div class="page" id="page">
-      <!-- engraved border: a guilloche band between two rules -->
-      <svg class="frame" viewBox="0 0 210 297" aria-hidden="true">
-        <defs>
-          <pattern id="g" width="6" height="6" patternUnits="userSpaceOnUse">
-            <path d="M0 3 Q1.5 0 3 3 T6 3" fill="none" stroke="#000054" stroke-width=".22"/>
-            <path d="M0 3 Q1.5 6 3 3 T6 3" fill="none" stroke="#000054" stroke-width=".22"/>
-            <path d="M3 0 Q0 1.5 3 3 T3 6" fill="none" stroke="#e61e2a" stroke-width=".16"/>
-          </pattern>
-          <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.1"/></filter>
-        </defs>
-        <rect x="8" y="8" width="194" height="281" fill="url(#g)"/>
-        <rect x="13" y="13" width="184" height="271" fill="#fff"/>
-        <rect x="8" y="8" width="194" height="281" fill="none" stroke="#000054" stroke-width=".7"/>
-        <rect x="13" y="13" width="184" height="271" fill="none" stroke="#000054" stroke-width=".35"/>
-        <rect x="15.5" y="15.5" width="179" height="266" fill="none" stroke="#e61e2a" stroke-width=".25"/>
-        <!-- corner pixels -->
-        <g fill="#e61e2a">
-          <rect x="11.5" y="11.5" width="3" height="3"/><rect x="195.5" y="11.5" width="3" height="3"/>
-          <rect x="11.5" y="282.5" width="3" height="3"/><rect x="195.5" y="282.5" width="3" height="3"/>
-        </g>
+      <!-- a double hairline frame, with RMIT's red pixel in each corner -->
+      <svg class="frame" viewBox="0 0 297 210" aria-hidden="true">
+        <rect x="9" y="9" width="279" height="192" fill="none" stroke="#000054" stroke-width=".6"/>
+        <rect x="11.5" y="11.5" width="274" height="187" fill="none" stroke="#b2b2cb" stroke-width=".25"/>
+        <g fill="#e61e2a"><rect x="7.5" y="7.5" width="3" height="3"/><rect x="286.5" y="7.5" width="3" height="3"/><rect x="7.5" y="199.5" width="3" height="3"/><rect x="286.5" y="199.5" width="3" height="3"/></g>
       </svg>
 
       <div class="content">
-        <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
-        <div class="issuer">GCMC Creative Services · Vietnam</div>
+        <div class="top">
+          <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
+          <span class="issuer">GCMC Creative Services · Vietnam</span>
+        </div>
 
-        <div class="authority">By the authority vested in us by the GCMC Demand Tracker</div>
-        <h1>Certificate</h1>
-        <div class="sub">of Onboarding</div>
-
-        <div class="certify">This is to certify that</div>
+        <div class="kicker">Certificate of Onboarding</div>
+        <div class="certify">This certifies that</div>
         <div class="name" id="cName">Nghia</div>
-
+        <div class="rule"></div>
         <p class="body" id="cBody"></p>
-        <div class="score"><span id="cPct">+28 points</span><small id="cOf">28 of 30 correct</small></div>
-        <p class="body tight" id="cBody2"></p>
-        <div class="rank" id="cRank">Fully Onboarded Multimedia Designer</div>
-        <div class="latin" id="cLatin"></div>
 
-        <div class="powers">
-          <p>and is henceforth authorised to</p>
-          <ol>
-            <li>Use RMIT Red in every application, untinted, forever</li>
-            <li>Say “too easy” and “no worries” to Melbourne without irony</li>
-            <li>Attend the Thursday INTON stand-up, fifteen minutes sharp</li>
-            <li>Refuse, firmly and on brand, any request for a blue pixel</li>
-            <li>Put the task code first on every file, email and folder</li>
-            <li>Mark a ticket Done. Twice.</li>
-          </ol>
+        <div class="results">
+          <div><b class="pts" id="cPts">+37</b><span id="cPtsUnit">Points</span></div>
+          <div><b id="cOf">38 / 45</b><span>Right answers</span></div>
+          <div><b class="latin" id="cLatin">Magna Cum Laude</b><span id="cGloss">With great credit</span></div>
         </div>
 
         <div class="signs">
           <div class="sig"><div class="line"></div><b>Nguyễn Tuấn Danh</b><span>Creative Services Lead</span></div>
-          <svg class="seal" viewBox="0 0 120 124" aria-hidden="true">
+          <svg class="seal" viewBox="0 0 120 120" aria-hidden="true">
             <defs>
               <path id="arcTop" d="M16 60 A44 44 0 0 1 104 60"/>
               <path id="arcBot" d="M10.5 60 A49.5 49.5 0 0 0 109.5 60"/>
             </defs>
-            <g fill="#e61e2a">
-              <path d="M38 98 L29 122 L38.5 117 L44 124 L51 102 Z"/>
-              <path d="M82 98 L91 122 L81.5 117 L76 124 L69 102 Z"/>
-            </g>
             <circle cx="60" cy="60" r="56" fill="#000054"/>
-            <circle cx="60" cy="60" r="53" fill="none" stroke="#fff" stroke-width=".6"/>
-            <circle cx="60" cy="60" r="41" fill="none" stroke="#fff" stroke-width=".6"/>
-            <circle cx="60" cy="60" r="39" fill="none" stroke="#fff" stroke-width=".3" stroke-dasharray=".9 1.3"/>
+            <circle cx="60" cy="60" r="52.5" fill="none" stroke="#fff" stroke-width=".6"/>
+            <circle cx="60" cy="60" r="40" fill="none" stroke="#fff" stroke-width=".6"/>
             <g font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="6.6" letter-spacing="1.3" fill="#fff" text-anchor="middle">
               <text><textPath href="#arcTop" startOffset="50%">GCMC · CREATIVE SERVICES</textPath></text>
-              <text><textPath href="#arcBot" startOffset="50%">VIETNAM · CERTIFIED</textPath></text>
+              <text><textPath href="#arcBot" startOffset="50%">VIETNAM · ONBOARDED</textPath></text>
             </g>
             <g fill="#e61e2a"><circle cx="13" cy="60" r="1.6"/><circle cx="107" cy="60" r="1.6"/></g>
-            <text x="60" y="44" text-anchor="middle" font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="4.6" letter-spacing="1.4" fill="#b2b2cb">ONBOARDED</text>
-            <image href="assets/pixel.png" x="48.5" y="48" width="23" height="21.5"/>
-            <text x="60" y="80" text-anchor="middle" font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="5.4" letter-spacing="1.2" fill="#fff" id="sealYear">MMXXVI</text>
+            <image href="assets/pixel.png" x="47" y="42" width="26" height="24.3"/>
+            <text x="60" y="80" text-anchor="middle" font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="6" letter-spacing="1.2" fill="#fff" id="sealYear">2026</text>
           </svg>
           <div class="sig"><div class="line"></div><b>Nguyễn Anh Đức</b><span>Creative &amp; Production Manager</span></div>
         </div>
-        <div class="witness">
-          <svg viewBox="0 0 20 20"><g fill="#000054"><ellipse cx="10" cy="13" rx="4.2" ry="3.6"/><circle cx="4.5" cy="8" r="1.8"/><circle cx="8" cy="5" r="1.8"/><circle cx="12" cy="5" r="1.8"/><circle cx="15.5" cy="8" r="1.8"/></g></svg>
-          Witnessed by Roy (platypus) and Milo (wombat), official mascots, who could not hold a pen
-          <svg viewBox="0 0 20 20"><g fill="#e61e2a"><ellipse cx="10" cy="13" rx="4.2" ry="3.6"/><circle cx="4.5" cy="8" r="1.8"/><circle cx="8" cy="5" r="1.8"/><circle cx="12" cy="5" r="1.8"/><circle cx="15.5" cy="8" r="1.8"/></g></svg>
-        </div>
-
-        <div class="foot">
-          <span>Ref. <b id="cRef">[26.0923.A]</b></span>
-          <span>Issued <b id="cDate">23 September 2026</b></span>
-          <span>Valid until the next rebrand</span>
-          <span>CRICOS 00122A | RTO 3046</span>
-        </div>
+        <div class="foot">Issued <b id="cDate">28 September 2026</b> &nbsp;·&nbsp; Ref. <b id="cRef">[26.0928.N]</b></div>
       </div>
-
-      <div class="stamp" id="stamp"><b>APPROVED</b><span id="stampSub">IN WRITING · 23/09</span></div>
     </div>
   </div></div>
 
@@ -214,18 +159,16 @@
 
       // ---------- wording ----------
       function honours(pct) {
-        if (pct >= 100) return ["Summa Cum Laude", "Flawless. Not a single question escaped."];
         if (pct >= 95) return ["Summa Cum Laude", "With the highest distinction"];
         if (pct >= 80) return ["Magna Cum Laude", "With great credit"];
         if (pct >= 60) return ["Cum Laude", "With credit"];
-        return ["Cum Spiritu Magno", "With great spirit, which also counts"];
+        return ["Cum Spiritu Magno", "With great spirit"];
       }
       function ref(name, d) { // looks like a project code: [yy.mmdd.X]
         let h = 0; for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
         const p = (n) => String(n).padStart(2, "0");
         return `[${String(d.getFullYear()).slice(2)}.${p(d.getMonth() + 1)}${p(d.getDate())}.${String.fromCharCode(65 + (h % 26))}]`;
       }
-      const roman = (n) => [[1000,"M"],[900,"CM"],[500,"D"],[400,"CD"],[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]].reduce((s, [v, r]) => { while (n >= v) { s += r; n -= v; } return s; }, "");
 
       function render(v) {
         // the honours follow the share of right answers; the score shown is the points (one per right answer when none are given)
@@ -233,29 +176,37 @@
         const pts = v.pts != null && !isNaN(v.pts) ? Math.round(v.pts) : c;
         const d = isNaN(v.date) ? new Date() : v.date, name = (v.name || "").trim() || "Candidate";
         const [latin, gloss] = honours(pct);
-        $("cName").textContent = name;
-        $("cBody").textContent = "having completed the onboarding programme in full, and sat the End‑of‑Training Assessment with courage, composure and a strong cup of coffee, achieved a score of";
-        $("cPct").textContent = (pts > 0 ? "+" : pts < 0 ? "−" : "") + Math.abs(pts) + (Math.abs(pts) === 1 ? " point" : " points");
-        $("cOf").textContent = `${c} of ${t} correct`;
-        $("cBody2").textContent = (v.best ? `with particular brilliance in ${v.best}, ` : "") + "and is hereby admitted to the rank of";
-        $("cLatin").innerHTML = ""; $("cLatin").append(latin, Object.assign(document.createElement("small"), { textContent: gloss }));
-        const long = d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
-        $("cDate").textContent = long; $("cRef").textContent = ref(name, d);
-        $("stampSub").textContent = "IN WRITING · " + d.toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit" });
-        $("sealYear").textContent = roman(d.getFullYear());
+        $("cName").textContent = name; fitName();
+        $("cBody").textContent = "has completed the GCMC Creative Services onboarding programme and the End‑of‑Training Assessment"
+          + (v.best ? `, with particular strength in ${v.best}.` : ".");
+        $("cPts").textContent = (pts > 0 ? "+" : pts < 0 ? "−" : "") + Math.abs(pts);
+        $("cPtsUnit").textContent = Math.abs(pts) === 1 ? "Point" : "Points";
+        $("cOf").textContent = `${c} / ${t}`;
+        $("cLatin").textContent = latin; $("cGloss").textContent = gloss;
+        $("cDate").textContent = d.toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" });
+        $("cRef").textContent = ref(name, d);
+        $("sealYear").textContent = d.getFullYear();
         document.title = `Certificate · ${name}`;
+      }
+
+      // a long name steps down until it fits on one line (and only wraps below 36pt)
+      function fitName() {
+        const el = $("cName");
+        let pt = 64;
+        el.style.fontSize = pt + "pt";
+        while (pt > 36 && el.offsetHeight > pt * 1.34 * 1.3) { pt -= 2; el.style.fontSize = pt + "pt"; }
       }
 
       // ---------- modes ----------
       if (real) {
         $("modeTag").textContent = "OFFICIAL"; $("modeTag").style.background = "#fac800"; $("modeTag").style.color = "#000054";
         $("modeText").textContent = "Your certificate"; $("editors").hidden = true;
-        $("hint").textContent = "In the print dialog, choose A4, portrait, margins “None”, and turn on background graphics.";
+        $("hint").textContent = "In the print dialog, choose A4, landscape, margins “None”, and turn on background graphics.";
         render({ name: q.get("n"), c: +q.get("c"), t: +q.get("t"), pts: q.has("pts") ? +q.get("pts") : null, best: q.get("b") || "", date: new Date(q.get("d") || Date.now()) });
       } else {
         const today = new Date(); $("fDate").value = today.toISOString().slice(0, 10);
-        const read = () => render({ name: $("fName").value, c: +$("fC").value, t: +$("fT").value, best: $("fBest").value.trim(), date: new Date($("fDate").value + "T12:00") });
-        ["fName", "fC", "fT", "fBest", "fDate"].forEach((id) => $(id).addEventListener("input", read));
+        const read = () => render({ name: $("fName").value, c: +$("fC").value, t: +$("fT").value, pts: $("fP").value === "" ? null : +$("fP").value, best: $("fBest").value.trim(), date: new Date($("fDate").value + "T12:00") });
+        ["fName", "fC", "fT", "fP", "fBest", "fDate"].forEach((id) => $(id).addEventListener("input", read));
         read();
       }
       $("printBtn").addEventListener("click", () => window.print());
