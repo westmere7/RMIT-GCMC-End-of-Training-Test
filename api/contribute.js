@@ -1,5 +1,5 @@
 // The team's "Submit a question" page. Each person's private link carries their token (?t=…); there's no sign-in.
-// GET  /api/contribute?t=…  -> { name, sent, categories, criticalPenalty }  (nothing from the bank itself)
+// GET  /api/contribute?t=…  -> { name, sent, categories }  (nothing from the bank itself)
 // POST /api/contribute?t=…  -> { ok, id, sent }   body: { question }  → waits in the editor's inbox for review
 const fs = require("fs");
 const path = require("path");
@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
     if (!who) return send(res, 403, { error: "This link isn't active. Ask for a new one." });
     if (req.method === "GET") {
       const st = await settings();
-      return send(res, 200, { name: who.name, sent: await submissions.count(who.token), categories: st.categories || [], criticalPenalty: st.criticalPenalty });
+      return send(res, 200, { name: who.name, sent: await submissions.count(who.token), categories: st.categories || [] });
     }
     if (req.method === "POST") {
       const body = await readJson(req);

@@ -153,6 +153,65 @@ const submissions = {
   },
 };
 
+// ---------- group play: rooms, the people in them, and their answers (migration 005) ----------
+const isDuplicate = (e) => /\b409\b|23505|duplicate key/.test(String(e && e.message));
+const rooms = {
+  async get(code, withPaper) {
+    const cols = "code,host_hash,host_name,host_busy_q,host_seen_at,state,version,updated_at" + (withPaper ? ",paper" : "");
+    const rows = await rest(`assessment_rooms?code=eq.${code}&select=${cols}`);
+    return (rows && rows[0]) || null;
+  },
+  async create(code, hostHash, hostName) {
+    await rest("assessment_rooms", { method: "POST", body: JSON.stringify({ code, host_hash: hostHash, host_name: hostName, state: { phase: "lobby" } }) });
+  },
+  /** Writes the room's state if nobody else did since `version`; null when they did. */
+  async setState(code, version, state, paper) {
+    const body = { state, version: version + 1, updated_at: new Date().toISOString() };
+    if (paper !== undefined) body.paper = paper;
+    const rows = await rest(`assessment_rooms?code=eq.${code}&version=eq.${version}&select=code,host_hash,host_name,host_busy_q,host_seen_at,state,version,updated_at`, {
+      method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(body),
+    });
+    return (rows && rows[0]) || null;
+  },
+  async patchHost(code, patch) {
+    await rest(`assessment_rooms?code=eq.${code}`, { method: "PATCH", body: JSON.stringify(patch) });
+  },
+  async remove(code) {
+    await rest(`assessment_rooms?code=eq.${code}`, { method: "DELETE" });
+  },
+  /** Rooms nobody has touched for two days. */
+  async prune() {
+    await rest(`assessment_rooms?updated_at=lt.${new Date(Date.now() - 2 * 864e5).toISOString()}`, { method: "DELETE" });
+  },
+  async members(code) {
+    return (await rest(`assessment_room_members?room=eq.${code}&select=id,device_hash,name,color,busy_q,seen_at&order=id.asc`)) || [];
+  },
+  /** A new seat; throws with `code: 409` when the colour is taken. */
+  async join(code, deviceHash, name, color) {
+    try {
+      const rows = await rest("assessment_room_members", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ room: code, device_hash: deviceHash, name, color }) });
+      return rows && rows[0];
+    } catch (e) { if (isDuplicate(e)) e.code = 409; throw e; }
+  },
+  async patchMember(code, id, patch) {
+    try { await rest(`assessment_room_members?room=eq.${code}&id=eq.${id}`, { method: "PATCH", body: JSON.stringify(patch) }); }
+    catch (e) { if (isDuplicate(e)) e.code = 409; throw e; }
+  },
+  async removeMember(code, id) {
+    await rest(`assessment_room_members?room=eq.${code}&id=eq.${id}`, { method: "DELETE" });
+  },
+  async answers(code, fromQ) {
+    return (await rest(`assessment_room_answers?room=eq.${code}&qidx=gte.${fromQ}&select=member_id,qidx,response,at&order=qidx.asc`)) || [];
+  },
+  /** The first answer counts: a second one for the same question is ignored. */
+  async answer(code, memberId, qidx, response) {
+    await rest("assessment_room_answers?on_conflict=room,member_id,qidx", {
+      method: "POST", headers: { Prefer: "resolution=ignore-duplicates" },
+      body: JSON.stringify({ room: code, member_id: memberId, qidx, response: response == null ? null : response, at: new Date().toISOString() }),
+    });
+  },
+};
+
 // Question images: WebP files in a public Storage bucket, named by their SHA-256 (the same image is stored once).
 const BUCKET = "assessment-images";
 const MAX_IMAGE = 3 * 1024 * 1024;
@@ -207,4 +266,4 @@ function send(res, code, payload) {
 }
 
 module.exports = { configured, readDoc, writeDoc, insertResult, people, storeImage, MAX_IMAGE, readRaw, readJson, send,
-  isEditor, setEditorKey, contributors, submissions };
+  isEditor, setEditorKey, contributors, submissions, rooms, sha256 };

@@ -59,7 +59,6 @@
     $("sPer").oninput = (e) => { s.questionsPerAttempt = Math.max(A.MIN_PER_ATTEMPT, +e.target.value || 30); markDirty(); renderBank(); };
     $("sPer").onchange = (e) => { e.target.value = s.questionsPerAttempt; }; // below 10 snaps back to 10
     $("sConf").value = s.confettiThreshold == null ? 95 : s.confettiThreshold; $("sConf").oninput = (e) => { s.confettiThreshold = +e.target.value; markDirty(); };
-    $("sPen").value = s.criticalPenalty == null ? 3 : s.criticalPenalty; $("sPen").oninput = (e) => { s.criticalPenalty = Math.max(0, +e.target.value || 0); markDirty(); renderBank(); };
     $("sCritShare").value = A.criticalShareOf(s);
     $("sCritShare").oninput = (e) => { const v = e.target.value; s.criticalShare = v === "" ? 15 : Math.max(0, Math.min(100, +v || 0)); markDirty(); renderBank(); };
     $("sShuffle").checked = !!s.shuffleOptions; $("sShuffle").onchange = (e) => { s.shuffleOptions = e.target.checked; markDirty(); };
@@ -76,10 +75,10 @@
     if (CONTRIB) return;
     const n = D.questions.length, per = A.perAttemptOf(D.settings, n), na = D.questions.filter((q) => q.always).length;
     const cats = new Set(D.questions.map(A.categoryOf));
-    const nc = D.questions.filter((q) => q.critical).length, pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
+    const nc = D.questions.filter((q) => q.critical).length;
     const stat = (v, k, sub) => `<div class="bstat"><b>${v}</b><span>${k}</span>${sub ? `<small>${sub}</small>` : ""}</div>`;
     $("bankStats").innerHTML = stat(n, "Questions in the bank") + stat(cats.size, "Categories") + stat(per, "Per attempt", Math.round((100 * per) / Math.max(1, n)) + "% of the bank")
-      + stat(nc, "Critical", "−" + pen + " marks each if wrong");
+      + stat(nc, "Critical", "points count double");
     const share = A.criticalShareOf(D.settings), want = Math.round((per * share) / 100), k = Math.min(nc, want);
     $("critShareHelp").textContent = `About ${k} of ${per} questions` + (want > nc ? `. Only ${nc} critical ${nc === 1 ? "question is" : "questions are"} in the bank, so that's the most an attempt can have.` : `, picked from the ${nc} critical ones in the bank.`);
     $("perHelp").textContent = `At least ${A.MIN_PER_ATTEMPT}. `
@@ -412,9 +411,8 @@
       box.onchange = () => { if (box.checked) q[key] = true; else delete q[key]; if (after) after(box.checked); markDirty(); refreshRow(q); renderBank(); };
       return el("label.flag." + cls, { title }, box, el("span", { html }));
     };
-    const pen = D.settings.criticalPenalty == null ? 3 : D.settings.criticalPenalty;
     const flags = el("div.flags", {},
-      flag("crit", "critical", `<b>Critical</b> −${pen}`, `A wrong or skipped answer loses ${pen} extra marks`, (on) => card.classList.toggle("critical", on)),
+      flag("crit", "critical", "<b>Critical</b> ×2", "Points count double on this question, right or wrong", (on) => card.classList.toggle("critical", on)),
       CONTRIB ? null : flag("always", "always", "<b>Always in</b>", "Always include: this question is in every attempt, whatever the random draw picks"));
     const type = el("select.input", { id: "qType" });
     for (const [v, l] of TYPES) type.add(new Option(l, v, false, v === q.type));
@@ -892,7 +890,7 @@
       $("edLoadMsg").textContent = e.message;
       return;
     }
-    D = { settings: { categories: info.categories, criticalPenalty: info.criticalPenalty }, questions: [] };
+    D = { settings: { categories: info.categories }, questions: [] };
     $("cHello").textContent = `Hi ${info.name}.`;
     $("cSent").textContent = sentText(info.sent);
     let q = null;

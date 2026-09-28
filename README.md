@@ -5,6 +5,7 @@ A timed onboarding test for GCMC Creative Services. Each attempt draws 30 questi
 - **Test:** `/`
 - **Editor:** `/admin.html#key=…`, a private link (see below). Without its key the editor and its save endpoint refuse access.
 - **Send in a question:** `/contribute.html?t=…`, one private link per team member, made in the editor's Team tab.
+- **Play along:** `/join?r=CODE` (the QR code on the taker's briefing screen), or `/join` and type the room code.
 
 Sign-in is a testing build: any email and any staff ID get in. The first time someone signs in, they're asked for their first name, and it's remembered for next time. The name rides on the meter's needle and appears in the results.
 
@@ -18,6 +19,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
    - views `assessment_leaderboard` (score, time, strongest and weakest category) and `assessment_category_scores` (one row per attempt per category)
    - `assessment_migrations`: which files in `supabase/migrations/` have been applied
    - `assessment_contributors`, `assessment_submissions`, `assessment_secrets`: team links, the questions sent through them, and the editor key's fingerprint
+   - `assessment_rooms`, `assessment_room_members`, `assessment_room_answers`: group play (rooms are deleted two days after they were last used)
    - Storage bucket `assessment-images`: question pictures (public to read, WebP only, 3 MB each)
 
    Row-level security is on with no policies, so only the server can touch the tables.
@@ -61,12 +63,51 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 
 **Preview:** every question has a Preview button (Alt+P) in the editor. It opens the real test page with that question, including unsaved edits. Answer it to check the marking; nothing is saved or sent.
 
+## Points
+
+The score is points, not a percentage.
+
+- **On your own:** +1 for each right answer, 0 for a wrong or skipped one.
+- **With the team in the room:** the taker's points depend on how the team did on that question, and each teammate's on how the taker did. A teammate with no answer by the time the taker submits counts as wrong.
+
+  | Taker | Team | Taker's points |
+  | --- | --- | --- |
+  | Right | everyone wrong | +10 |
+  | Right | some wrong | +2 |
+  | Right | everyone right | +1 |
+  | Wrong | everyone wrong | 0 |
+  | Wrong | some right | −3 |
+  | Wrong | everyone right | −5 |
+
+  | Teammate | Taker | Teammate's points |
+  | --- | --- | --- |
+  | Right | either | +1 |
+  | Wrong | wrong | −5 |
+  | Wrong | right | −10 |
+- **Critical questions count double**, both ways.
+- **Time running out:** the question on screen and any after it score nothing for anyone (they still count as wrong).
+- The meter and the confetti still follow the share of right answers ("Confetti from" in Settings).
+- Each result row's payload stores `points`, `mode` (`solo` or `group`), each answer's points, and in group play `room.people` (everyone's name, colour, points and right answers).
+
 ## Critical questions
 
-- **Tick "Critical"** on any question in the editor. The candidate sees it flagged in red, with the penalty.
+- **Tick "Critical"** on any question in the editor. The candidate sees it flagged in red.
 - **Each attempt is about 15% critical questions** (7 of 45), changeable in Settings under "Critical questions per attempt". It never goes above the number of critical questions in the bank.
-- **A wrong or skipped critical question loses extra marks**: 3 by default, changeable in Settings. The score is (correct − penalties) ÷ questions, never below 0%.
-- **Results list the critical errors.** Each result row in Supabase also stores `criticalErrors`, `marks` and `percent`.
+- **Points count double** on a critical question, right or wrong.
+- **Results list the critical errors.** Each result row in Supabase also stores `criticalErrors`.
+
+## Group play
+
+The test taker's briefing screen opens a room. It shows a QR code, a five-character room code and the `/join` address for laptops.
+
+- **Joining:** teammates scan the QR code (or open `/join` and type the code), then give a name and pick a colour. A colour someone has taken disappears from everyone else's list. The taker can remove anyone from the lobby with ×.
+- **Names stay hidden until the results.** Before then, teammates show up by colour only, in the lobby and during the test. The server doesn't send names out before the end either.
+- **Starting:** with nobody in the room, the test runs on its own, exactly as before. With one or more teammates, Start sends everyone the same paper: the same questions, in the same order, with the same option order. Nobody can join after the start.
+- **During the test:** the taker's screen is the main screen everyone watches. It shows each person as *Thinking…* (nothing picked yet), *Answering…* (picked something, not submitted) or *Answered*, and everyone's points so far. Teammates' screens show only the question, the clock and their own result.
+- **The taker's submit** shows the right answer on every screen, stops the clock, and marks anyone who hasn't answered as wrong. Nobody can answer during that time. Only the taker has **Next**.
+- **Results:** everyone sees the whole room. The taker is on top, then the team, best first, with names. The taker's own screen also has their stats, categories and certificate. Only the taker's attempt is recorded, with the room's scores in it.
+- **Refreshing:** each browser keeps a random device id (in localStorage and sessionStorage), and the room stores only its SHA-256. A refresh, or closing the tab and opening the link again, gets the same seat, colour and answers back. A different browser or a private window counts as a new person. The taker's refresh resumes from the saved attempt.
+- It needs the live site (Supabase). Offline (`server.py`) there's no lobby, and the test runs on its own.
 
 ## Run it locally
 
@@ -87,11 +128,12 @@ Schema changes go in a new numbered file in `supabase/migrations/`, which is the
 
 ## Files
 
-- `index.html`, `assets/app.js`, `assets/meter.js`: the test
+- `index.html`, `assets/app.js`, `assets/meter.js`: the test (and the team's join and answer screens)
+- `assets/group.js`: group play in the browser (the room, device id, colours, points rules, QR code); `assets/qrcode.js` is [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) (MIT)
 - `admin.html`, `assets/admin.js`: the editor
 - `assets/common.js`: shared helpers (answer matching, categories, the random draw)
 - `contribute.html`: the team's page for sending in questions (runs `assets/admin.js` in contribute mode)
-- `api/questions.js`, `api/results.js`, `api/people.js`, `api/images.js`, `api/contribute.js`, `api/submissions.js`, `api/contributors.js`, `api/editor.js`, `api/_store.js`: Vercel functions that talk to Supabase
+- `api/questions.js`, `api/results.js`, `api/people.js`, `api/images.js`, `api/contribute.js`, `api/submissions.js`, `api/contributors.js`, `api/editor.js`, `api/room.js`, `api/_store.js`: Vercel functions that talk to Supabase
 - `scripts/editor-key.js`: makes a new editor key and prints the editor link
 - `dev-server.js`: local server running those same functions, with auto-refresh
 - `server.py`: offline local server, file-based

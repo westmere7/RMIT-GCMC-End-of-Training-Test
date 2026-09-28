@@ -57,6 +57,7 @@
           </div>
           <p class="error-msg" id="loginError" role="alert"></p>
           <button class="btn navy" type="submit" id="loginBtn">Sign in</button>
+          <p class="join-instead">Here to play along with a teammate? <a href="join">Enter a room code</a></p>
           <p class="fineprint">This assessment is for authorised RMIT staff only. Your responses, score and completion time are recorded for your training record.</p>
         </form>
       </div>
@@ -69,12 +70,12 @@
       <header class="sheet-head">
         <div class="sheet-title">
           <p class="eyebrow" id="briefCode">Assessment</p>
-          <h1 id="briefTitle">Before you begin</h1>
+          <h1 id="briefTitle">Ready when you are</h1>
           <p class="lead" id="briefLead"></p>
         </div>
         <dl class="sheet-cand">
-          <div><dt>Candidate</dt><dd id="dCand">—</dd></div>
-          <div><dt>Date of sitting</dt><dd id="dDate">—</dd></div>
+          <div><dt>Playing today</dt><dd id="dCand">—</dd></div>
+          <div><dt>Date</dt><dd id="dDate">—</dd></div>
         </dl>
       </header>
 
@@ -85,28 +86,78 @@
         <div><dt>Attempt</dt><dd id="dAttempt">1</dd></div>
       </dl>
 
+      <!-- group play: the team scans in and answers alongside -->
+      <section class="lobby" id="lobby" hidden aria-labelledby="lobbyTitle">
+        <div class="lobby-join">
+          <div class="qr" id="lobbyQr"></div>
+          <div class="lobby-how">
+            <p class="eyebrow">Play along</p>
+            <h2 id="lobbyTitle">Scan to join the room</h2>
+            <p>The team answers the same questions on their phone or laptop. How they do moves your points, and how you do moves theirs.</p>
+            <p class="lobby-code"><span>Room</span><b id="lobbyCode">·····</b></p>
+            <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a> and type the code.</span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
+          </div>
+        </div>
+        <div class="lobby-room">
+          <div class="lobby-room-head"><h2>In the room <b id="lobbyN">1</b></h2><span id="lobbySub"></span></div>
+          <ul class="players" id="lobbyList"></ul>
+        </div>
+        <div class="lobby-rules" id="lobbyRules"></div>
+      </section>
+
       <div class="sheet-body">
         <section class="conditions">
-          <h2>Conditions</h2>
+          <h2>How it works</h2>
           <ol class="rules">
-            <li><span class="n">01</span><p><b>Timing.</b> The clock can't be paused. It submits at 00:00.</p></li>
-            <li><span class="n">02</span><p><b>Answers.</b> Final once submitted. A skipped question counts as wrong.</p></li>
-            <li><span class="n">03</span><p><b>Written answers.</b> A word or short phrase. Capitals and accents don't matter.</p></li>
-            <li class="crit"><span class="n">04</span><p><b>Critical questions.</b> Marked <span class="crit-chip">Critical</span>. A wrong or skipped answer loses <span id="dPen">3</span> marks. <span id="dCritN"></span></p></li>
-            <li><span class="n">05</span><p><b>Keyboard.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
+            <li><span class="n">01</span><p><b>The clock.</b> It keeps running and hands your answers in at 00:00. With the team in, it pauses while each answer is on show.</p></li>
+            <li><span class="n">02</span><p><b>One go each.</b> An answer is locked in once you submit. Skipping counts as wrong.</p></li>
+            <li><span class="n">03</span><p><b>Typed answers.</b> A word or two is plenty. Capitals and accents don't matter.</p></li>
+            <li><span class="n">04</span><p><b>Points.</b> Right answers earn points. With the team in, what they get right or wrong moves your points too (see <i>How points work</i>).</p></li>
+            <li class="crit"><span class="n">05</span><p><b>Critical questions.</b> Flagged <span class="crit-chip">Critical</span>, they count double. <span id="dCritN"></span></p></li>
+            <li><span class="n">06</span><p><b>Shortcuts.</b> <span class="kbd"><b>A</b>–<b>F</b></span> to choose, <span class="kbd"><b>Enter</b></span> to submit.</p></li>
           </ol>
         </section>
 
         <aside class="declaration">
-          <h2>Declaration</h2>
-          <label class="confirm"><input type="checkbox" id="agree"> <span>I'm doing this on my own, with no notes open.</span></label>
-          <div class="signature">
-            <div><span id="dSign">—</span><small>Candidate</small></div>
-            <div><span id="dSignDate">—</span><small>Date</small></div>
-          </div>
-          <button class="btn" id="startBtn" disabled>Start assessment <span aria-hidden="true">→</span></button>
-          <p class="fineprint">Your result is saved to your training record.</p>
+          <h2>All set?</h2>
+          <p>No trick questions, just what you've picked up so far. Missed something? That's what the results are for.</p>
+          <label class="confirm"><input type="checkbox" id="agree"> <span>I'll answer from memory: no notes, no peeking.</span></label>
+          <button class="btn" id="startBtn" disabled><span id="startLabel">Start assessment</span> <span aria-hidden="true">→</span></button>
+          <p class="error-msg" id="startError" role="alert"></p>
+          <p class="fineprint">Your result goes to your training record. You can retake it any time.</p>
         </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- joining someone's test (from the QR code) -->
+  <section class="screen" id="scrJoin" hidden>
+    <div class="container join">
+      <div class="card join-card">
+        <p class="eyebrow">Room <span id="joinCode"></span></p>
+        <h1 id="joinTitle">Join the test</h1>
+        <p class="lead" id="joinLead"></p>
+        <form id="codeForm" class="code-form" novalidate hidden>
+          <input class="input code-input" id="codeInput" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCDE" aria-label="Room code">
+          <p class="error-msg" id="codeError" role="alert"></p>
+          <button class="btn navy" type="submit">Join</button>
+        </form>
+        <a class="btn ghost" id="joinAgain" href="join" hidden>Enter a different code</a>
+        <form id="joinForm" novalidate hidden>
+          <div class="field"><label for="joinName">Your name</label><input class="input" id="joinName" maxlength="24" autocomplete="given-name" placeholder="What should we call you?"></div>
+          <fieldset class="field colours"><legend>Pick a colour</legend><div class="swatches" id="joinSwatches" role="radiogroup" aria-label="Colour"></div><p class="hint" id="joinHint"></p></fieldset>
+          <p class="error-msg" id="joinError" role="alert"></p>
+          <button class="btn navy" type="submit" id="joinBtn">Join the room</button>
+        </form>
+        <div class="join-wait" id="joinWait" hidden>
+          <div class="me-badge" id="joinMe"><span class="avatar"></span><b></b></div>
+          <p id="joinWaitText"></p>
+          <div class="join-actions"><button type="button" class="btn ghost small" id="joinChange">Change name or colour</button><button type="button" class="btn quiet" id="joinLeave">Leave</button></div>
+        </div>
+        <div class="join-room" id="joinRoom" hidden>
+          <h2>In the room <b id="joinN">1</b></h2>
+          <ul class="players" id="joinList"></ul>
+        </div>
       </div>
     </div>
   </section>
@@ -134,6 +185,7 @@
           <div class="q-actions">
             <button class="btn" id="submitBtn" disabled>Submit answer</button>
             <button class="btn quiet" id="skipBtn">Skip question</button>
+            <button class="btn navy" id="nextBtn" hidden><span id="nextLabel">Next question</span> <span aria-hidden="true">→</span></button>
             <span class="status" id="qStatus"><span class="kbd">Press <b>Enter</b> to submit</span></span>
           </div>
         </div>
@@ -144,6 +196,10 @@
           <div class="clock"><span class="digits" id="digits">10:00</span></div>
           <div class="t-track"><i id="tFill"></i></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
+        </div>
+        <div class="card players-card" id="playersCard" hidden>
+          <p class="eyebrow">In the room</p>
+          <ul class="players compact" id="playersList"></ul>
         </div>
         <div class="card progress-card">
           <p class="eyebrow">Answer sheet</p>
@@ -169,25 +225,31 @@
           <div class="res-tags"><span class="badge" id="resBadge" hidden>Distinction</span><span class="zone-tag" id="resZone">Too close to call</span><span class="zone-tag bad" id="resCrit" hidden></span></div>
         </div>
         <div class="res-score">
-          <span class="pct"><span id="resPct">0</span><small>%</small></span>
+          <span class="pct"><span id="resPts">0</span><small id="resPtsUnit">points</small></span>
           <span class="of" id="resOf">0 of 30 correct</span>
           <div class="res-strip" id="resStrip" aria-label="Every answer, in order"></div>
           <span class="strip-legend"><i class="ok"></i>Right <i class="no"></i>Wrong <i class="skip"></i>Skipped</span>
         </div>
       </div>
 
+      <!-- everyone in the room -->
+      <div class="card room-card" id="roomCard" hidden>
+        <div class="card-head"><h2>The room</h2><span class="sub" id="roomSub"></span></div>
+        <div class="room-board" id="roomBoard"></div>
+      </div>
+
       <!-- quick stats -->
-      <div class="res-stats">
+      <div class="res-stats" id="resStats">
         <div class="stat"><span class="k">Time used</span><span class="v" id="sTime">0:00</span><span class="s" id="sTimeSub"></span></div>
         <div class="stat"><span class="k">Per question</span><span class="v" id="sAvg">0s</span><span class="s">average</span></div>
         <div class="stat"><span class="k">Longest streak</span><span class="v" id="sStreak">0</span><span class="s">correct in a row</span></div>
-        <div class="stat"><span class="k">Categories aced</span><span class="v" id="sAced">0</span><span class="s" id="sAcedSub">of 0 at 100%</span></div>
+        <div class="stat"><span class="k">Categories aced</span><span class="v" id="sAced">0</span><span class="s" id="sAcedSub">of 0 with every answer right</span></div>
       </div>
 
       <!-- per category -->
-      <div class="res-grid">
+      <div class="res-grid" id="resGrid">
         <div class="card cat-card">
-          <div class="card-head"><h2>By category</h2><span class="sub">Correct answers in each part of your onboarding</span></div>
+          <div class="card-head"><h2>By category</h2><span class="sub">Right answers in each part of your onboarding</span></div>
           <div id="catList" class="cat-list"></div>
         </div>
         <div class="card insight-card">
@@ -200,7 +262,7 @@
       <!-- review -->
       <div class="card review">
         <div class="card-head">
-          <h2>Your answers</h2>
+          <h2 id="reviewTitle">Your answers</h2>
           <div class="tabs" role="tablist">
             <button role="tab" class="tab" id="tabWrong" aria-selected="true">To revisit <b id="nWrong">0</b></button>
             <button role="tab" class="tab" id="tabAll" aria-selected="false">All <b id="nAll">0</b></button>
@@ -215,6 +277,8 @@
   <canvas id="confetti" hidden></canvas>
 
   <script src="assets/common.js"></script>
+  <script src="assets/qrcode.js"></script>
+  <script src="assets/group.js"></script>
   <script src="assets/meter.js"></script>
   <script src="assets/app.js"></script>
 </body>

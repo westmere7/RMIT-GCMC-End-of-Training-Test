@@ -26,5 +26,11 @@
     "api/contribute.js": {
       "includeFiles": "data/questions.json"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/join",
+      "destination": "/index.html"
+    }
+  ]
 }

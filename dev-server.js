@@ -49,7 +49,7 @@ http.createServer((req, res) => {
     delete require.cache[require.resolve(file)]; // pick up edits without a restart
     return Promise.resolve(require(file)(req, res)).catch((e) => { res.writeHead(500); res.end(JSON.stringify({ error: String(e) })); });
   }
-  const file = path.normalize(path.join(ROOT, p === "/" ? "index.html" : p));
+  const file = path.normalize(path.join(ROOT, p === "/" || p === "/join" ? "index.html" : p)); // /join: same rewrite as vercel.json
   if (!file.startsWith(ROOT) || /[\\/]\.(env|git)/.test(file)) { res.writeHead(403); return res.end("Forbidden"); }
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end("Not found"); }
