@@ -49,32 +49,21 @@
 
   // ---------- points ----------
   // The taker's points depend on how the rest of the room did; each member's on how the taker did.
+  // The taker's run between two ends, by the share of the team that got it wrong: right, +1 (the whole team right too)
+  // up to +10 (the whole team wrong); wrong, −5 (the whole team right) up to 0 (the whole team wrong too). In between,
+  // each teammate who got it wrong is worth the same, so a bigger room doesn't change what a taker scores on average.
+  // Teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker was wrong too.
   // Critical questions count double, both ways. With nobody else in the room, a right answer is +1 and a wrong one 0.
   const RULES = {
-    taker: [
-      { right: true, others: "wrong", pts: 10, text: "Right, and everyone else got it wrong" },
-      { right: true, others: "some", pts: 2, text: "Right, and some others got it wrong" },
-      { right: true, others: "right", pts: 1, text: "Right, and so did everyone else" },
-      { right: false, others: "wrong", pts: 0, text: "Wrong, and so was everyone else" },
-      { right: false, others: "some", pts: -3, text: "Wrong, and some others got it right" },
-      { right: false, others: "right", pts: -5, text: "Wrong, and everyone else got it right" },
-    ],
-    member: [
-      { right: true, pts: 1, text: "Right, whatever the taker answered" },
-      { right: false, taker: false, pts: -5, text: "Wrong, and so was the taker" },
-      { right: false, taker: true, pts: -10, text: "Wrong, but the taker got it right" },
-    ],
+    taker: { right: { allRight: 1, allWrong: 10 }, wrong: { allRight: -5, allWrong: 0 } },
+    member: { right: 1, wrongTakerRight: -3, wrongTakerWrong: -2 },
   };
   /** Points for one question. takerRight: bool; memberRights: bools (an unanswered member counts as wrong). */
   function points(critical, takerRight, memberRights) {
-    const k = critical ? 2 : 1, n = memberRights.length, r = memberRights.filter(Boolean).length;
-    let t;
-    if (!n) t = takerRight ? 1 : 0;
-    else {
-      const others = r === n ? "right" : r === 0 ? "wrong" : "some";
-      t = RULES.taker.find((x) => x.right === !!takerRight && x.others === others).pts;
-    }
-    return { taker: t * k, members: memberRights.map((ok) => (ok ? 1 : takerRight ? -10 : -5) * k) };
+    const k = critical ? 2 : 1, n = memberRights.length, share = n ? memberRights.filter((x) => !x).length / n : 0;
+    const ends = takerRight ? RULES.taker.right : RULES.taker.wrong, M = RULES.member;
+    const t = !n ? (takerRight ? 1 : 0) : Math.round(ends.allRight + (ends.allWrong - ends.allRight) * share) || 0;
+    return { taker: t * k, members: memberRights.map((ok) => (ok ? M.right : takerRight ? M.wrongTakerRight : M.wrongTakerWrong) * k) };
   }
   const signed = (n) => (n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0");
 

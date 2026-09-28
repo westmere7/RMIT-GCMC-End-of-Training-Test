@@ -73,17 +73,21 @@ The score is points, not a percentage.
   | Taker | Team | Taker's points |
   | --- | --- | --- |
   | Right | everyone wrong | +10 |
-  | Right | some wrong | +2 |
+  | Right | some wrong | +2 to +9: the bigger the share who got it wrong, the more (1 + 9 × share, rounded) |
   | Right | everyone right | +1 |
   | Wrong | everyone wrong | 0 |
-  | Wrong | some right | −3 |
+  | Wrong | some right | −4 to −1: the bigger the share who got it right, the more it costs (−5 + 5 × share wrong, rounded) |
   | Wrong | everyone right | −5 |
+
+  Because each teammate counts the same, a bigger room doesn't change what a taker scores on average (see `node tests/simulate.js`).
 
   | Teammate | Taker | Teammate's points |
   | --- | --- | --- |
   | Right | either | +1 |
-  | Wrong | wrong | −5 |
-  | Wrong | right | −10 |
+  | Wrong | wrong | −2 |
+  | Wrong | right | −3 |
+
+  A teammate who gets about 70% right ends up around zero; better than that gains, worse loses.
 - **Critical questions count double**, both ways.
 - **Time running out:** the question on screen and any after it score nothing for anyone (they still count as wrong).
 - The meter and the confetti still follow the share of right answers ("Confetti from" in Settings).

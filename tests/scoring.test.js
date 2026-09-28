@@ -6,40 +6,46 @@ const { load, rng, sit, stats } = require("./load");
 const { A, G, Meter } = load();
 const N = 45, CRIT = 9; // the live settings: 45 questions an attempt, 20% of them critical
 
-// ---------- the rules, exactly as specified ----------
-test("taker: the six cases", () => {
+// ---------- the rules ----------
+test("taker: the ends of each range", () => {
   const T = (right, team) => G.points(false, right, team).taker;
-  assert.equal(T(false, [true, true]), -5, "wrong, all others right");
-  assert.equal(T(false, [false, false]), 0, "wrong, all others wrong");
-  assert.equal(T(false, [true, false]), -3, "wrong, some others wrong");
-  assert.equal(T(true, [true, true]), 1, "right, all others right");
-  assert.equal(T(true, [false, false]), 10, "right, all others wrong");
-  assert.equal(T(true, [false, true]), 2, "right, some others wrong");
+  assert.equal(T(true, [false, false, false]), 10, "right, the whole team wrong");
+  assert.equal(T(true, [true, true, true]), 1, "right, the whole team right too");
+  assert.equal(T(false, [false, false, false]), 0, "wrong, the whole team wrong too");
+  assert.equal(T(false, [true, true, true]), -5, "wrong, the whole team right");
 });
 
-test("taker: with one teammate it's always 'all' one way or the other", () => {
+test("taker: in between, each teammate who got it wrong is worth the same", () => {
+  const T = (right, wrongOf3) => G.points(false, right, [0, 1, 2].map((i) => i >= wrongOf3)).taker;
+  assert.deepEqual([0, 1, 2, 3].map((w) => T(true, w)), [1, 4, 7, 10], "right: +3 for each of 3 teammates who missed it");
+  assert.deepEqual([0, 1, 2, 3].map((w) => T(false, w)), [-5, -3, -2, 0], "wrong: less of a loss for each one who missed it too");
+  assert.equal(G.points(false, true, [true, false]).taker, 6, "1 of 2 wrong: halfway, rounded");
+  assert.equal(G.points(false, false, [true, false]).taker, -2);
+});
+
+test("taker: with one teammate it's one end or the other", () => {
   assert.equal(G.points(false, true, [true]).taker, 1);
   assert.equal(G.points(false, true, [false]).taker, 10);
   assert.equal(G.points(false, false, [true]).taker, -5);
   assert.equal(G.points(false, false, [false]).taker, 0);
 });
 
-test("teammates: the four cases", () => {
+test("teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker didn't", () => {
   const M = (right, takerRight) => G.points(false, takerRight, [right]).members[0];
-  assert.equal(M(false, true), -10, "wrong, taker right");
-  assert.equal(M(false, false), -5, "wrong, taker wrong");
-  assert.equal(M(true, true), 1, "right, taker right");
-  assert.equal(M(true, false), 1, "right, taker wrong");
+  assert.equal(M(true, true), 1);
+  assert.equal(M(true, false), 1);
+  assert.equal(M(false, true), -3);
+  assert.equal(M(false, false), -2);
 });
 
 test("each teammate is scored on their own answer", () => {
-  assert.deepEqual([...G.points(false, true, [true, false, true]).members], [1, -10, 1]);
-  assert.deepEqual([...G.points(false, false, [false, true]).members], [-5, 1]);
+  assert.deepEqual([...G.points(false, true, [true, false, true]).members], [1, -3, 1]);
+  assert.deepEqual([...G.points(false, false, [false, true]).members], [-2, 1]);
 });
 
 test("critical questions double everything, both ways", () => {
   for (const takerRight of [true, false])
-    for (const team of [[true, true], [false, false], [true, false], [true], [false]]) {
+    for (const team of [[true, true], [false, false], [true, false], [true], [false], [true, false, false]]) {
       const plain = G.points(false, takerRight, team), crit = G.points(true, takerRight, team);
       assert.equal(crit.taker, plain.taker * 2);
       assert.deepEqual([...crit.members], [...plain.members].map((x) => x * 2));
@@ -53,27 +59,39 @@ test("on your own: +1 right, 0 wrong (×2 when critical)", () => {
   assert.equal(G.points(true, false, []).taker, 0);
 });
 
-test("the rules table shown on the start page matches the scoring", () => {
-  for (const r of G.RULES.taker) {
-    const team = r.others === "right" ? [true, true] : r.others === "wrong" ? [false, false] : [true, false];
-    assert.equal(G.points(false, r.right, team).taker, r.pts, r.text);
-  }
-  for (const r of G.RULES.member) {
-    const takers = r.right ? [true, false] : [r.taker];
-    for (const t of takers) assert.equal(G.points(false, t, [r.right]).members[0], r.pts, r.text);
-  }
+test("the numbers on the start page are the ones the scoring uses", () => {
+  const { taker: T, member: M } = G.RULES;
+  assert.equal(G.points(false, true, [false, false]).taker, T.right.allWrong);
+  assert.equal(G.points(false, true, [true, true]).taker, T.right.allRight);
+  assert.equal(G.points(false, false, [false, false]).taker, T.wrong.allWrong);
+  assert.equal(G.points(false, false, [true, true]).taker, T.wrong.allRight);
+  assert.equal(G.points(false, true, [true]).members[0], M.right);
+  assert.equal(G.points(false, true, [false]).members[0], M.wrongTakerRight);
+  assert.equal(G.points(false, false, [false]).members[0], M.wrongTakerWrong);
 });
 
-test("per question, points stay within −5…+10 (taker) and −10…+1 (teammate), doubled when critical", () => {
+test("per question, points stay within −5…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
   for (const critical of [false, true])
     for (const takerRight of [true, false])
       for (let size = 1; size <= 8; size++)
         for (let mask = 0; mask < 1 << size; mask++) {
           const team = [...Array(size)].map((_, i) => !!(mask & (1 << i))), k = critical ? 2 : 1;
           const p = G.points(critical, takerRight, team);
+          assert.ok(Number.isInteger(p.taker) && !Object.is(p.taker, -0));
           assert.ok(p.taker >= -5 * k && p.taker <= 10 * k);
-          for (const m of p.members) assert.ok(m >= -10 * k && m <= 1 * k);
+          for (const m of p.members) assert.ok(m >= -3 * k && m <= 1 * k);
         }
+});
+
+test("more teammates getting it wrong never lowers the taker's points", () => {
+  for (const takerRight of [true, false])
+    for (let size = 1; size <= 8; size++) {
+      let last = -Infinity;
+      for (let wrong = 0; wrong <= size; wrong++) {
+        const t = G.points(false, takerRight, [...Array(size)].map((_, i) => i >= wrong)).taker;
+        assert.ok(t >= last); last = t;
+      }
+    }
 });
 
 // ---------- the meter ----------
@@ -138,4 +156,20 @@ test("simulated: a good taker (80%) comes out ahead with a room of any size", ()
     const st = stats(simulate({ taker: 0.8, team: Array(size).fill(0.7) }).map((s) => s.takerPoints));
     assert.ok(st.p5 > 0, `team of ${size}: 5th percentile ${st.p5}`);
   }
+});
+
+test("simulated: the size of the room barely changes what a taker scores on average", () => {
+  for (const taker of [0.6, 0.8, 0.95]) {
+    const means = [1, 2, 3, 6].map((size) => stats(simulate({ taker, team: Array(size).fill(0.7) }).map((s) => s.takerPoints)).mean);
+    const lo = Math.min(...means), hi = Math.max(...means);
+    // within about a dozen points (whole-number rounding of the in-between cases); it used to swing 119 vs 45
+    assert.ok(hi - lo <= Math.max(12, 0.1 * hi), `taker ${taker * 100}%: ${means.map((m) => m.toFixed(0)).join(" / ")}`);
+  }
+});
+
+test("simulated: teammates land either side of zero (a typical teammate breaks even)", () => {
+  const mean = (p) => stats(simulate({ taker: 0.8, team: [p, 0.7, 0.7] }).map((s) => s.memberPoints[0])).mean;
+  assert.ok(mean(0.5) < 0, "a weak teammate loses points");
+  assert.ok(Math.abs(mean(0.7)) < 20, `a 70% teammate is around zero (${mean(0.7).toFixed(0)})`);
+  assert.ok(mean(0.85) > 0, "a strong teammate gains");
 });

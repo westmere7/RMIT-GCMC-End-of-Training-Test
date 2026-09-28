@@ -241,20 +241,21 @@
   // the points rules, grouped by "you got it right / wrong", with the points first so they scan at a glance
   function pointsHtml() {
     const name = esc(S.name || "the taker");
-    const taker = (right, others) => G.RULES.taker.find((r) => r.right === right && r.others === others).pts;
-    const member = (right, takerRight) => G.RULES.member.find((r) => r.right === right && (right || r.taker === takerRight)).pts;
-    const line = (pts, text) => `<li><b class="${pts > 0 ? "up" : pts < 0 ? "down" : ""}">${G.signed(pts)}</b><span>${text}</span></li>`;
+    const T = G.RULES.taker, M = G.RULES.member;
+    // a range, for "some of the team": the points between the two ends
+    const between = (a, b) => { const lo = Math.min(a, b) + 1, hi = Math.max(a, b) - 1; return lo === hi ? G.signed(lo) : `${G.signed(lo)}…${G.signed(hi)}`; };
+    const line = (pts, text, shown) => `<li><b class="${pts > 0 ? "up" : pts < 0 ? "down" : ""}${shown ? " range" : ""}">${shown || G.signed(pts)}</b><span>${text}</span></li>`;
     const group = (ok, lines) => `<div class="pts-group"><h4 class="${ok ? "y" : "n"}">${ok ? "Right" : "Wrong"}</h4><ul>${lines.join("")}</ul></div>`;
     return `<h2 class="pts-title">How points work</h2>
       <div class="pts-who">
         <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>${name}</h3>
-        ${group(true, [line(taker(true, "wrong"), "the whole team got it wrong"), line(taker(true, "some"), "some of the team got it wrong"), line(taker(true, "right"), "the whole team got it right too")])}
-        ${group(false, [line(taker(false, "wrong"), "the whole team got it wrong too"), line(taker(false, "some"), "some of the team got it right"), line(taker(false, "right"), "the whole team got it right")])}
+        ${group(true, [line(T.right.allWrong, "the whole team got it wrong"), line(1, "some of the team got it wrong<small>the more of them, the more points</small>", between(T.right.allRight, T.right.allWrong)), line(T.right.allRight, "the whole team got it right too")])}
+        ${group(false, [line(T.wrong.allWrong, "the whole team got it wrong too"), line(-1, "some of the team got it right<small>the more of them, the more it costs</small>", between(T.wrong.allRight, T.wrong.allWrong)), line(T.wrong.allRight, "the whole team got it right")])}
       </div>
       <div class="pts-who">
         <h3><span class="team-dots" aria-hidden="true"><i></i><i></i><i></i></span>Everyone else</h3>
-        ${group(true, [line(member(true, true), "always")])}
-        ${group(false, [line(member(false, false), `${name} got it wrong too`), line(member(false, true), `${name} got it right`)])}
+        ${group(true, [line(M.right, "always")])}
+        ${group(false, [line(M.wrongTakerWrong, `${name} got it wrong too`), line(M.wrongTakerRight, `${name} got it right`)])}
       </div>
       <p class="pts-foot"><span class="crit-chip">Critical</span> questions count double. No answer by the time ${name} submits counts as wrong.</p>`;
   }

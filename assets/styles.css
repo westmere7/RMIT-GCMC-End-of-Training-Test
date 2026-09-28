@@ -966,8 +966,10 @@ html.joiner .q-card { min-height: 0; }
 .pts-group h4.y { color: var(--ok); } .pts-group h4.y::before { content: "✓"; background: var(--ok); }
 .pts-group h4.n { color: var(--red-dark); } .pts-group h4.n::before { content: "✕"; background: var(--red); font-size: 10px; }
 .pts-group ul { list-style: none; margin: 0; padding: 0; }
-.pts-group li { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 4px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--body); }
-.pts-group li b { font-family: var(--display); font-size: 21px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+.pts-group li { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 4px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--body); }
+.pts-group li b { font-family: var(--display); font-size: 21px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; letter-spacing: -0.02em; }
+.pts-group li b.range { font-size: 16px; }
+.pts-group li small { display: block; font-size: 12px; color: var(--muted); }
 .av { --c: var(--navy); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: #fff; font-family: var(--display); font-size: 12px; }
 .team-dots { display: inline-flex; }
 .team-dots i { width: 18px; height: 18px; border-radius: 50%; margin-right: -7px; box-shadow: 0 0 0 2px #fff; background: #2563eb; }
