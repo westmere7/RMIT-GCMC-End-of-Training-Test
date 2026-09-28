@@ -731,6 +731,9 @@
     const hard = (q.critical && !correct) || (!S.lastJolt && Math.random() < 0.25);
     S.lastJolt = hard; save();
     if (hard) meter.jolt(correct ? 1 : -1); else meter.kick(correct ? 1 : -1);
+    // the glow behind the meter flashes green or red (restarted, so two answers in a row both flash)
+    const card = $("meter").closest(".meter-card");
+    card.classList.remove("flash-ok", "flash-no"); void card.offsetWidth; card.classList.add(correct ? "flash-ok" : "flash-no");
     showVerdict(q, S.index, meterInfo(S.index));
   }
   $("submitBtn").addEventListener("click", () => submit(false));
