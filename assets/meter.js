@@ -260,31 +260,39 @@
     })();
 
     // the rest of the room: a small mark each on the arc (their colour and initial), linked to a name badge. Badges never
-    // overlap each other, the taker's tag or the award label: each takes the first free spot, trying further out from the
-    // arc and then inside it, and keeps its spot while it stays free, so they don't jump about
+    // overlap each other, the taker's tag, the needle or the award label: each takes the nearest free spot. What they
+    // avoid only moves when an answer lands (never with the needle's wobble), so the badges stay put in between
     if (this.marks.length) {
       const r = this.compact ? 7 : 10, fs = this.compact ? 10 : 12, bh = this.compact ? 18 : 22;
       const boxes = [], hit = (b) => boxes.some((o) => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
-      if (tag) boxes.push({ x: tag.x - tag.pw / 2 - 4, y: tag.y - tag.ph / 2 - 4, w: tag.pw + 8, h: tag.ph + 14 });
+      // the taker's tag and needle are avoided where the needle settles, not where it wobbles to, with room for the
+      // wobble: otherwise a nearby badge would hop back and forth with every flick
+      const rest = this.aim(this.p) * S, [rtx, rty] = pt(rest, rr + lw / 2 + 12), wob = 14;
+      if (tag) {
+        const x = Math.max(tag.pw / 2 + 4, Math.min(w - tag.pw / 2 - 4, rtx)), y = Math.max(tag.ph / 2 + 2, rty - 20);
+        boxes.push({ x: x - tag.pw / 2 - wob, y: y - tag.ph / 2 - 6, w: tag.pw + 2 * wob, h: tag.ph + 16 });
+      }
       { const mid = (zs + S) / 2, [lx, ly] = pt(mid, rr + lw / 2 + (this.compact ? 16 : 20)); boxes.push({ x: lx - 38, y: ly - 13, w: 76, h: 26 }); }
       { // and the needle itself, from the bead down to where it fades out
-        const [ix, iy] = pt(this.theta, rr - drop * 0.3), pad = lw / 2 + 4;
-        boxes.push({ x: Math.min(hx, ix) - pad, y: Math.min(hy, iy) - pad, w: Math.abs(hx - ix) + 2 * pad, h: Math.abs(hy - iy) + 2 * pad });
+        const [ix, iy] = pt(rest, rr - drop * 0.3), [sx, sy] = pt(rest, rr), pad = lw / 2 + wob;
+        boxes.push({ x: Math.min(sx, ix) - pad, y: Math.min(sy, iy) - pad, w: Math.abs(sx - ix) + 2 * pad, h: Math.abs(sy - iy) + 2 * pad });
       }
-      const rings = [0, 1, 2, 3, -1, -2]; // outwards from the arc first, then inside it
+      // spots to try, nearest first: rows outwards from the arc, each also a step or two to either side (a crowd at the
+      // same reading fans out sideways instead of stacking off the top), then rows inside the arc
+      const spots = [];
+      for (const ring of [0, 1]) for (const side of [0, -1, 1, -2, 2]) spots.push([ring, side]);
+      for (const ring of [-1, -2]) for (const side of [0, -1, 1]) spots.push([ring, side]);
       g.font = `700 ${fs}px ` + TEXT;
       for (const m of [...this.marks].sort((x, y) => x.a - y.a)) {
         const a = Math.max(-S, Math.min(S, m.a)), [mx, my] = pt(a, rr), bw = g.measureText(m.name || "").width + 18;
-        const at = (ring) => {
+        const at = ([ring, side]) => {
           const d = ring >= 0 ? rr + lw / 2 + bh / 2 + 10 + ring * (bh + 5) : rr - lw / 2 - 28 - (-ring - 1) * (bh + 5) - bh / 2;
-          const [x0, y0] = pt(a, d);
-          return { x: Math.max(4, Math.min(w - bw - 4, x0 - bw / 2)), y: Math.max(2, Math.min(this.h - bh - 2, y0 - bh / 2)), w: bw, h: bh };
+          const [x0, y0] = pt(a, d), x = x0 - bw / 2 + side * (bw + 6);
+          return { x: Math.max(4, Math.min(w - bw - 4, x)), y: Math.max(2, Math.min(this.h - bh - 2, y0 - bh / 2)), w: bw, h: bh };
         };
         let box = null;
-        for (const ring of m.ring != null ? [m.ring, ...rings.filter((x) => x !== m.ring)] : rings) {
-          const b = at(ring); if (!hit(b)) { box = b; m.ring = ring; break; }
-        }
-        if (!box) box = at(m.ring != null ? m.ring : 0); // nowhere free (a very full room): the last spot it had
+        for (const spot of spots) { const b = at(spot); if (!hit(b)) { box = b; m.spot = spot; break; } }
+        if (!box) box = at(m.spot || spots[0]); // nowhere free (a very full room): the last spot it had
         boxes.push(box);
         const bx0 = box.x + box.w / 2, by0 = box.y + box.h / 2;
         // the link from the mark to its badge

@@ -16,7 +16,7 @@
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; }
-    body { background: var(--grey); font-family: var(--text); color: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { background: radial-gradient(900px 520px at 6% -10%, rgba(110, 70, 255, 0.45), transparent 62%), radial-gradient(760px 520px at 106% 4%, rgba(230, 30, 42, 0.38), transparent 60%), #07074a; background-attachment: fixed; font-family: var(--text); color: var(--body); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     /* ---------- toolbar (screen only) ---------- */
     .bar { position: sticky; top: 0; z-index: 5; background: var(--navy); color: #fff; display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 12px 24px; font-size: 13px; }
@@ -29,7 +29,8 @@
     .bar .spacer { flex: 1; }
     #editors { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
     [hidden] { display: none !important; }
-    .bar button, .bar a { font: inherit; font-weight: 700; border: 0; border-radius: 3px; padding: 9px 16px; background: var(--red); color: #fff; cursor: pointer; text-decoration: none; }
+    .bar button, .bar a { font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 9px 18px; background: var(--red); color: #fff; cursor: pointer; text-decoration: none; box-shadow: 0 4px 0 #9c0f18; }
+    .bar button:active { transform: translateY(3px); box-shadow: 0 1px 0 #9c0f18; }
     .bar a { background: transparent; border: 1px solid rgba(255,255,255,.35); }
     .hint { color: var(--navy-30); font-size: 12px; width: 100%; margin: -4px 0 0; }
 
@@ -38,7 +39,7 @@
     .scaler { transform-origin: top center; }
     .page {
       width: 297mm; height: 210mm; background: #fff; position: relative; overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,84,.08), 0 24px 60px -20px rgba(0,0,84,.35);
+      box-shadow: 0 10px 0 rgba(0,0,40,.35), 0 40px 90px -30px rgba(0,0,0,.8); border-radius: 6px;
     }
     .frame { position: absolute; inset: 0; width: 100%; height: 100%; }
     .content { position: absolute; inset: 20mm 26mm 17mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -77,7 +78,7 @@
       .bar { display: none; }
       .stage { padding: 0; display: block; }
       .scaler { transform: none !important; height: auto !important; width: auto !important; }
-      .page { box-shadow: none; }
+      .page { box-shadow: none; border-radius: 0; }
     }
   </style>
 </head>
@@ -113,7 +114,7 @@
           <span class="issuer">GCMC Creative Services · Vietnam</span>
         </div>
 
-        <div class="kicker">Certificate of Onboarding</div>
+        <div class="kicker">Achievement unlocked · Certificate of Onboarding</div>
         <div class="certify">This certifies that</div>
         <div class="name" id="cName">Nghia</div>
         <div class="rule"></div>
@@ -177,7 +178,7 @@
         const d = isNaN(v.date) ? new Date() : v.date, name = (v.name || "").trim() || "Candidate";
         const [latin, gloss] = honours(pct);
         $("cName").textContent = name; fitName();
-        $("cBody").textContent = "has completed the GCMC Creative Services onboarding programme and the End‑of‑Training Assessment"
+        $("cBody").textContent = "has cleared GCMC Creative Services onboarding and taken on the Onboarding Challenge"
           + (v.best ? `, with particular strength in ${v.best}.` : ".");
         $("cPts").textContent = (pts > 0 ? "+" : pts < 0 ? "−" : "") + Math.abs(pts);
         $("cPtsUnit").textContent = Math.abs(pts) === 1 ? "Point" : "Points";

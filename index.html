@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>End-of-Training Assessment · RMIT</title>
+  <title>Onboarding Challenge · RMIT</title>
   <link rel="icon" href="assets/pixel.png">
   <link rel="stylesheet" href="assets/styles.css">
 </head>
@@ -11,7 +11,7 @@
   <header class="topbar">
     <img src="assets/rmit-logo-white.png" alt="RMIT University">
     <span class="divider"></span>
-    <div class="portal">Staff Assessment Portal<small id="topSubtitle">GCMC Creative Services · Vietnam</small></div>
+    <div class="portal">Onboarding Challenge<small id="topSubtitle">GCMC Creative Services · Vietnam</small></div>
     <span class="spacer"></span>
     <span class="who" id="whoBox" hidden>Signed in as <b id="whoEmail"></b></span>
     <button class="link-btn" id="signOut" hidden>Sign out</button>
@@ -19,7 +19,7 @@
 
   <!-- boot / error -->
   <section class="screen center-msg" id="scrBoot">
-    <div class="card"><span class="spinner" id="bootSpinner" aria-hidden="true"></span><p class="eyebrow">Loading</p><h2 id="bootTitle">Preparing your assessment…</h2><p id="bootMsg"></p></div>
+    <div class="card"><span class="spinner" id="bootSpinner" aria-hidden="true"></span><p class="eyebrow">Loading</p><h2 id="bootTitle">Loading the game…</h2><p id="bootMsg"></p></div>
   </section>
 
   <!-- sign in -->
@@ -28,8 +28,8 @@
       <div class="hero">
         <div>
           <p class="eyebrow" id="loginCode">GCMC-VN-ONB-2026</p>
-          <h1 id="loginTitle">End-of-Training Assessment</h1>
-          <p class="lead">Confirm what you've learned across your onboarding: team, brand, squads, platforms and workflow.</p>
+          <h1 id="loginTitle">Onboarding Challenge</h1>
+          <p class="lead">Show off everything you picked up in onboarding. Beat the clock, bring the team, chase the award.</p>
         </div>
         <dl class="meta">
           <div><dt>Questions</dt><dd><b id="metaQ">30</b></dd></div>
@@ -40,7 +40,7 @@
       <div class="panel">
         <form id="loginForm" novalidate>
           <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
-          <h2>Sign in to begin</h2>
+          <h2>Player sign-in</h2>
           <p class="hint">Use your RMIT staff email and your staff ID.</p>
           <div class="field">
             <label for="email">RMIT email</label>
@@ -56,9 +56,9 @@
             <p class="hint">We don't have your name on file yet. We'll remember it for next time.</p>
           </div>
           <p class="error-msg" id="loginError" role="alert"></p>
-          <button class="btn navy" type="submit" id="loginBtn">Sign in</button>
+          <button class="btn" type="submit" id="loginBtn">Let's play</button>
           <p class="join-instead">Here to play along with a teammate? <a href="join">Enter a room code</a></p>
-          <p class="fineprint">This assessment is for authorised RMIT staff only. Your responses, score and completion time are recorded for your training record.</p>
+          <p class="fineprint">For RMIT staff. Your answers, points and time go to your training record.</p>
         </form>
       </div>
     </div>
@@ -102,10 +102,10 @@
         </section>
 
         <aside class="card start-card">
-          <p class="eyebrow">Your test</p>
-          <h2>All set?</h2>
+          <p class="eyebrow">Your game</p>
+          <h2>Ready?</h2>
           <p class="start-note" id="startNote">The clock starts as soon as you do. Take your time with each one.</p>
-          <button class="btn" id="startBtn"><span id="startLabel">Start assessment</span> <span aria-hidden="true">→</span></button>
+          <button class="btn" id="startBtn"><span id="startLabel">Press start</span> <span aria-hidden="true">→</span></button>
           <p class="error-msg" id="startError" role="alert"></p>
           <p class="start-fine">Saved to your training record · Retakes allowed</p>
         </aside>
@@ -168,8 +168,8 @@
           <div class="crit-notice" id="critNotice" hidden role="alert"><b>Critical question.</b> <span id="critNoticeText">A wrong or skipped answer loses 3 marks.</span> Take your time.</div>
           <div id="qBody"></div>
           <div class="q-actions">
-            <button class="btn" id="submitBtn" disabled>Submit answer</button>
-            <button class="btn quiet" id="skipBtn">Skip question</button>
+            <button class="btn" id="submitBtn" disabled>Lock it in</button>
+            <button class="btn quiet" id="skipBtn">Skip</button>
             <button class="btn navy" id="nextBtn" hidden><span id="nextLabel">Next question</span> <span aria-hidden="true">→</span></button>
             <span class="status" id="qStatus"><span class="kbd">Press <b>Enter</b> to submit</span></span>
           </div>
@@ -201,7 +201,7 @@
       <!-- hero -->
       <div class="res-hero">
         <div class="res-hero-text">
-          <p class="eyebrow">Assessment complete</p>
+          <p class="eyebrow">Game over</p>
           <h1 id="resTitle">Congratulations.</h1>
           <p id="resMsg"></p>
           <div class="res-tags"><span class="badge award" id="resBadge" hidden>🏆 Award</span><span class="zone-tag" id="resZone">Too close to call</span><span class="zone-tag bad" id="resCrit" hidden></span></div>
@@ -237,7 +237,7 @@
         <div class="card insight-card">
           <div class="insight best"><span class="k">Strongest</span><span class="v" id="bestCat">—</span><span class="s" id="bestSub"></span></div>
           <div class="insight worst"><span class="k">Worth a refresher</span><span class="v" id="worstCat">—</span><span class="s" id="worstSub"></span></div>
-          <div class="insight who"><span class="k">Candidate</span><span class="v" id="sName">—</span><span class="s" id="sEmail">—</span><span class="s" id="sDate"></span></div>
+          <div class="insight who"><span class="k">Player</span><span class="v" id="sName">—</span><span class="s" id="sEmail">—</span><span class="s" id="sDate"></span></div>
         </div>
       </div>
 

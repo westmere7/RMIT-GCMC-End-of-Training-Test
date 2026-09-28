@@ -65,22 +65,22 @@
       if (!window.crypto || !crypto.subtle) throw new Error("Open this page through the local server (Start Test.bat) or a secure (https) address.");
       DATA = await A.loadData();
     } catch (e) {
-      $("bootTitle").textContent = "The assessment couldn't start"; $("bootSpinner").hidden = true;
+      $("bootTitle").textContent = "The game couldn't start"; $("bootSpinner").hidden = true;
       $("bootMsg").textContent = e.message;
       return;
     }
     const st = DATA.settings || {};
     DATA.questions.forEach((q) => { BYID[q.id] = q; });
     const n = perAttempt(), mins = st.timeLimitMinutes || 10;
-    document.title = (st.title || "End-of-Training Assessment") + " · RMIT";
+    document.title = "Onboarding Challenge · RMIT";
     $("topSubtitle").textContent = st.subtitle || "";
     $("loginCode").textContent = st.assessmentCode || ""; $("briefCode").textContent = st.assessmentCode || "";
-    $("loginTitle").textContent = st.title || "End-of-Training Assessment";
+    $("loginCode").textContent = [st.assessmentCode, st.title].filter(Boolean).join(" · ");
     $("metaQ").textContent = n; $("metaT").textContent = mins + " minutes";
     $("dQ").textContent = n; $("dT").textContent = mins;
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
-    $("briefLead").textContent = "A friendly check-in on everything from your onboarding.";
+    $("briefLead").textContent = "A quick game on everything from your onboarding. No trick questions.";
 
     S = load();
     if (S && S.role) S = null; // a joiner's tab, now without its link
@@ -126,10 +126,10 @@
     $("nameStep").hidden = false; $("firstName").value = guessName(email); $("firstName").select(); $("firstName").focus();
     btn.textContent = "Continue";
   });
-  $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
+  $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Let's play"; pendingHash = null; } });
   function enter(email, name, attempt) {
     S = { email, name, attempt: attempt || 1, started: false, finished: false }; save();
-    busy($("startBtn"), false); $("startLabel").textContent = "Start assessment"; $("dAttempt").textContent = S.attempt;
+    busy($("startBtn"), false); $("startLabel").textContent = "Press start"; $("dAttempt").textContent = S.attempt;
     show("scrBrief");
     openLobby();
   }
@@ -184,7 +184,7 @@
     const me = MEMBER() ? S.memberId === p.id : p.taker;
     return `<li class="player${p.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(p.color)}" data-id="${p.id}">`
       + `<span class="avatar" aria-hidden="true">${initial(p.name)}</span>`
-      + `<span class="pname"><b>${esc(p.name)}</b><small>${p.taker ? "Taking the test" : me ? "You" : esc(G.colourName(p.color))}</small></span>`
+      + `<span class="pname"><b>${esc(p.name)}</b><small>${p.taker ? "In the hot seat" : me ? "You" : esc(G.colourName(p.color))}</small></span>`
       + (extra || "") + "</li>";
   }
   const away = (p) => ROOM && ROOM.now - p.seen > 25000;
@@ -214,7 +214,7 @@
     $("lobbyCode").textContent = S.group.code;
     $("lobbyUrl").textContent = joinUrl().replace(/^https?:\/\//, ""); $("lobbyUrl").href = url;
     $("lobbyRules").innerHTML = pointsHtml(); $("lobbyRules").hidden = false;
-    $("briefLead").textContent = "A friendly check-in on everything from your onboarding. Bring the team along if you like: they can scan in.";
+    $("briefLead").textContent = "A quick game on everything from your onboarding. Bring the team: they scan in and play along.";
     $("startNote").textContent = "Start when everyone's in. Each question moves on when you submit it.";
     lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
     startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
@@ -245,7 +245,7 @@
       // empty seats, until someone scans in
       + (n ? "" : '<li class="player ghost" aria-hidden="true"><span class="avatar"></span><span class="pname"><b>Waiting…</b></span></li>'.repeat(3));
     for (const li of $("lobbyList").querySelectorAll("[data-id]")) { if (away(roomPlayers().find((p) => p.id === +li.dataset.id) || {})) li.classList.add("away"); lobbySeen.add(+li.dataset.id); }
-    $("startLabel").textContent = n ? `Start with ${n} ${n === 1 ? "teammate" : "teammates"}` : "Start assessment";
+    $("startLabel").textContent = n ? `Start with ${n} ${n === 1 ? "teammate" : "teammates"}` : "Press start";
   }
   $("lobbyList").addEventListener("click", async (e) => {
     const b = e.target.closest("[data-kick]"); if (!b) return;
@@ -792,7 +792,7 @@
   function roomGone() {
     stopPolling(); clearInterval(tick);
     setStatus("error", "The room has closed.");
-    if (MEMBER()) return memberScreen("closed", "This room has closed", "The test was ended. Thanks for playing along.");
+    if (MEMBER()) return memberScreen("closed", "This room has closed", "The game was ended. Thanks for playing along.");
     // the taker's room vanished (it's pruned after two days): finish on your own from here
     S.group.live = false; save(); runClock(); renderPlayers(); renderQuestion();
   }
@@ -870,7 +870,7 @@
   // /join on its own: type the room code (for a laptop, which can't scan the QR code)
   function codeEntry() {
     document.documentElement.classList.add("joiner");
-    memberScreen("code", "Join a test", "Type the room code from the main screen.");
+    memberScreen("code", "Join a game", "Type the room code from the big screen.");
     $("joinCode").textContent = "code";
     setTimeout(() => $("codeInput").focus(), 30);
   }
@@ -904,7 +904,7 @@
     }
     if (!me || (ROOM.roster && !ROOM.roster.includes(me.id))) {
       stopPolling();
-      return memberScreen("closed", ROOM.phase === "finished" ? "This test has finished" : "This test has already started", `Catch ${taker} for the next one.`);
+      return memberScreen("closed", ROOM.phase === "finished" ? "This game has finished" : "This game has already started", `Catch ${taker} for the next one.`);
     }
     if (!S.qids) {
       // the paper: the same questions, in the same order, as the taker
@@ -937,7 +937,7 @@
   }
   function memberForm(taker) {
     if ($("joinForm").hidden) {
-      memberScreen("form", `Join ${taker}'s test`, `Answer the same questions alongside ${taker}. Get them right and you both do well; get them wrong and it costs you.`);
+      memberScreen("form", `Join ${taker}'s game`, `Play along with ${taker}: same questions, same clock. Get them right and you both do well; get them wrong and it costs you.`);
       $("joinError").textContent = "";
       if (!$("joinName").value) setTimeout(() => $("joinName").focus(), 30);
     }
@@ -1096,7 +1096,7 @@
       $("resTitle").textContent = `${tName} scored ${G.signed(taker.points)}.`;
       $("resMsg").textContent = `${tName} got ${taker.correct} of ${n} right${award ? " and finished in the award zone" : ""}. Here's how the whole room did, and your own answers underneath.`;
     } else {
-      $("resTitle").textContent = award ? `Award winner, ${name}. Welcome to the team.` : `Congratulations, ${name}. You've completed your onboarding.`;
+      $("resTitle").textContent = award ? `Award winner, ${name}! Welcome to the team.` : `Nice run, ${name}! Onboarding complete.`;
       $("resMsg").textContent = award
         ? "You finished in the award zone, at the very top of the meter. That deserves more than confetti."
         : S.timedOut ? "Time ran out before the last questions, but the hard part is done. The breakdown below shows where to look next."
@@ -1174,7 +1174,7 @@
       return `<div class="board-row${r.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(r.color)}">
         <span class="rank">${r.taker ? "" : rank < 3 && team.length > 1 ? medals[rank] : rank + 1}</span>
         <span class="avatar" aria-hidden="true">${initial(r.name)}</span>
-        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "Taking the test" + (award ? " · 🏆 Award" : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
+        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "In the hot seat" + (award ? " · 🏆 Award" : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
         ${cells(r)}
         <span class="right-n"><b>${r.correct}</b><small>of ${n}</small></span>
         <span class="pts ${r.points > 0 ? "up" : r.points < 0 ? "down" : ""}">${G.signed(r.points)}<small>${Math.abs(r.points) === 1 ? "point" : "points"}</small></span>
