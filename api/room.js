@@ -70,11 +70,11 @@ async function snapshot(room, me, since, withPaper) {
 async function act(body) {
   const action = String(body.action || "");
   if (action === "create") {
-    await rooms.prune().catch(() => {});
+    const pruning = rooms.prune().catch(() => {}); // alongside, not first: it only ever touches old rooms
     const hostKey = crypto.randomBytes(18).toString("base64url"), name = cleanName(body.name, 40) || "Candidate";
     for (let t = 0; ; t++) {
       const code = newCode();
-      try { await rooms.create(code, sha256(hostKey), name); return { hostKey, code }; }
+      try { await rooms.create(code, sha256(hostKey), name); await pruning; return { hostKey, code }; }
       catch (e) { if (t > 4 || !/\b409\b|23505|duplicate/.test(e.message)) throw e; }
     }
   }

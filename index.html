@@ -19,7 +19,7 @@
 
   <!-- boot / error -->
   <section class="screen center-msg" id="scrBoot">
-    <div class="card"><p class="eyebrow">Loading</p><h2 id="bootTitle">Preparing your assessment…</h2><p id="bootMsg"></p></div>
+    <div class="card"><span class="spinner" id="bootSpinner" aria-hidden="true"></span><p class="eyebrow">Loading</p><h2 id="bootTitle">Preparing your assessment…</h2><p id="bootMsg"></p></div>
   </section>
 
   <!-- sign in -->
@@ -82,10 +82,12 @@
       </header>
 
       <div class="brief-main" id="briefMain">
+        <div class="card brief-loading" id="briefLoading" hidden role="status"><span class="spinner" aria-hidden="true"></span><p>Opening the room…</p></div>
+
         <!-- group play: the team scans in and answers alongside -->
         <section class="lobby" id="lobby" hidden aria-labelledby="lobbyTitle">
           <div class="card lobby-join">
-            <div class="qr" id="lobbyQr"></div>
+            <button type="button" class="qr" id="lobbyQr" aria-label="Show the QR code bigger" title="Show it bigger"></button>
             <div class="lobby-how">
               <p class="eyebrow">Play along</p>
               <h2 id="lobbyTitle">Scan to join</h2>
@@ -253,6 +255,18 @@
       <div class="res-actions"><button class="btn" id="retakeBtn" type="button">Retake the test</button><a class="btn navy" id="certBtn" href="certificate.html" target="_blank" rel="noopener">View your certificate ↗</a><button class="btn ghost" id="againBtn">Sign out</button></div>
     </div>
   </section>
+
+  <!-- the QR code, big enough to scan from across the room -->
+  <dialog class="qr-pop" id="qrPop" aria-labelledby="qrPopTitle">
+    <div class="qr-pop-qr" id="qrPopQr"></div>
+    <div class="qr-pop-info">
+      <p class="eyebrow" id="qrPopTitle">Scan to join</p>
+      <span class="qr-pop-label">Room code</span>
+      <b id="qrPopCode"></b>
+      <span class="qr-pop-url">or go to <b id="qrPopUrl"></b></span>
+    </div>
+    <button type="button" class="qr-pop-close" id="qrPopClose" aria-label="Close">×</button>
+  </dialog>
 
   <canvas id="confetti" hidden></canvas>
 

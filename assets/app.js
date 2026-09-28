@@ -65,7 +65,7 @@
       if (!window.crypto || !crypto.subtle) throw new Error("Open this page through the local server (Start Test.bat) or a secure (https) address.");
       DATA = await A.loadData();
     } catch (e) {
-      $("bootTitle").textContent = "The assessment couldn't start";
+      $("bootTitle").textContent = "The assessment couldn't start"; $("bootSpinner").hidden = true;
       $("bootMsg").textContent = e.message;
       return;
     }
@@ -191,9 +191,12 @@
 
   // ---------- the lobby (on the taker's briefing screen) ----------
   const lobbySeen = new Set();
+  // the room loads behind a placeholder, so the page appears in one piece instead of jumping into place
+  const briefLoading = (on) => { $("briefMain").classList.toggle("is-loading", on); $("briefLoading").hidden = !on; };
   async function openLobby() {
     if (!G) return;
     $("lobby").hidden = true; $("lobbyRules").hidden = true; $("briefMain").classList.remove("has-lobby");
+    briefLoading(true);
     try {
       if (S.group) {
         try { applyRoom(await G.get({ ...auth(), since: 0 })); }
@@ -203,7 +206,8 @@
         const d = await G.post({ action: "create", name: S.name });
         S.group = { code: d.code, hostKey: d.hostKey }; save(); applyRoom(d);
       }
-    } catch (e) { S.group = null; save(); return; } // group play needs the live site; offline, the test runs on its own as before
+    } catch (e) { S.group = null; save(); return briefLoading(false); } // group play needs the live site; offline, the test runs on its own as before
+    briefLoading(false);
     if ($("scrBrief").hidden) return;
     const url = joinUrl(S.group.code);
     $("lobbyQr").innerHTML = G.qrSvg(url);
@@ -215,6 +219,16 @@
     lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
     startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
   }
+  // the QR code, big: click it to show it across the room
+  $("lobbyQr").addEventListener("click", () => {
+    if (!S || !S.group) return;
+    $("qrPopQr").innerHTML = G.qrSvg(joinUrl(S.group.code));
+    $("qrPopCode").textContent = S.group.code;
+    $("qrPopUrl").textContent = joinUrl().replace(/^https?:\/\//, "");
+    $("qrPop").showModal();
+  });
+  $("qrPopClose").addEventListener("click", () => $("qrPop").close());
+  $("qrPop").addEventListener("click", (e) => { if (e.target === $("qrPop")) $("qrPop").close(); }); // a click outside it
   $("lobbyCopy").addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(joinUrl(S.group.code)); $("lobbyCopy").textContent = "Copied"; } catch (e) { $("lobbyCopy").textContent = "Copy failed"; }
     setTimeout(() => { $("lobbyCopy").textContent = "Copy link"; }, 1600);
@@ -238,26 +252,23 @@
     busy(b, true);
     try { await roomAct({ action: "kick", m: +b.dataset.kick }); renderLobby(); } catch (err) { b.disabled = false; }
   });
-  // the points rules, grouped by "you got it right / wrong", with the points first so they scan at a glance
+  // the points rules in four lines: right and wrong, for the taker and for everyone else
   function pointsHtml() {
-    const name = esc(S.name || "the taker");
-    const T = G.RULES.taker, M = G.RULES.member;
-    // a range, for "some of the team": the points between the two ends
-    const between = (a, b) => { const lo = Math.min(a, b) + 1, hi = Math.max(a, b) - 1; return lo === hi ? G.signed(lo) : `${G.signed(lo)}…${G.signed(hi)}`; };
-    const line = (pts, text, shown) => `<li><b class="${pts > 0 ? "up" : pts < 0 ? "down" : ""}${shown ? " range" : ""}">${shown || G.signed(pts)}</b><span>${text}</span></li>`;
-    const group = (ok, lines) => `<div class="pts-group"><h4 class="${ok ? "y" : "n"}">${ok ? "Right" : "Wrong"}</h4><ul>${lines.join("")}</ul></div>`;
-    return `<h2 class="pts-title">How points work</h2>
+    const name = esc(S.name || "the taker"), T = G.RULES.taker, M = G.RULES.member;
+    const range = (a, b) => `${G.signed(a)}<i>to</i>${G.signed(b)}`;
+    const row = (ok, cls, pts, text) => `<p class="pts-row"><span class="mark ${ok ? "y" : "n"}" aria-label="${ok ? "Right" : "Wrong"}"></span><b class="${cls}">${pts}</b><span>${text}</span></p>`;
+    return `<div class="pts-head"><h2 class="pts-title">How points work</h2>
+        <p class="pts-note"><span class="crit-chip">Critical</span> questions count double · No answer when ${name} submits counts as wrong</p></div>
       <div class="pts-who">
         <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>${name}</h3>
-        ${group(true, [line(T.right.allWrong, "the whole team got it wrong"), line(1, "some of the team got it wrong<small>the more of them, the more points</small>", between(T.right.allRight, T.right.allWrong)), line(T.right.allRight, "the whole team got it right too")])}
-        ${group(false, [line(T.wrong.allWrong, "the whole team got it wrong too"), line(-1, "some of the team got it right<small>the more of them, the more it costs</small>", between(T.wrong.allRight, T.wrong.allWrong)), line(T.wrong.allRight, "the whole team got it right")])}
+        ${row(true, "up", range(T.right.allRight, T.right.allWrong), "more for each teammate who got it wrong")}
+        ${row(false, "down", range(T.wrong.allRight, T.wrong.allWrong), "less of a loss for each teammate who got it wrong too")}
       </div>
       <div class="pts-who">
         <h3><span class="team-dots" aria-hidden="true"><i></i><i></i><i></i></span>Everyone else</h3>
-        ${group(true, [line(M.right, "always")])}
-        ${group(false, [line(M.wrongTakerWrong, `${name} got it wrong too`), line(M.wrongTakerRight, `${name} got it right`)])}
-      </div>
-      <p class="pts-foot"><span class="crit-chip">Critical</span> questions count double. No answer by the time ${name} submits counts as wrong.</p>`;
+        ${row(true, "up", G.signed(M.right), "every time")}
+        ${row(false, "down", G.signed(M.wrongTakerRight), `if ${name} got it right, ${G.signed(M.wrongTakerWrong)} if not`)}
+      </div>`;
   }
 
   // ---------- briefing ----------

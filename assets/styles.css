@@ -956,26 +956,24 @@ html.joiner .q-card { min-height: 0; }
 .start-card .btn:disabled { box-shadow: none; }
 .start-fine { font-size: 12px; color: var(--muted); text-align: center; }
 
-/* the points: you and everyone else side by side, each split into right and wrong */
-.points-card { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 56px; padding: 20px 32px 16px; }
-.pts-title { grid-column: 1 / -1; font-family: var(--text); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); }
-.pts-who { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 28px; align-content: start; }
-.pts-who h3 { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; font-size: 19px; margin-bottom: 4px; }
-.pts-group h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-.pts-group h4::before { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 12px; letter-spacing: 0; }
-.pts-group h4.y { color: var(--ok); } .pts-group h4.y::before { content: "✓"; background: var(--ok); }
-.pts-group h4.n { color: var(--red-dark); } .pts-group h4.n::before { content: "✕"; background: var(--red); font-size: 10px; }
-.pts-group ul { list-style: none; margin: 0; padding: 0; }
-.pts-group li { display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; gap: 12px; padding: 4px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--body); }
-.pts-group li b { font-family: var(--display); font-size: 21px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; letter-spacing: -0.02em; }
-.pts-group li b.range { font-size: 16px; }
-.pts-group li small { display: block; font-size: 12px; color: var(--muted); }
+/* the points: four lines, right and wrong for the taker and for everyone else */
+.points-card { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 56px; padding: 22px 32px 24px; }
+.pts-head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; }
+.pts-title { font-family: var(--text); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); }
+.pts-note { font-size: 13px; color: var(--muted); }
+.pts-note .crit-chip { margin-right: 4px; }
+.pts-who { display: grid; gap: 10px; align-content: start; }
+.pts-who h3 { display: flex; align-items: center; gap: 10px; font-size: 19px; margin-bottom: 2px; }
+.pts-row { display: grid; grid-template-columns: 22px 120px minmax(0, 1fr); align-items: center; gap: 14px; font-size: 15px; color: var(--body); }
+.pts-row b { font-family: var(--display); font-size: 26px; line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pts-row b i { font-style: normal; font-family: var(--text); font-weight: 400; font-size: 13px; color: var(--muted); margin: 0 6px; }
+.mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 700; line-height: 1; }
+.mark.y { background: var(--ok); } .mark.y::before { content: "✓"; }
+.mark.n { background: var(--red); } .mark.n::before { content: "✕"; font-size: 10px; }
 .av { --c: var(--navy); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--c); color: #fff; font-family: var(--display); font-size: 12px; }
 .team-dots { display: inline-flex; }
 .team-dots i { width: 18px; height: 18px; border-radius: 50%; margin-right: -7px; box-shadow: 0 0 0 2px #fff; background: #2563eb; }
 .team-dots i:nth-child(2) { background: #16a34a; } .team-dots i:nth-child(3) { background: #db2777; margin-right: 0; }
-.pts-foot { grid-column: 1 / -1; font-size: 13px; color: var(--muted); padding-top: 12px; border-top: 1px solid var(--line); }
-.pts-foot .crit-chip { margin-right: 4px; }
 .q-actions .status .hint { font-size: 13px; color: var(--muted); }
 
 @media (max-width: 1280px) {
@@ -1012,7 +1010,8 @@ html.joiner .q-card { min-height: 0; }
   .brief .lobby-code b { font-size: 40px; }
   .brief .lobby-room, .start-card, .points-card { padding: 20px 18px; }
   .brief-main .players { grid-template-columns: 1fr; }
-  .pts-who { grid-template-columns: minmax(0, 1fr); }
+  .pts-row { grid-template-columns: 22px 104px minmax(0, 1fr); gap: 10px; font-size: 14px; }
+  .pts-row b { font-size: 21px; }
 }
 
 /* ---------- buttons waiting on the network: a spinner beside the label, the button keeps its colour ---------- */
@@ -1028,4 +1027,40 @@ html.joiner .q-card { min-height: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .btn.is-loading::before, .kick.is-loading::after { animation: spin 1.6s linear infinite !important; }
+}
+
+/* ---------- loading: the whole briefing waits for its room, then appears together ---------- */
+.spinner { display: inline-block; width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--grey); border-top-color: var(--red); animation: spin 0.8s linear infinite; }
+#scrBoot .spinner { margin-bottom: 14px; }
+.brief-main.is-loading > :not(.brief-loading) { display: none !important; }
+.brief-main.is-loading { grid-template-columns: minmax(0, 1fr) !important; }
+.brief-loading { min-height: 420px; display: grid; place-content: center; justify-items: center; gap: 16px; text-align: center; }
+.brief-loading p { font-family: var(--display); font-size: 20px; color: var(--ink); }
+.brief-main:not(.is-loading) > .card, .brief-main:not(.is-loading) > .lobby > .card { animation: rise 0.45s ease both; }
+.brief-main > .lobby > .card + .card { animation-delay: 0.06s; }
+.brief-main > .start-card { animation-delay: 0.12s; }
+.brief-main > .points-card { animation-delay: 0.18s; }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: spin 1.6s linear infinite !important; } }
+
+/* ---------- the QR code, bigger (click it in the lobby) ---------- */
+button.qr { border: 0; cursor: zoom-in; position: relative; transition: transform 0.15s; }
+button.qr:hover { transform: scale(1.03); }
+button.qr::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 26px; height: 26px; border-radius: 50%; background: var(--yellow) no-repeat center / 14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000054' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5 14 14M7 5v4M5 7h4'/%3E%3C/svg%3E"); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+.qr-pop { border: 0; border-radius: 14px; padding: 36px; background: #fff; color: var(--body); max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); box-shadow: 0 30px 80px -20px rgba(0, 0, 40, 0.6); }
+.qr-pop[open] { display: flex; align-items: center; gap: 40px; animation: rise 0.25s ease both; }
+.qr-pop::backdrop { background: rgba(0, 0, 40, 0.72); backdrop-filter: blur(3px); }
+.qr-pop-qr { width: min(64vh, 60vw, 620px); aspect-ratio: 1; flex: none; }
+.qr-pop-qr svg { display: block; width: 100%; height: 100%; }
+.qr-pop-info { display: grid; gap: 8px; min-width: 0; }
+.qr-pop-info .eyebrow { font-size: 14px; }
+.qr-pop-label { font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); margin-top: 16px; }
+.qr-pop-info > b { font-family: var(--display); font-size: clamp(48px, 7vw, 96px); line-height: 1; letter-spacing: 0.14em; color: var(--ink); }
+.qr-pop-url { font-size: 18px; color: var(--muted); margin-top: 12px; }
+.qr-pop-url b { color: var(--navy); }
+.qr-pop-close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--grey-50); color: var(--navy); font-size: 26px; line-height: 1; }
+.qr-pop-close:hover { background: var(--grey); }
+@media (max-width: 860px), (orientation: portrait) {
+  .qr-pop[open] { flex-direction: column; gap: 20px; text-align: center; padding: 48px 20px 24px; }
+  .qr-pop-qr { width: min(80vw, 60vh); }
+  .qr-pop-label { margin-top: 0; }
 }
