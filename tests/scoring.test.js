@@ -96,6 +96,18 @@ test("powerups: double down doubles the room's points both ways; the recorded po
       }
 });
 
+test("powerups: a call wins 2 + 2 a teammate when exactly right, loses 3 otherwise, on top of the points", () => {
+  assert.equal(G.callPoints(1, 1, 1), 4);
+  assert.equal(G.callPoints(2, 2, 3), 8);
+  assert.equal(G.callPoints(0, 0, 6), 14, "calling nobody wrong counts too");
+  assert.equal(G.callPoints(2, 3, 3), -3);
+  assert.equal(G.callPoints(0, 1, 1), -3);
+  assert.equal(G.gamePoints(10, { call: { n: 1 } }, 1, 1), 14);
+  assert.equal(G.gamePoints(-5, { call: { n: 0 } }, 1, 3), -8);
+  assert.equal(G.gamePoints(10, { double: true, call: { n: 2 } }, 2, 3), 28, "a double doubles the points, not the call");
+  assert.equal(G.charges([true, true, true, true], { 3: { call: { n: 0 } } }, 3).held, 0, "a call costs a charge");
+});
+
 test("per question, points stay within −5…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
   for (const critical of [false, true])
     for (const takerRight of [true, false])

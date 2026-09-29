@@ -136,7 +136,7 @@
   // ---------- questions ----------
   const TYPES = [["single", "Single choice"], ["multi", "Multi choice"], ["match", "Match pairs"], ["image", "Image question"], ["fill", "Fill in the blank"], ["short", "Short answer"]];
   const TYPE_NAME = Object.fromEntries(TYPES.map(([v, l]) => [v, l]));
-  const LETTERS = "ABCDEFGHIJ", MAX_OPTS = 8, MAX_PAIRS = 8;
+  const LETTERS = "ABCDEFGHIJ", MAX_OPTS = 8, MAX_PAIRS = 3;
   const narrow = () => matchMedia("(max-width: 640px)").matches; // phone layout: pair rows stack, so blank rows need labels
   const isChoice = (t) => t === "single" || t === "multi";
   const isText = (t) => t === "fill" || t === "short";

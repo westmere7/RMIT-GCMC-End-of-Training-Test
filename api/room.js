@@ -10,8 +10,9 @@
 //                                          their current pick, which counts as their answer when the taker submits)
 //   answer {q, response}                  (members, while question q is open)
 //   kick {m} · start {paper} · reveal {q, response} · next {q} · finish {q, timedOut} · end   (the taker)
-//   power {q, kind: "double" | "gauge", m}   (the taker, while question q is open: a powerup; gauge looks at member
-//                                          m's pick as it stands, which only the taker's snapshot shows)
+//   power {q, kind: "double" | "gauge" | "call", m, n}   (the taker, while question q is open: a powerup; gauge looks
+//                                          at member m's pick as it stands, which only the taker's snapshot shows;
+//                                          call bets that n teammates get it wrong)
 const { configured, rooms, readJson, send, sha256 } = require("./_store");
 const crypto = require("crypto");
 
@@ -151,10 +152,14 @@ async function act(body) {
   } else if (action === "power") {
     const kind = String(body.kind || ""), used = (st.powers || {})[q] || {};
     if (st.phase !== "question" || q !== st.index) throw fail(409, "Too late: this question has closed.");
-    if (kind !== "double" && kind !== "gauge") throw fail(400, "Unknown powerup.");
+    if (!["double", "gauge", "call"].includes(kind)) throw fail(400, "Unknown powerup.");
     if (used[kind]) return { room }; // already used on this question (a second click)
     let add = { double: true };
-    if (kind === "gauge") {
+    if (kind === "call") {
+      const n = +body.n;
+      if (!Number.isInteger(n) || n < 0 || n > (st.roster || []).length) throw fail(400, "Call a number from 0 to the size of the team.");
+      add = { call: { n } };
+    } else if (kind === "gauge") {
       const m = +body.m;
       if (!(st.roster || []).includes(m)) throw fail(400, "That teammate isn't playing this one.");
       // a submitted answer if there is one, otherwise what they've picked so far

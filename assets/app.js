@@ -401,6 +401,7 @@
     $("verdictPts").textContent = `${G.signed(d)} ${Math.abs(d) === 1 ? "point" : "points"}`;
     $("verdictNote").textContent = (!team.length ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`)
       + (HOSTING() && (ROOM && ROOM.powers || {})[k] && ROOM.powers[k].double ? " · Doubled" : "")
+      + (HOSTING() ? callNote(k, missed, team.length) : "")
       + (HOSTING() && chargeEarned(k) ? " · ⚡ Powerup earned" : "");
     v.hidden = false; void v.offsetWidth; v.classList.add("show");
     clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, reduced ? 900 : 1250);
@@ -425,10 +426,11 @@
       // on your own, questions not answered yet, and the ones time ran out on, score nothing (in a room, `reached` already stops short of them)
       const out = !GROUP() && (!S.responses[q.id] || S.responses[q.id].timedOut);
       const pts = k < reached && !out ? G.points(q.critical, right[0], right.slice(1)) : { taker: 0, members: members.map(() => 0) };
+      const missed = right.slice(1).filter((x) => !x).length;
       rows.forEach((p, i) => {
         const g = given(p.id), d = i === 0 ? pts.taker : pts.members[i - 1];
         p.points += d; p.deltas.push(k < reached ? d : null);
-        const gd = i === 0 ? G.gamePoints(d, powers[k]) : d;
+        const gd = i === 0 && k < reached ? G.gamePoints(d, powers[k], missed, members.length) : d;
         p.game += gd; p.gameDeltas.push(k < reached ? gd : null);
         if (right[i]) p.correct++; else if (q.critical && k < reached) p.crit++;
         p.cells.push(k >= reached ? "none" : right[i] ? "ok" : !g || g.skipped ? "skip" : "no");
@@ -877,7 +879,14 @@
     }
     return `${name} ${verb} <b>“${esc(A.responseText(q, r))}”</b>`;
   }
-  let gaugeOpen = false, doubleArmed = 0, powerBusy = false, powerQ = -1;
+  let gaugeOpen = false, callOpen = false, doubleArmed = 0, powerBusy = false, powerQ = -1;
+  /** After the reveal: what the taker's call on question k won or lost. */
+  function callNote(k, missed, size) {
+    const c = ((ROOM && ROOM.powers) || {})[k] && ROOM.powers[k].call;
+    if (!c) return "";
+    const d = G.callPoints(c.n, missed, size);
+    return c.n === missed ? ` · Called it: ${G.signed(d)}` : ` · The call was ${c.n}: ${G.signed(d)}`;
+  }
   // redraws only what changed: the room is polled every second, and a redraw mid-click would swallow the click
   const setHtml = (el, html) => { if (el.dataset.html !== html) { el.dataset.html = html; el.innerHTML = html; } };
   function renderPowers(t) {
@@ -886,7 +895,7 @@
     if (card.hidden) return;
     t = t || tally();
     const k = S.index, q = QS()[k], powers = ROOM.powers || {}, used = powers[k] || {};
-    if (k !== powerQ) { powerQ = k; gaugeOpen = false; doubleArmed = 0; $("powerNote").textContent = ""; }
+    if (k !== powerQ) { powerQ = k; gaugeOpen = false; callOpen = false; doubleArmed = 0; $("powerNote").textContent = ""; }
     const reveal = ROOM.phase === "reveal" && ROOM.index === k;
     // after the reveal, the charge this answer earned shows straight away
     const { held, run } = G.charges(takerRights(t), powers, reveal ? k + 1 : k);
@@ -899,13 +908,13 @@
     const dbl = $("pwDouble"), armed = doubleArmed && Date.now() < doubleArmed;
     dbl.disabled = !used.double && (!open || held < 1);
     dbl.classList.toggle("on", !!used.double); dbl.classList.toggle("armed", !used.double && !!armed);
-    dbl.querySelector("small").textContent = used.double ? "On: this question counts twice, win or lose"
-      : armed ? "Click again to lock it in. No take-backs." : "Points ×2 on this question, win or lose";
+    dbl.querySelector("small").textContent = used.double ? "On: ×2, win or lose"
+      : armed ? "Click again to lock it in. No take-backs." : "×2 points, win or lose";
 
     const gau = $("pwGauge"), g = used.gauge;
     gau.disabled = !g && (!open || held < 1);
     gau.classList.toggle("on", !!g); gau.setAttribute("aria-expanded", String(!g && gaugeOpen));
-    gau.querySelector("small").textContent = g ? "Used on this question" : "See one teammate's pick, as it stands";
+    gau.querySelector("small").textContent = g ? "Used on this question" : "See one teammate's pick";
     const pick = $("gaugePick");
     pick.hidden = !!g || !gaugeOpen || !open;
     if (!pick.hidden) {
@@ -915,6 +924,24 @@
       setHtml(pick, ready.length
         ? `<p>Whose pick?</p>` + ready.map((p) => `<button type="button" class="gauge-who" data-m="${p.id}" style="--c:${esc(p.color)}"><span class="avatar" aria-hidden="true">${initial(p.name)}</span>${esc(p.name)}</button>`).join("")
         : "<p>Nobody has picked anything yet.</p>");
+    }
+
+    // the call: how many teammates get it wrong (everyone watching sees it, and the team can play against it)
+    const size = t.rows.length - 1, c = used.call, cb = $("pwCall");
+    cb.disabled = !c && (!open || held < 1);
+    cb.classList.toggle("on", !!c); cb.setAttribute("aria-expanded", String(!c && callOpen));
+    cb.querySelector("small").textContent = c ? `Called: ${c.n} wrong` : "Bet on how many miss";
+    const cp = $("callPick");
+    cp.hidden = !!c || !callOpen || !open;
+    if (!cp.hidden) setHtml(cp, `<p>How many teammates will get it wrong?</p><div class="call-nums">`
+      + [...Array(size + 1)].map((_, n) => `<button type="button" data-n="${n}">${n}</button>`).join("")
+      + `</div><p class="call-odds">Exactly right: <b>${G.signed(G.callPoints(0, 0, size))}</b> · Off by any: <b>${G.signed(G.POWER.call.miss)}</b> · Everyone sees your call</p>`);
+    $("callSeen").hidden = !c;
+    if (c) {
+      const missed = t.rows.slice(1).filter((p) => p.cells[k] !== "ok").length;
+      setHtml($("callSeen"), reveal
+        ? (c.n === missed ? `<b>Called it.</b> ${c.n} of ${size} got it wrong: ${G.signed(G.callPoints(c.n, missed, size))}` : `<b>The call missed.</b> You said ${c.n}, it was ${missed}: ${G.signed(G.POWER.call.miss)}`)
+        : `You called <b>${c.n} of ${size}</b> wrong. Exactly right wins ${G.signed(G.callPoints(0, 0, size))}, anything else loses ${Math.abs(G.POWER.call.miss)}.`);
     }
 
     // what the gauge showed: in the card, and on the question itself
@@ -936,11 +963,14 @@
     let chip = $("qMarks").querySelector(".dbl-chip");
     if (used.double && !chip) { chip = document.createElement("span"); chip.className = "dbl-chip"; chip.textContent = "×2 Doubled"; $("qMarks").prepend(chip); }
     else if (!used.double && chip) chip.remove();
+    let callChip = $("qMarks").querySelector(".call-chip");
+    if (c && !callChip) { callChip = document.createElement("span"); callChip.className = "call-chip"; $("qMarks").prepend(callChip); }
+    if (c) callChip.textContent = `Called: ${c.n} wrong`; else if (callChip) callChip.remove();
   }
-  async function usePower(kind, m) {
+  async function usePower(kind, m, n) {
     if (!HOSTING() || !ROOM || powerBusy) return;
     powerBusy = true; $("powerNote").textContent = ""; renderPowers();
-    try { await roomAct({ action: "power", q: S.index, kind, m }); gaugeOpen = false; }
+    try { await roomAct({ action: "power", q: S.index, kind, m, n }); gaugeOpen = false; callOpen = false; }
     catch (e) { $("powerNote").textContent = e.message || "Couldn't reach the room. Try again."; }
     powerBusy = false; doubleArmed = 0; renderPowers();
   }
@@ -951,7 +981,9 @@
     doubleArmed = Date.now() + 3500; renderPowers();
     setTimeout(() => { if (doubleArmed && Date.now() >= doubleArmed) { doubleArmed = 0; renderPowers(); } }, 3600);
   });
-  $("pwGauge").addEventListener("click", () => { gaugeOpen = !gaugeOpen; $("powerNote").textContent = ""; renderPowers(); });
+  $("pwGauge").addEventListener("click", () => { gaugeOpen = !gaugeOpen; callOpen = false; $("powerNote").textContent = ""; renderPowers(); });
+  $("pwCall").addEventListener("click", () => { callOpen = !callOpen; gaugeOpen = false; $("powerNote").textContent = ""; renderPowers(); });
+  $("callPick").addEventListener("click", (e) => { const b = e.target.closest("[data-n]"); if (b) usePower("call", undefined, +b.dataset.n); });
   $("gaugePick").addEventListener("click", (e) => { const b = e.target.closest("[data-m]"); if (b) usePower("gauge", +b.dataset.m); });
 
   // ---------- group play: everyone else's side (opened from the QR code) ----------

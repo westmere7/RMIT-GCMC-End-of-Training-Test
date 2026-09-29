@@ -53,6 +53,7 @@ function incomplete(q) {
   if (q.options && (q.options.filter(Boolean).length < 2 || !q.correct.length)) return "Add the options and mark the correct one.";
   if (q.type === "image" && q.mode === "question" && !q.image) return "Upload the picture for the question.";
   if (q.type === "match" && q.pairs.length < 2) return "Add at least two complete pairs.";
+  if (q.type === "match" && q.pairs.length > 3) return "Up to 3 pairs.";
   if ((q.type === "fill" || q.type === "short") && !q.answers.length) return "Add at least one accepted answer.";
   if (q.type === "fill" && !/_{3,}/.test(q.prompt)) return "Put ___ where the blank goes.";
   return "";

@@ -71,9 +71,14 @@
   // already held earns nothing). A charge buys one powerup on the question on screen:
   //   double: the taker's points on this question count twice, win or lose, and it can't be taken back.
   //   gauge:  one teammate's pick, as it stands right now (they can still change it, and they may be wrong).
+  //   call:   a bet on how many teammates get it wrong. Exactly right wins 2 + 2 a teammate (a bigger room is harder
+  //           to call); off by any amount loses 3. The call is on the main screen, so the team can play against it,
+  //           though a wrong answer costs them.
   // They only change the room's scoreboard: the recorded points, the meter and the award are worked out without them.
-  const POWER = { run: 3, hold: 2 };
-  const spentAt = (p) => (p ? (p.double ? 1 : 0) + (p.gauge ? 1 : 0) : 0);
+  const POWER = { run: 3, hold: 2, call: { base: 2, each: 2, miss: -3 } };
+  const spentAt = (p) => (p ? (p.double ? 1 : 0) + (p.gauge ? 1 : 0) + (p.call ? 1 : 0) : 0);
+  /** What a call pays: `called` teammates wrong, `missed` actually were, out of `size`. */
+  const callPoints = (called, missed, size) => (called === missed ? POWER.call.base + POWER.call.each * size : POWER.call.miss);
   /** Charges in hand on question k, after anything spent on it. takerRight[i]: the taker got question i right (for
       the questions before k); powers[i]: what was used on question i. `run` is the current run toward the next charge. */
   function charges(takerRight, powers, k) {
@@ -85,8 +90,10 @@
     }
     return { held: Math.max(0, held - spentAt(powers && powers[k])), run };
   }
-  /** The taker's points on the room's scoreboard for one question: the points, doubled when they doubled down. */
-  const gamePoints = (points, power) => (power && power.double ? points * 2 : points);
+  /** The taker's points on the room's scoreboard for one question: the points (doubled when they doubled down), plus
+      what a call won or lost. `missed` of `size` teammates got it wrong. */
+  const gamePoints = (points, power, missed, size) =>
+    (power && power.double ? points * 2 : points) + (power && power.call ? callPoints(power.call.n, missed, size) : 0);
 
   const signed = (n) => (n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0");
 
@@ -99,5 +106,5 @@
     return `<svg viewBox="0 0 ${n + 2 * q} ${n + 2 * q}" role="img" aria-label="QR code to join" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000054"/></svg>`;
   }
 
-  global.Group = { TAKER_COLOUR, PALETTE, colourName, deviceId, get, post, serverNow, remaining, RULES, points, POWER, charges, gamePoints, signed, qrSvg };
+  global.Group = { TAKER_COLOUR, PALETTE, colourName, deviceId, get, post, serverNow, remaining, RULES, points, POWER, charges, callPoints, gamePoints, signed, qrSvg };
 })(window);

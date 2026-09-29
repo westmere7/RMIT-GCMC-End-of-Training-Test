@@ -590,10 +590,10 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
 .charges i::before { content: "⚡"; }
 .charges i.on { border: 2px solid #caa200; background: var(--yellow); color: var(--navy); box-shadow: 0 0 0 3px rgba(250, 200, 0, 0.22); animation: pop 0.45s cubic-bezier(.2, 1.4, .4, 1) both; }
 .power-run { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.power-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.power { display: grid; gap: 3px; align-content: start; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); transition: border-color 0.12s, background 0.12s, transform 0.05s; }
-.power b { font-family: var(--display); font-size: 15px; line-height: 1.2; }
-.power small { font-size: 11px; line-height: 1.35; color: var(--muted); }
+.power-btns { display: grid; gap: 6px; }
+.power { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 10px; text-align: left; padding: 9px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); transition: border-color 0.12s, background 0.12s, transform 0.05s; }
+.power b { font-family: var(--display); font-size: 14px; line-height: 1.2; }
+.power small { font-size: 11px; line-height: 1.35; color: var(--muted); text-align: right; }
 .power:hover:not(:disabled) { border-color: var(--navy); }
 .power:active:not(:disabled) { transform: translateY(1px); }
 .power:disabled { cursor: not-allowed; opacity: 0.5; }
@@ -614,6 +614,14 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
 .gauge-pairs li span:first-child { font-weight: 700; }
 .gauge-pairs .none { color: var(--muted); }
 .gauge-seen small { display: block; margin-top: 2px; font-size: 11px; color: var(--muted); }
+.call-pick { display: grid; gap: 8px; }
+.call-pick p { font-size: 12px; color: var(--muted); }
+.call-pick .call-odds b { color: var(--ink); }
+.call-nums { display: flex; flex-wrap: wrap; gap: 6px; }
+.call-nums button { min-width: 38px; height: 38px; padding: 0 10px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; font-family: var(--display); font-size: 16px; color: var(--ink); }
+.call-nums button:hover { border-color: var(--navy); }
+.call-seen { padding: 10px 12px; border-radius: 10px; background: #fff9dc; border: 1.5px solid #f0d77a; font-size: 13px; color: var(--ink); line-height: 1.4; }
+.call-chip { display: inline-block; margin: 0 4px 5px 0; padding: 4px 9px; border-radius: 999px; background: var(--navy); color: #fff; font-size: 11px; letter-spacing: 0.06em; }
 .power-note { font-size: 12px; font-weight: 700; color: var(--red-dark); }
 .power-note:empty { display: none; }
 /* on the question: the gauged teammate's pick, and a doubled question */
