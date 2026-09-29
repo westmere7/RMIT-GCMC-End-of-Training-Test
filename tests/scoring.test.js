@@ -70,6 +70,32 @@ test("the numbers on the start page are the ones the scoring uses", () => {
   assert.equal(G.points(false, false, [false]).members[0], M.wrongTakerWrong);
 });
 
+test("powerups: every run of 3 right in a row earns a charge, up to 2 held", () => {
+  const R = (str) => [...str].map((c) => c === "x"); // x = right, . = wrong
+  const at = (str, powers = {}, k = str.length) => G.charges(R(str), powers, k);
+  assert.deepEqual({ ...at("") }, { held: 0, run: 0 });
+  assert.deepEqual({ ...at("xx") }, { held: 0, run: 2 });
+  assert.equal(at("xxx").held, 1);
+  assert.equal(at("xx.x").held, 0, "a wrong answer breaks the run");
+  assert.equal(at("xxxxxx").held, 2);
+  assert.equal(at("xxxxxxxxx").held, 2, "no more than 2 held; the third run earns nothing");
+  assert.equal(at("xxxxxxxxx", { 6: { double: true } }).held, 2, "spend one, and the next run fills it again");
+  assert.equal(at("xxxx", { 3: { gauge: { m: 1 } } }).held, 0, "spent on question 3");
+  assert.equal(at("xxxxx", { 3: { double: true, gauge: { m: 1 } } }).held, 0, "both on one question costs two");
+  assert.equal(at("xxx", { 3: { double: true } }, 3).held, 0, "what's spent on the question on screen counts straight away");
+});
+
+test("powerups: double down doubles the room's points both ways; the recorded points don't change", () => {
+  for (const critical of [false, true])
+    for (const takerRight of [true, false])
+      for (const team of [[true], [false], [true, false, false]]) {
+        const d = G.points(critical, takerRight, team).taker;
+        assert.equal(G.gamePoints(d, { double: true }), d * 2);
+        assert.equal(G.gamePoints(d, { gauge: { m: 1 } }), d, "a gauge doesn't change the points");
+        assert.equal(G.gamePoints(d, undefined), d);
+      }
+});
+
 test("per question, points stay within −5…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
   for (const critical of [false, true])
     for (const takerRight of [true, false])

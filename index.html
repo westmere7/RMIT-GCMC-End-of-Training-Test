@@ -182,14 +182,20 @@
           <div class="t-track"><i id="tFill"></i></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
         </div>
+        <div class="card power-card" id="powerCard" hidden>
+          <div class="power-head"><p class="eyebrow">Powerups</p><span class="charges" id="powerCharges" role="img"></span></div>
+          <p class="power-run" id="powerRun"></p>
+          <div class="power-btns">
+            <button type="button" class="power" id="pwDouble"><b>Double down</b><small></small></button>
+            <button type="button" class="power" id="pwGauge" aria-controls="gaugePick"><b>Gauge the room</b><small></small></button>
+          </div>
+          <div class="gauge-pick" id="gaugePick" hidden></div>
+          <div class="gauge-seen" id="gaugeSeen" hidden></div>
+          <p class="power-note" id="powerNote" aria-live="polite"></p>
+        </div>
         <div class="card players-card" id="playersCard" hidden>
           <p class="eyebrow">In the room</p>
           <ul class="players compact" id="playersList"></ul>
-        </div>
-        <div class="card progress-card">
-          <p class="eyebrow">Answer sheet</p>
-          <p class="count" id="count">0 <small>of 30 answered</small></p>
-          <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
         </div>
       </aside>
     </div>

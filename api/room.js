@@ -10,6 +10,8 @@
 //                                          their current pick, which counts as their answer when the taker submits)
 //   answer {q, response}                  (members, while question q is open)
 //   kick {m} · start {paper} · reveal {q, response} · next {q} · finish {q, timedOut} · end   (the taker)
+//   power {q, kind: "double" | "gauge", m}   (the taker, while question q is open: a powerup; gauge looks at member
+//                                          m's pick as it stands, which only the taker's snapshot shows)
 const { configured, rooms, readJson, send, sha256 } = require("./_store");
 const crypto = require("crypto");
 
@@ -39,6 +41,12 @@ async function who(room, q) {
   return { device: sha256(q.d) };
 }
 
+// the powerups used so far; a gauge's look at a teammate's pick goes to the taker only
+function powersFor(powers, me) {
+  if (me.host || !powers) return powers || {};
+  return Object.fromEntries(Object.entries(powers).map(([k, p]) => [k, p.gauge ? { ...p, gauge: { m: p.gauge.m } } : p]));
+}
+
 async function snapshot(room, me, since, withPaper) {
   const st = room.state || {}, code = room.code, now = Date.now();
   const revealed = revealedCount(st), from = Math.max(0, Math.min(+since || 0, st.index || 0));
@@ -46,7 +54,7 @@ async function snapshot(room, me, since, withPaper) {
   const mine = me.device ? members.find((m) => m.device_hash === me.device) : null;
   const out = {
     code, now, phase: st.phase || "lobby", index: st.index || 0, total: st.total || 0, clock: st.clock || null,
-    roster: st.roster || null, timedOut: !!st.timedOut, revealed,
+    roster: st.roster || null, timedOut: !!st.timedOut, revealed, powers: powersFor(st.powers, me),
     host: { name: room.host_name, busy: room.host_busy_q, seen: Date.parse(room.host_seen_at) },
     members: members.map((m) => ({ id: m.id, name: m.name, color: m.color, busy: m.busy_q, seen: Date.parse(m.seen_at) })),
     isHost: !!me.host, me: mine ? { id: mine.id, name: mine.name, color: mine.color } : null,
@@ -140,6 +148,22 @@ async function act(body) {
       await setState({ ...st, phase: "reveal", clock: freeze(st.clock, now), revealAt: { ...(st.revealAt || {}), [q]: now } });
       await rooms.patchHost(code, { host_busy_q: null });
     }
+  } else if (action === "power") {
+    const kind = String(body.kind || ""), used = (st.powers || {})[q] || {};
+    if (st.phase !== "question" || q !== st.index) throw fail(409, "Too late: this question has closed.");
+    if (kind !== "double" && kind !== "gauge") throw fail(400, "Unknown powerup.");
+    if (used[kind]) return { room }; // already used on this question (a second click)
+    let add = { double: true };
+    if (kind === "gauge") {
+      const m = +body.m;
+      if (!(st.roster || []).includes(m)) throw fail(400, "That teammate isn't playing this one.");
+      // a submitted answer if there is one, otherwise what they've picked so far
+      const sent = (await rooms.answers(code, q)).find((a) => a.qidx === q && a.member_id === m);
+      const draft = sent ? null : (await rooms.drafts(code, q)).find((d) => d.id === m);
+      if (!sent && !draft) throw fail(409, "They haven't picked anything yet.");
+      add = { gauge: { m, r: sent ? sent.response : draft.draft, final: !!sent } };
+    }
+    await setState({ ...st, powers: { ...(st.powers || {}), [q]: { ...used, ...add } } });
   } else if (action === "next") {
     if (st.phase === "reveal" && q === st.index) {
       if (q + 1 >= st.total) await setState({ ...st, phase: "finished", reached: st.total });

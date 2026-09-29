@@ -66,6 +66,28 @@
     const t = !n ? (takerRight ? RULES.solo.right : RULES.solo.wrong) : Math.round(ends.allRight + (ends.allWrong - ends.allRight) * share) || 0;
     return { taker: t * k, members: memberRights.map((ok) => (ok ? M.right : takerRight ? M.wrongTakerRight : M.wrongTakerWrong) * k) };
   }
+  // ---------- powerups (the taker, with the team in the room) ----------
+  // Every run of three right answers in a row earns a charge; the taker holds two at most (a run that ends with two
+  // already held earns nothing). A charge buys one powerup on the question on screen:
+  //   double: the taker's points on this question count twice, win or lose, and it can't be taken back.
+  //   gauge:  one teammate's pick, as it stands right now (they can still change it, and they may be wrong).
+  // They only change the room's scoreboard: the recorded points, the meter and the award are worked out without them.
+  const POWER = { run: 3, hold: 2 };
+  const spentAt = (p) => (p ? (p.double ? 1 : 0) + (p.gauge ? 1 : 0) : 0);
+  /** Charges in hand on question k, after anything spent on it. takerRight[i]: the taker got question i right (for
+      the questions before k); powers[i]: what was used on question i. `run` is the current run toward the next charge. */
+  function charges(takerRight, powers, k) {
+    let held = 0, run = 0;
+    for (let i = 0; i < k; i++) {
+      held -= spentAt(powers && powers[i]);
+      if (!takerRight[i]) { run = 0; continue; }
+      if (++run === POWER.run) { run = 0; if (held < POWER.hold) held++; }
+    }
+    return { held: Math.max(0, held - spentAt(powers && powers[k])), run };
+  }
+  /** The taker's points on the room's scoreboard for one question: the points, doubled when they doubled down. */
+  const gamePoints = (points, power) => (power && power.double ? points * 2 : points);
+
   const signed = (n) => (n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0");
 
   // ---------- QR code (assets/qrcode.js), drawn as SVG so it stays sharp when projected ----------
@@ -77,5 +99,5 @@
     return `<svg viewBox="0 0 ${n + 2 * q} ${n + 2 * q}" role="img" aria-label="QR code to join" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000054"/></svg>`;
   }
 
-  global.Group = { TAKER_COLOUR, PALETTE, colourName, deviceId, get, post, serverNow, remaining, RULES, points, signed, qrSvg };
+  global.Group = { TAKER_COLOUR, PALETTE, colourName, deviceId, get, post, serverNow, remaining, RULES, points, POWER, charges, gamePoints, signed, qrSvg };
 })(window);

@@ -318,7 +318,7 @@
     const st = $("qStatus"); st.className = "status preview-res " + (correct ? "ok" : "no");
     st.innerHTML = (correct ? "<b>✓ Correct</b>" : `<b>${skipped ? "Skipped" : "✕ Not quite"}</b><span>Correct answer: ${esc(rightText(q))}</span>`)
       + '<button type="button" class="btn ghost small" id="previewAgain">Try again</button>';
-    $("previewAgain").onclick = () => { S.responses = {}; S.order = [orderFor(q, DATA.settings || {})]; meter.setScore(0); updateProgress(); renderQuestion(); };
+    $("previewAgain").onclick = () => { S.responses = {}; S.order = [orderFor(q, DATA.settings || {})]; meter.setScore(0); renderQuestion(); };
   }
 
   async function startTest(resume) {
@@ -369,13 +369,14 @@
   }
   const groupPoints = () => (!HOSTING() ? null : S.board ? S.board.rows[0].points : ROOM ? tally().rows[0].points : null);
 
-  // the readout under the meter (points, question, streak); after an answer (k), its ripple and points chip too
+  // the readout under the meter (points, question, streak); after an answer (k), its ripple and points chip too.
+  // With the team in, the readout shows the room's scoreboard (powerups included); the needle stays on the recorded points.
   function meterInfo(k) {
     if (!meter || S.preview || (HOSTING() && !ROOM)) return;
     const qs = QS(), me = tally().rows[0];
     let streak = 0;
     for (const q of qs) { const r = S.responses[q.id]; if (!r) break; streak = r.correct ? streak + 1 : 0; }
-    meter.setStats({ points: me.points, answered: Object.keys(S.responses).length, total: qs.length, streak });
+    meter.setStats({ points: me.game, answered: Object.keys(S.responses).length, total: qs.length, streak });
     // the room on the taker's meter: each teammate's right against wrong so far (critical ×2), the scale the meter uses on your own
     if (HOSTING()) {
       const t = tally();
@@ -385,7 +386,7 @@
         return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterReading(rw, ww, qs.length) };
       }));
     }
-    if (k != null) meter.pulse(me.deltas[k], !!(S.responses[qs[k].id] || {}).correct);
+    if (k != null) meter.pulse(me.gameDeltas[k], !!(S.responses[qs[k].id] || {}).correct);
     return me;
   }
 
@@ -393,23 +394,27 @@
   let verdictTimer = null;
   function showVerdict(q, k, me) {
     if (MEMBER() || S.preview || !me) return;
-    const r = S.responses[q.id] || {}, d = me.deltas[k] || 0, v = $("verdict");
+    const r = S.responses[q.id] || {}, d = me.gameDeltas[k] || 0, v = $("verdict");
     const t = tally(), team = t.rows.slice(1), missed = team.filter((p) => p.cells[k] !== "ok").length;
     v.className = "verdict " + (r.correct ? "ok" : "no");
     $("verdictText").textContent = r.correct ? "Right" : r.skipped ? "Skipped" : "Wrong";
     $("verdictPts").textContent = `${G.signed(d)} ${Math.abs(d) === 1 ? "point" : "points"}`;
-    $("verdictNote").textContent = !team.length ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`;
+    $("verdictNote").textContent = (!team.length ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`)
+      + (HOSTING() && (ROOM && ROOM.powers || {})[k] && ROOM.powers[k].double ? " · Doubled" : "")
+      + (HOSTING() && chargeEarned(k) ? " · ⚡ Powerup earned" : "");
     v.hidden = false; void v.offsetWidth; v.classList.add("show");
     clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, reduced ? 900 : 1250);
   }
   // the award: the meter ended in its award zone (the top of the meter; its size is a setting in the editor)
   const awardLine = () => { const m = new Meter(null, null, {}); m.setThreshold((DATA.settings || {}).confettiThreshold); return m.pg; };
 
-  /** Everyone's points, question by question. Questions the room never reached score nothing for anyone. */
+  /** Everyone's points, question by question. Questions the room never reached score nothing for anyone.
+      `points`/`deltas` are the recorded ones; `game`/`gameDeltas` are the room's scoreboard, with the taker's powerups. */
   function tally() {
     const qs = QS(), players = GROUP() ? roomPlayers() : [{ id: 0, name: S.name, color: G.TAKER_COLOUR, taker: true }];
     const reached = GROUP() ? (ROOM ? ROOM.revealed : 0) : qs.length;
-    const rows = players.map((p) => ({ ...p, points: 0, correct: 0, crit: 0, cells: [], deltas: [] }));
+    const rows = players.map((p) => ({ ...p, points: 0, correct: 0, crit: 0, cells: [], deltas: [], game: 0, gameDeltas: [] }));
+    const powers = (GROUP() && ROOM && ROOM.powers) || {};
     const members = rows.filter((r) => !r.taker);
     qs.forEach((q, k) => {
       const given = (id) => {
@@ -423,6 +428,8 @@
       rows.forEach((p, i) => {
         const g = given(p.id), d = i === 0 ? pts.taker : pts.members[i - 1];
         p.points += d; p.deltas.push(k < reached ? d : null);
+        const gd = i === 0 ? G.gamePoints(d, powers[k]) : d;
+        p.game += gd; p.gameDeltas.push(k < reached ? gd : null);
         if (right[i]) p.correct++; else if (q.critical && k < reached) p.crit++;
         p.cells.push(k >= reached ? "none" : right[i] ? "ok" : !g || g.skipped ? "skip" : "no");
       });
@@ -453,11 +460,6 @@
   }
 
   // ---------- progress ----------
-  function updateProgress() {
-    const n = QS().length, done = Object.keys(S.responses).length;
-    $("count").innerHTML = `${done} <small>of ${n} answered</small>`;
-    $("barFill").style.width = (100 * done) / n + "%";
-  }
   const setStatus = (cls, html) => { $("qStatus").className = "status " + cls; $("qStatus").innerHTML = html; };
 
   // ---------- questions ----------
@@ -532,7 +534,6 @@
       }
     }
     $("submitBtn").disabled = true;
-    updateProgress();
     if (MEMBER() && ROOM && ROOM.mine && ROOM.index === S.index && ROOM.phase === "question") answerIn(q, ROOM.mine.r);
   }
 
@@ -715,12 +716,11 @@
     S.responses[q.id] = { response: resp, correct, skipped: !!skipped, at: Date.now() };
     save();
     if (S.preview) {
-      meter.setScore(score().p); meter.kick(correct ? 1 : -1); updateProgress();
+      meter.setScore(score().p); meter.kick(correct ? 1 : -1);
       return previewResult(q, resp, correct, skipped);
     }
     setStatus("recorded", skipped ? "Skipped" : "Answer recorded");
     bounce(q, correct);
-    updateProgress();
     setTimeout(() => {
       if (S.index >= QS().length - 1) return finish(false);
       S.index++; save(); renderQuestion(); meterInfo();
@@ -769,7 +769,7 @@
     }
     const correct = !skipped && A.isCorrect(q, resp);
     S.responses[q.id] = { response: resp, correct, skipped: !!skipped, at: Date.now() }; save();
-    bounce(q, correct); updateProgress();
+    bounce(q, correct);
     busy($("submitBtn"), false); busy($("skipBtn"), false);
     syncTaker();
   }
@@ -817,7 +817,7 @@
       }
     }
     const t = tally(), id = MEMBER() ? S.memberId : 0, me = t.rows.find((r) => r.id === id) || t.rows[0];
-    const cell = me.cells[k], d = me.deltas[k] || 0;
+    const cell = me.cells[k], d = me.gameDeltas[k] || 0;
     const head = cell === "ok" ? "<b>✓ Right</b>" : cell === "skip" ? `<b>✕ ${MEMBER() ? "No answer in time" : "Skipped"}</b>` : "<b>✕ Wrong</b>";
     const pts = `<span class="delta ${d > 0 ? "up" : d < 0 ? "down" : ""}">${G.signed(d)}</span>`;
     const ans = cell === "ok" ? "" : `<span>Correct answer: ${esc(rightText(q))}</span>`;
@@ -827,7 +827,7 @@
       $("nextLabel").textContent = S.index >= QS().length - 1 ? "See the results" : "Next question";
       setTimeout(() => $("nextBtn").focus({ preventScroll: true }), 30);
     } else $("qStatus").insertAdjacentHTML("beforeend", `<span class="wait">Everyone's results are on the main screen. Waiting for ${esc(takerName())} to move on…</span>`);
-    updateProgress(); renderPlayers();
+    renderPlayers();
   }
 
   // the side panel during the test: everyone's status on this question, and their points so far
@@ -840,16 +840,119 @@
     $("playersList").innerHTML = t.rows.map((p) => {
       let st;
       if (shown) {
-        const c = p.cells[k], d = p.deltas[k] || 0;
+        const c = p.cells[k], d = p.gameDeltas[k] || 0;
         st = `<span class="pstat ${c === "ok" ? "ok" : "no"}">${c === "ok" ? "✓ Right" : c === "skip" ? "✕ No answer" : "✕ Wrong"}</span><span class="delta ${d > 0 ? "up" : d < 0 ? "down" : ""}">${G.signed(d)}</span>`;
       } else {
         const done = !p.taker && answered.has(p.id), busy = p.busy === k;
         st = `<span class="pstat ${done ? "done" : busy ? "busy" : "think"}">${done ? "Answered" : busy ? "Answering…" : "Thinking…"}</span>`;
       }
-      return playerLi(p, `<span class="pwhat">${st}</span><span class="ptotal" title="Points so far">${G.signed(p.points)}</span>`);
+      return playerLi(p, `<span class="pwhat">${st}</span><span class="ptotal" title="Points so far">${G.signed(p.game)}</span>`);
     }).join("");
     for (const li of $("playersList").children) { const p = t.rows.find((r) => r.id === +li.dataset.id); if (p && away(p)) li.classList.add("away"); }
+    renderPowers(t);
   }
+
+  // ---------- powerups (the taker, with the team in the room) ----------
+  // Charges come from runs of right answers (see Group.charges); each buys one powerup on the question on screen.
+  // They change the room's scoreboard only: the recorded points, the meter and the award are worked out without them.
+  const takerRights = (t) => t.rows[0].cells.map((c) => c === "ok");
+  /** Did question k's answer earn a charge? */
+  function chargeEarned(k) {
+    const t = tally(), rights = takerRights(t), powers = (ROOM && ROOM.powers) || {};
+    return G.charges(rights, powers, k + 1).held > G.charges(rights, powers, k).held;
+  }
+  // a teammate's pick, as the taker sees the question: options by their letters on screen, a match as its pairs in the
+  // order column A shows them (the ones not linked yet say so), a typed answer in quotes
+  function pickHtml(name, q, r, final) {
+    const ord = S.order[S.index], verb = final ? "locked in" : "is going with";
+    if (A.isChoiceQ(q) && Array.isArray(ord) && Array.isArray(r) && r.length)
+      return `${name} ${verb} <b>${esc(r.map((i) => LETTERS[ord.indexOf(i)] + (A.imageAnswers(q) ? "" : ". " + q.options[i])).join(" · "))}</b>`;
+    if (q.type === "match" && Array.isArray(r) && ord && Array.isArray(ord.a)) {
+      const linked = ord.a.filter((p) => r[p] != null && q.pairs[r[p]]).length;
+      const rows = ord.a.map((p) => {
+        const to = r[p] != null && q.pairs[r[p]] ? esc(q.pairs[r[p]].right) : '<i class="none">not linked yet</i>';
+        return `<li><span>${esc(q.pairs[p].left)}</span><span aria-hidden="true">→</span><span>${to}</span></li>`;
+      }).join("");
+      return `${name} ${final ? "locked in" : `has linked ${linked} of ${ord.a.length}`}:<ul class="gauge-pairs">${rows}</ul>`;
+    }
+    return `${name} ${verb} <b>“${esc(A.responseText(q, r))}”</b>`;
+  }
+  let gaugeOpen = false, doubleArmed = 0, powerBusy = false, powerQ = -1;
+  // redraws only what changed: the room is polled every second, and a redraw mid-click would swallow the click
+  const setHtml = (el, html) => { if (el.dataset.html !== html) { el.dataset.html = html; el.innerHTML = html; } };
+  function renderPowers(t) {
+    const card = $("powerCard");
+    card.hidden = !HOSTING() || !ROOM || !!S.finished || ROOM.phase === "finished";
+    if (card.hidden) return;
+    t = t || tally();
+    const k = S.index, q = QS()[k], powers = ROOM.powers || {}, used = powers[k] || {};
+    if (k !== powerQ) { powerQ = k; gaugeOpen = false; doubleArmed = 0; $("powerNote").textContent = ""; }
+    const reveal = ROOM.phase === "reveal" && ROOM.index === k;
+    // after the reveal, the charge this answer earned shows straight away
+    const { held, run } = G.charges(takerRights(t), powers, reveal ? k + 1 : k);
+    const open = ROOM.phase === "question" && ROOM.index === k && !locked && !powerBusy;
+    setHtml($("powerCharges"), [...Array(G.POWER.hold)].map((_, i) => `<i class="${i < held ? "on" : ""}"></i>`).join(""));
+    $("powerCharges").setAttribute("aria-label", `${held} of ${G.POWER.hold} charges`);
+    $("powerRun").textContent = held >= G.POWER.hold ? `Both charges full. Spend one, or your next run of ${G.POWER.run} earns nothing.`
+      : `${run} of ${G.POWER.run} right in a row to the next charge`;
+
+    const dbl = $("pwDouble"), armed = doubleArmed && Date.now() < doubleArmed;
+    dbl.disabled = !used.double && (!open || held < 1);
+    dbl.classList.toggle("on", !!used.double); dbl.classList.toggle("armed", !used.double && !!armed);
+    dbl.querySelector("small").textContent = used.double ? "On: this question counts twice, win or lose"
+      : armed ? "Click again to lock it in. No take-backs." : "Points ×2 on this question, win or lose";
+
+    const gau = $("pwGauge"), g = used.gauge;
+    gau.disabled = !g && (!open || held < 1);
+    gau.classList.toggle("on", !!g); gau.setAttribute("aria-expanded", String(!g && gaugeOpen));
+    gau.querySelector("small").textContent = g ? "Used on this question" : "See one teammate's pick, as it stands";
+    const pick = $("gaugePick");
+    pick.hidden = !!g || !gaugeOpen || !open;
+    if (!pick.hidden) {
+      // only teammates who have picked something can be looked at
+      const answered = new Set(ROOM.answered || []);
+      const ready = t.rows.slice(1).filter((p) => answered.has(p.id) || p.busy === k);
+      setHtml(pick, ready.length
+        ? `<p>Whose pick?</p>` + ready.map((p) => `<button type="button" class="gauge-who" data-m="${p.id}" style="--c:${esc(p.color)}"><span class="avatar" aria-hidden="true">${initial(p.name)}</span>${esc(p.name)}</button>`).join("")
+        : "<p>Nobody has picked anything yet.</p>");
+    }
+
+    // what the gauge showed: in the card, and on the question itself
+    const who = g && t.rows.find((p) => p.id === g.m);
+    $("gaugeSeen").hidden = !(g && who && "r" in g);
+    if (!$("gaugeSeen").hidden) {
+      $("gaugeSeen").style.setProperty("--c", who.color);
+      setHtml($("gaugeSeen"), `<span class="avatar" aria-hidden="true">${initial(who.name)}</span><span>${pickHtml(`<b>${esc(who.name)}</b>`, q, g.r, g.final)}`
+        + `<small>${g.final ? "Their answer is in. Right or wrong, you'll see at the reveal." : "Still choosing: they can change it."}</small></span>`);
+    }
+    for (const o of document.querySelectorAll(".opt")) {
+      const on = !!(g && who && Array.isArray(g.r) && g.r.includes(+o.dataset.orig));
+      let tag = o.querySelector(".peek");
+      if (on && !tag) { tag = document.createElement("span"); tag.className = "peek"; tag.setAttribute("aria-hidden", "true"); o.append(tag); }
+      if (on) { tag.textContent = (String(who.name || "?").trim()[0] || "?").toUpperCase(); tag.style.setProperty("--c", who.color); tag.title = `${who.name}'s pick`; }
+      else if (tag) tag.remove();
+    }
+    $("qCard").classList.toggle("doubled", !!used.double);
+    let chip = $("qMarks").querySelector(".dbl-chip");
+    if (used.double && !chip) { chip = document.createElement("span"); chip.className = "dbl-chip"; chip.textContent = "×2 Doubled"; $("qMarks").prepend(chip); }
+    else if (!used.double && chip) chip.remove();
+  }
+  async function usePower(kind, m) {
+    if (!HOSTING() || !ROOM || powerBusy) return;
+    powerBusy = true; $("powerNote").textContent = ""; renderPowers();
+    try { await roomAct({ action: "power", q: S.index, kind, m }); gaugeOpen = false; }
+    catch (e) { $("powerNote").textContent = e.message || "Couldn't reach the room. Try again."; }
+    powerBusy = false; doubleArmed = 0; renderPowers();
+  }
+  $("pwDouble").addEventListener("click", () => {
+    if ((ROOM && ROOM.powers || {})[S.index]?.double) return;
+    // two clicks: the first arms it, the second locks it in (it can't be taken back)
+    if (doubleArmed && Date.now() < doubleArmed) return usePower("double");
+    doubleArmed = Date.now() + 3500; renderPowers();
+    setTimeout(() => { if (doubleArmed && Date.now() >= doubleArmed) { doubleArmed = 0; renderPowers(); } }, 3600);
+  });
+  $("pwGauge").addEventListener("click", () => { gaugeOpen = !gaugeOpen; $("powerNote").textContent = ""; renderPowers(); });
+  $("gaugePick").addEventListener("click", (e) => { const b = e.target.closest("[data-m]"); if (b) usePower("gauge", +b.dataset.m); });
 
   // ---------- group play: everyone else's side (opened from the QR code) ----------
   function memberScreen(state, title, lead) {
@@ -1036,7 +1139,8 @@
   // everyone's result, kept with the attempt so the results survive a refresh (and the room closing)
   function board() {
     const t = tally();
-    return { reached: t.reached, rows: t.rows.map(({ id, name, color, taker, points, correct, crit, cells, deltas }) => ({ id, name, color, taker: !!taker, points, correct, crit, cells, deltas })) };
+    const powered = Object.values((ROOM && ROOM.powers) || {}).reduce((n, p) => n + (p.double ? 1 : 0) + (p.gauge ? 1 : 0), 0);
+    return { reached: t.reached, powered, rows: t.rows.map(({ id, name, color, taker, points, correct, crit, cells, deltas, game, gameDeltas }) => ({ id, name, color, taker: !!taker, points, correct, crit, cells, deltas, game, gameDeltas })) };
   }
 
   // ---------- finish & results ----------
@@ -1086,6 +1190,7 @@
     })(t0);
   }
   const plural = (n, one, many) => `${n} ${Math.abs(n) === 1 ? one : many}`;
+  const gameOf = (r) => (r.game != null ? r.game : r.points); // the room's scoreboard (a board saved before powerups has none)
 
   function showResults() {
     if (meter) meter.stop();
@@ -1098,7 +1203,7 @@
     const reading = member ? A.pointsReading(taker.points, n, n) : sc.p, award = reading >= awardLine();
 
     if (member) {
-      $("resTitle").textContent = `${tName} scored ${G.signed(taker.points)}.`;
+      $("resTitle").textContent = `${tName} scored ${G.signed(gameOf(taker))}.`;
       $("resMsg").textContent = `${tName} got ${taker.correct} of ${n} right${award ? " and finished in the award zone" : ""}. Here's how the whole room did, and your own answers underneath.`;
     } else {
       $("resTitle").textContent = award ? `Award winner, ${name}! Welcome to the team.` : `Nice run, ${name}! Onboarding complete.`;
@@ -1110,11 +1215,14 @@
     $("resBadge").hidden = !award;
     const zt = $("resZone"); zt.hidden = member;
     if (!member) { zt.textContent = "Meter: " + new Meter(null, null, LABELS()).zone(sc.p); zt.className = "zone-tag" + (sc.p >= 1 / 3 ? " good" : sc.p <= -1 / 3 ? " bad" : ""); }
-    $("resOf").textContent = `${taker.correct} of ${n} correct` + (group ? ` · ${plural(bd.rows.length - 1, "teammate", "teammates")} in the room` : "");
+    $("resOf").textContent = `${taker.correct} of ${n} correct` + (group ? ` · ${plural(bd.rows.length - 1, "teammate", "teammates")} in the room` : "")
+      + (!member && gameOf(taker) !== taker.points ? ` · ${G.signed(gameOf(taker))} on the room's scoreboard, with powerups` : "");
     $("resCrit").hidden = !taker.crit; $("resCrit").textContent = `${taker.crit} critical ${taker.crit === 1 ? "error" : "errors"}`;
-    $("resPtsUnit").textContent = Math.abs(taker.points) === 1 ? "point" : "points";
+    // the taker sees their recorded points; a teammate sees the taker's points on the room's scoreboard
+    const headPts = member ? gameOf(taker) : taker.points;
+    $("resPtsUnit").textContent = Math.abs(headPts) === 1 ? "point" : "points";
     show("scrResults");
-    countUp($("resPts"), taker.points, 1200, G.signed);
+    countUp($("resPts"), headPts, 1200, G.signed);
 
     // every answer, in order
     const strip = $("resStrip"); strip.innerHTML = "";
@@ -1170,7 +1278,7 @@
     card.hidden = bd.rows.length < 2;
     if (card.hidden) return;
     const n = QS().length, taker = bd.rows[0];
-    const team = bd.rows.slice(1).sort((a, b) => b.points - a.points || b.correct - a.correct);
+    const team = bd.rows.slice(1).sort((a, b) => gameOf(b) - gameOf(a) || b.correct - a.correct);
     const medals = ["🥇", "🥈", "🥉"];
     $("roomSub").textContent = `${plural(team.length, "teammate", "teammates")} played along with ${taker.name}` + (bd.reached < n ? ` · the room reached question ${bd.reached} of ${n}` : "");
     const cells = (r) => `<span class="mini-strip" aria-hidden="true">${r.cells.map((c, i) => `<i class="${c}${QS()[i] && QS()[i].critical ? " crit" : ""}"></i>`).join("")}</span>`;
@@ -1179,10 +1287,10 @@
       return `<div class="board-row${r.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(r.color)}">
         <span class="rank">${r.taker ? "" : rank < 3 && team.length > 1 ? medals[rank] : rank + 1}</span>
         <span class="avatar" aria-hidden="true">${initial(r.name)}</span>
-        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "In the hot seat" + (award ? " · 🏆 Award" : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
+        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "In the hot seat" + (award ? " · 🏆 Award" : "") + (bd.powered ? ` · ⚡ ${plural(bd.powered, "powerup", "powerups")}` : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
         ${cells(r)}
         <span class="right-n"><b>${r.correct}</b><small>of ${n}</small></span>
-        <span class="pts ${r.points > 0 ? "up" : r.points < 0 ? "down" : ""}">${G.signed(r.points)}<small>${Math.abs(r.points) === 1 ? "point" : "points"}</small></span>
+        <span class="pts ${gameOf(r) > 0 ? "up" : gameOf(r) < 0 ? "down" : ""}">${G.signed(gameOf(r))}<small>${Math.abs(gameOf(r)) === 1 ? "point" : "points"}</small></span>
       </div>`;
     };
     $("roomBoard").innerHTML = row(taker, -1) + `<p class="board-label">The team</p>` + team.map(row).join("");
