@@ -71,8 +71,8 @@
   // already held earns nothing). A charge buys one powerup on the question on screen:
   //   double: the taker's points on this question count twice, win or lose, and it can't be taken back.
   //   gauge:  one teammate's pick, as it stands right now (they can still change it, and they may be wrong).
-  //   call:   a bet on how many teammates get it wrong. Exactly right wins 2 + 2 a teammate (a bigger room is harder
-  //           to call); off by any amount loses 3. The call is on the main screen, so the team can play against it,
+  //   call:   "Bet on the team": how many teammates get it wrong. Exactly right wins 2 + 2 a teammate (a bigger room is harder
+  //           to call); off by any amount loses 3. The bet is on the main screen, so the team can play against it,
   //           though a wrong answer costs them.
   // They only change the room's scoreboard: the recorded points, the meter and the award are worked out without them.
   const POWER = { run: 3, hold: 2, call: { base: 2, each: 2, miss: -3 } };

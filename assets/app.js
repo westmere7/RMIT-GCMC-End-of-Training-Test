@@ -213,7 +213,7 @@
     $("lobbyQr").innerHTML = G.qrSvg(url);
     $("lobbyCode").textContent = S.group.code;
     $("lobbyUrl").textContent = joinUrl().replace(/^https?:\/\//, ""); $("lobbyUrl").href = url;
-    $("lobbyRules").innerHTML = pointsHtml(); $("lobbyRules").hidden = false;
+    $("lobbyRules").innerHTML = pointsHtml() + `<div class="pts-powers">${powersHtml("Powerups for " + esc(S.name || "the taker"))}</div>`; $("lobbyRules").hidden = false;
     $("briefLead").textContent = "A quick game on everything from your onboarding. Bring the team: they scan in and play along.";
     $("startNote").textContent = "Start when everyone's in. Each question moves on when you submit it.";
     lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
@@ -254,13 +254,13 @@
   });
   // the points rules in four lines: right and wrong, for the taker and for everyone else
   function pointsHtml() {
-    const name = esc(S.name || "the taker"), T = G.RULES.taker, M = G.RULES.member;
+    const who = MEMBER() ? takerName() : S.name, name = esc(who || "the taker"), T = G.RULES.taker, M = G.RULES.member;
     const range = (a, b) => `${G.signed(a)}<i>to</i>${G.signed(b)}`;
     const row = (ok, cls, pts, text) => `<p class="pts-row"><span class="mark ${ok ? "y" : "n"}" aria-label="${ok ? "Right" : "Wrong"}"></span><b class="${cls}">${pts}</b><span>${text}</span></p>`;
     return `<div class="pts-head"><h2 class="pts-title">How points work</h2>
         <p class="pts-note"><span class="crit-chip">Critical</span> questions count double · No answer when ${name} submits counts as wrong</p></div>
       <div class="pts-who">
-        <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(S.name)}</span>${name}</h3>
+        <h3><span class="av" style="--c:${G.TAKER_COLOUR}" aria-hidden="true">${initial(who)}</span>${name}</h3>
         ${row(true, "up", range(T.right.allRight, T.right.allWrong), "more for each teammate who got it wrong")}
         ${row(false, "down", range(T.wrong.allRight, T.wrong.allWrong), "less of a loss for each teammate who got it wrong too")}
       </div>
@@ -745,7 +745,7 @@
   $("nextBtn").addEventListener("click", () => nextQuestion());
 
   document.addEventListener("keydown", (e) => {
-    if ($("scrTest").hidden) return;
+    if ($("scrTest").hidden || $("rulesPop").open) return;
     if (locked) {
       if (e.key === "Enter" && HOSTING() && revealShown && !$("nextBtn").disabled && !(e.target.closest && e.target.closest("button"))) { e.preventDefault(); nextQuestion(); }
       return;
@@ -885,7 +885,7 @@
     const c = ((ROOM && ROOM.powers) || {})[k] && ROOM.powers[k].call;
     if (!c) return "";
     const d = G.callPoints(c.n, missed, size);
-    return c.n === missed ? ` · Called it: ${G.signed(d)}` : ` · The call was ${c.n}: ${G.signed(d)}`;
+    return c.n === missed ? ` · Bet won: ${G.signed(d)}` : ` · Bet lost (you said ${c.n}): ${G.signed(d)}`;
   }
   // redraws only what changed: the room is polled every second, and a redraw mid-click would swallow the click
   const setHtml = (el, html) => { if (el.dataset.html !== html) { el.dataset.html = html; el.innerHTML = html; } };
@@ -926,22 +926,22 @@
         : "<p>Nobody has picked anything yet.</p>");
     }
 
-    // the call: how many teammates get it wrong (everyone watching sees it, and the team can play against it)
+    // the bet on the team: how many teammates get it wrong (everyone watching sees it, and the team can play against it)
     const size = t.rows.length - 1, c = used.call, cb = $("pwCall");
     cb.disabled = !c && (!open || held < 1);
     cb.classList.toggle("on", !!c); cb.setAttribute("aria-expanded", String(!c && callOpen));
-    cb.querySelector("small").textContent = c ? `Called: ${c.n} wrong` : "Bet on how many miss";
+    cb.querySelector("small").textContent = c ? `Bet: ${c.n} wrong` : "Bet on how many miss";
     const cp = $("callPick");
     cp.hidden = !!c || !callOpen || !open;
-    if (!cp.hidden) setHtml(cp, `<p>How many teammates will get it wrong?</p><div class="call-nums">`
+    if (!cp.hidden) setHtml(cp, `<p>Place your bet: how many teammates will get it wrong?</p><div class="call-nums">`
       + [...Array(size + 1)].map((_, n) => `<button type="button" data-n="${n}">${n}</button>`).join("")
-      + `</div><p class="call-odds">Exactly right: <b>${G.signed(G.callPoints(0, 0, size))}</b> · Off by any: <b>${G.signed(G.POWER.call.miss)}</b> · Everyone sees your call</p>`);
+      + `</div><p class="call-odds">Exactly right: <b>${G.signed(G.callPoints(0, 0, size))}</b> · Off by any: <b>${G.signed(G.POWER.call.miss)}</b> · Everyone sees your bet</p>`);
     $("callSeen").hidden = !c;
     if (c) {
       const missed = t.rows.slice(1).filter((p) => p.cells[k] !== "ok").length;
       setHtml($("callSeen"), reveal
-        ? (c.n === missed ? `<b>Called it.</b> ${c.n} of ${size} got it wrong: ${G.signed(G.callPoints(c.n, missed, size))}` : `<b>The call missed.</b> You said ${c.n}, it was ${missed}: ${G.signed(G.POWER.call.miss)}`)
-        : `You called <b>${c.n} of ${size}</b> wrong. Exactly right wins ${G.signed(G.callPoints(0, 0, size))}, anything else loses ${Math.abs(G.POWER.call.miss)}.`);
+        ? (c.n === missed ? `<b>Bet won.</b> ${c.n} of ${size} got it wrong: ${G.signed(G.callPoints(c.n, missed, size))}` : `<b>Bet lost.</b> You bet ${c.n}, it was ${missed}: ${G.signed(G.POWER.call.miss)}`)
+        : `You bet <b>${c.n} of ${size}</b> get it wrong. Exactly right wins ${G.signed(G.callPoints(0, 0, size))}, anything else loses ${Math.abs(G.POWER.call.miss)}.`);
     }
 
     // what the gauge showed: in the card, and on the question itself
@@ -965,7 +965,7 @@
     else if (!used.double && chip) chip.remove();
     let callChip = $("qMarks").querySelector(".call-chip");
     if (c && !callChip) { callChip = document.createElement("span"); callChip.className = "call-chip"; $("qMarks").prepend(callChip); }
-    if (c) callChip.textContent = `Called: ${c.n} wrong`; else if (callChip) callChip.remove();
+    if (c) callChip.textContent = `Bet: ${c.n} wrong`; else if (callChip) callChip.remove();
   }
   async function usePower(kind, m, n) {
     if (!HOSTING() || !ROOM || powerBusy) return;
@@ -985,6 +985,37 @@
   $("pwCall").addEventListener("click", () => { callOpen = !callOpen; gaugeOpen = false; $("powerNote").textContent = ""; renderPowers(); });
   $("callPick").addEventListener("click", (e) => { const b = e.target.closest("[data-n]"); if (b) usePower("call", undefined, +b.dataset.n); });
   $("gaugePick").addEventListener("click", (e) => { const b = e.target.closest("[data-m]"); if (b) usePower("gauge", +b.dataset.m); });
+
+  // ---------- the rules, from the Rules button on the timer ----------
+  /** The powerups, for the rules and the briefing's points card. `title` heads the list. */
+  function powersHtml(title) {
+    const P = G.POWER, win = (size) => G.signed(G.callPoints(0, 0, size));
+    const li = (b, text) => `<li><b>${b}</b> ${text}</li>`;
+    return `<h3 class="rules-sub">${title}</h3><ul class="rules-list">`
+      + li(`Earn a ⚡ charge`, `for every ${P.run} right answers in a row, ${P.hold} held at most. Each one buys a powerup on the question on screen, before submitting.`)
+      + li("Double down:", "points ×2 on this question, right or wrong. No take-backs.")
+      + li("Gauge the room:", "see one teammate's pick as it stands. They can still change it, and they may be wrong.")
+      + li("Bet on the team:", `bet on how many teammates get it wrong. Exactly right wins ${win(1)} with one teammate, ${win(3)} with three (2 + 2 a teammate); anything else loses ${Math.abs(P.call.miss)}. Everyone sees the bet.`)
+      + `</ul><p class="rules-fine">Powerups change the room's scoreboard only: the training record, the meter and the award count the points without them.</p>`;
+  }
+  function rulesHtml() {
+    const n = QS().length, group = GROUP(), mins = Math.round((group && S.clock ? S.clock.limitMs : S.limitMs) / 60000);
+    const tn = esc(takerName());
+    const li = (b, text) => `<li><b>${b}</b> ${text}</li>`;
+    let h = `<h2 id="rulesTitle">The rules</h2><ul class="rules-list">`
+      + li(`${n} questions, ${mins} minutes.`, group ? "The clock stops while an answer is on show. When it runs out, the question on screen and any after it score nothing." : "When the clock runs out, the test submits itself, and anything unanswered scores nothing.")
+      + li("Lock it in to answer.", MEMBER() ? `You can't change it after. Not submitted when ${tn} submits? Your pick still counts.` : "You can't change it after. A skip counts as wrong.")
+      + li("Critical questions", "are flagged in red and count double, right or wrong.")
+      + li("The meter", `shows how ${MEMBER() ? tn + " is" : "you're"} doing: ${group ? `${MEMBER() ? tn + "'s" : "your"} points, without powerups` : "right answers against wrong ones"}. Finish in the purple award zone at the top for an award.`)
+      + `</ul>`;
+    if (!group) h += `<h3 class="rules-sub">Points</h3><ul class="rules-list">${li(`${G.signed(G.RULES.solo.right)} for a right answer,`, `${G.signed(G.RULES.solo.wrong)} for a wrong or skipped one (${G.signed(G.RULES.solo.right * 2)} and ${G.signed(G.RULES.solo.wrong * 2)} on a critical question).`)}</ul>`
+      + powersHtml("Powerups: with the team in the room");
+    else h += `<div class="rules-pts">${pointsHtml()}</div>` + powersHtml(MEMBER() ? `${tn}'s powerups` : "Powerups");
+    return h;
+  }
+  $("rulesBtn").addEventListener("click", () => { $("rulesBody").innerHTML = rulesHtml(); $("rulesPop").showModal(); });
+  $("rulesClose").addEventListener("click", () => $("rulesPop").close());
+  $("rulesPop").addEventListener("click", (e) => { if (e.target === $("rulesPop")) $("rulesPop").close(); }); // a click outside it
 
   // ---------- group play: everyone else's side (opened from the QR code) ----------
   function memberScreen(state, title, lead) {

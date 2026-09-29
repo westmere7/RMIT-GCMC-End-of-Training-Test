@@ -178,7 +178,7 @@
       <aside class="side">
         <div class="timer" id="timer">
           <p class="eyebrow">Time remaining</p>
-          <div class="clock"><span class="digits" id="digits">10:00</span></div>
+          <div class="clock"><span class="digits" id="digits">10:00</span><button type="button" class="rules-btn" id="rulesBtn" aria-haspopup="dialog">Rules</button></div>
           <div class="t-track"><i id="tFill"></i></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
         </div>
@@ -188,7 +188,7 @@
           <div class="power-btns">
             <button type="button" class="power" id="pwDouble"><b>Double down</b><small></small></button>
             <button type="button" class="power" id="pwGauge" aria-controls="gaugePick"><b>Gauge the room</b><small></small></button>
-            <button type="button" class="power" id="pwCall" aria-controls="callPick"><b>Call the room</b><small></small></button>
+            <button type="button" class="power" id="pwCall" aria-controls="callPick"><b>Bet on the team</b><small></small></button>
           </div>
           <div class="gauge-pick" id="gaugePick" hidden></div>
           <div class="call-pick" id="callPick" hidden></div>
@@ -266,6 +266,11 @@
   </section>
 
   <!-- the QR code, big enough to scan from across the room -->
+  <dialog class="rules-pop" id="rulesPop" aria-labelledby="rulesTitle">
+    <button type="button" class="qr-pop-close" id="rulesClose" aria-label="Close">×</button>
+    <div id="rulesBody"></div>
+  </dialog>
+
   <dialog class="qr-pop" id="qrPop" aria-labelledby="qrPopTitle">
     <div class="qr-pop-qr" id="qrPopQr"></div>
     <div class="qr-pop-info">

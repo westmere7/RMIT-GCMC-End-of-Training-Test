@@ -1075,6 +1075,28 @@ html.joiner .q-card { min-height: 0; }
 button.qr { border: 0; cursor: zoom-in; position: relative; transition: transform 0.15s; }
 button.qr:hover { transform: scale(1.03); }
 button.qr::after { content: ""; position: absolute; right: -6px; bottom: -6px; width: 26px; height: 26px; border-radius: 50%; background: var(--yellow) no-repeat center / 14px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000054' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='7' cy='7' r='4.5'/%3E%3Cpath d='M10.5 10.5 14 14M7 5v4M5 7h4'/%3E%3C/svg%3E"); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3); }
+/* the rules, during the test (the Rules button on the timer) */
+.rules-btn { position: absolute; top: 18px; right: 18px; z-index: 1; padding: 4px 12px; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.4); background: transparent; color: #fff; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.rules-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: #fff; }
+html.preview .rules-btn { display: none; }
+@media (max-width: 860px) { .rules-btn { position: static; margin-left: auto; } }
+.rules-pop { border: 0; border-radius: 14px; padding: 30px 34px 28px; width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 32px); overflow: auto; background: #fff; color: var(--body); box-shadow: 0 30px 80px -20px rgba(0, 0, 40, 0.6); }
+.rules-pop[open] { animation: rise 0.25s ease both; }
+.rules-pop::backdrop { background: rgba(0, 0, 40, 0.72); backdrop-filter: blur(3px); }
+.rules-pop h2 { font-size: 26px; margin-bottom: 14px; padding-right: 40px; }
+.rules-sub { font-family: var(--text); font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red); margin: 22px 0 10px; }
+.rules-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 15px; line-height: 1.45; }
+.rules-list li { padding-left: 16px; position: relative; }
+.rules-list li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--red); }
+.rules-list b { color: var(--ink); }
+.rules-pts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 40px; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.rules-fine { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.pts-powers { grid-column: 1 / -1; padding-top: 4px; border-top: 1px solid var(--line); }
+.pts-powers .rules-list { font-size: 14px; }
+@media (max-width: 720px) {
+  .rules-pop { padding: 24px 18px 20px; }
+  .rules-pts { grid-template-columns: minmax(0, 1fr); }
+}
 .qr-pop { border: 0; border-radius: 14px; padding: 36px; background: #fff; color: var(--body); max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); box-shadow: 0 30px 80px -20px rgba(0, 0, 40, 0.6); }
 .qr-pop[open] { display: flex; align-items: center; gap: 40px; animation: rise 0.25s ease both; }
 .qr-pop::backdrop { background: rgba(0, 0, 40, 0.72); backdrop-filter: blur(3px); }
