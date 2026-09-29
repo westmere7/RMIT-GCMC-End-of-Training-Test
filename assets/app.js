@@ -417,7 +417,9 @@
         const a = ANS[k] || {}; return id in a ? { r: a[id], skipped: a[id] == null } : null;
       };
       const right = rows.map((p) => { const g = given(p.id); return !!g && !g.skipped && A.isCorrect(q, g.r); });
-      const pts = k < reached ? G.points(q.critical, right[0], right.slice(1)) : { taker: 0, members: members.map(() => 0) };
+      // on your own, questions not answered yet, and the ones time ran out on, score nothing (in a room, `reached` already stops short of them)
+      const out = !GROUP() && (!S.responses[q.id] || S.responses[q.id].timedOut);
+      const pts = k < reached && !out ? G.points(q.critical, right[0], right.slice(1)) : { taker: 0, members: members.map(() => 0) };
       rows.forEach((p, i) => {
         const g = given(p.id), d = i === 0 ? pts.taker : pts.members[i - 1];
         p.points += d; p.deltas.push(k < reached ? d : null);

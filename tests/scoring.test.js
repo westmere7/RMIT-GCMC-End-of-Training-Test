@@ -52,11 +52,11 @@ test("critical questions double everything, both ways", () => {
     }
 });
 
-test("on your own: +1 right, 0 wrong (×2 when critical)", () => {
+test("on your own: +1 right, −1 wrong (×2 when critical)", () => {
   assert.equal(G.points(false, true, []).taker, 1);
-  assert.equal(G.points(false, false, []).taker, 0);
+  assert.equal(G.points(false, false, []).taker, -1);
   assert.equal(G.points(true, true, []).taker, 2);
-  assert.equal(G.points(true, false, []).taker, 0);
+  assert.equal(G.points(true, false, []).taker, -2);
 });
 
 test("the numbers on the start page are the ones the scoring uses", () => {
@@ -149,9 +149,13 @@ test("meter with a team: it follows the points, breaking even in the middle", ()
 const RUNS = 3000;
 const simulate = (opts, seed = 1) => { const r = rng(seed); return [...Array(RUNS)].map(() => sit({ A, G }, r, { n: N, crit: CRIT, ...opts })); };
 
-test("simulated: on your own, points track right answers (0…54)", () => {
+test("simulated: on your own, points are right answers less wrong ones, critical ×2 (−54…54)", () => {
   const runs = simulate({ taker: 0.8 });
-  for (const s of runs) assert.ok(s.takerPoints >= s.takerRight && s.takerPoints <= s.takerRight + CRIT && s.takerPoints <= N + CRIT);
+  for (const s of runs) {
+    const wrong = N - s.takerRight;
+    assert.ok(s.takerPoints >= s.takerRight - wrong - CRIT && s.takerPoints <= s.takerRight - wrong + CRIT);
+    assert.ok(Math.abs(s.takerPoints) <= N + CRIT);
+  }
 });
 
 test("simulated: a stronger taker scores more, whatever the team", () => {

@@ -67,7 +67,7 @@ Sign-in is a testing build: any email and any staff ID get in. The first time so
 
 The score is points, not a percentage.
 
-- **On your own:** +1 for each right answer, 0 for a wrong or skipped one.
+- **On your own:** +1 for each right answer, −1 for a wrong or skipped one. Questions time ran out on score nothing.
 - **With the team in the room:** the taker's points depend on how the team did on that question, and each teammate's on how the taker did. A teammate with no answer by the time the taker submits counts as wrong.
 
   | Taker | Team | Taker's points |

@@ -53,8 +53,9 @@
   // up to +10 (the whole team wrong); wrong, −5 (the whole team right) up to 0 (the whole team wrong too). In between,
   // each teammate who got it wrong is worth the same, so a bigger room doesn't change what a taker scores on average.
   // Teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker was wrong too.
-  // Critical questions count double, both ways. With nobody else in the room, a right answer is +1 and a wrong one 0.
+  // Critical questions count double, both ways. With nobody else in the room, a right answer is +1 and a wrong one −1.
   const RULES = {
+    solo: { right: 1, wrong: -1 },
     taker: { right: { allRight: 1, allWrong: 10 }, wrong: { allRight: -5, allWrong: 0 } },
     member: { right: 1, wrongTakerRight: -3, wrongTakerWrong: -2 },
   };
@@ -62,7 +63,7 @@
   function points(critical, takerRight, memberRights) {
     const k = critical ? 2 : 1, n = memberRights.length, share = n ? memberRights.filter((x) => !x).length / n : 0;
     const ends = takerRight ? RULES.taker.right : RULES.taker.wrong, M = RULES.member;
-    const t = !n ? (takerRight ? 1 : 0) : Math.round(ends.allRight + (ends.allWrong - ends.allRight) * share) || 0;
+    const t = !n ? (takerRight ? RULES.solo.right : RULES.solo.wrong) : Math.round(ends.allRight + (ends.allWrong - ends.allRight) * share) || 0;
     return { taker: t * k, members: memberRights.map((ok) => (ok ? M.right : takerRight ? M.wrongTakerRight : M.wrongTakerWrong) * k) };
   }
   const signed = (n) => (n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0");
