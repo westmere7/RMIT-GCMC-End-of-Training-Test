@@ -41,8 +41,8 @@ function sit({ A, G }, random, { n = 45, crit = 9, taker = 0.8, team = [], sprea
     tp += pts.taker; pts.members.forEach((d, k) => { mp[k] += d; if (mr[k]) mc[k]++; });
     if (tr) { tc++; rw += critical ? 2 : 1; } else { tw++; ww += critical ? 2 : 1; }
   }
-  // the meter: on your own, right against wrong (critical ×2); with a team, the taker's points
-  const meter = team.length ? A.pointsReading(tp, n, n) : A.meterReading(rw, ww, n);
+  // the meter: right against wrong (critical ×2), with or without a team
+  const meter = A.meterReading(rw, ww, n);
   return { takerPoints: tp, takerRight: tc, meter, memberPoints: mp, memberRight: mc };
 }
 

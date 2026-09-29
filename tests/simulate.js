@@ -24,6 +24,6 @@ for (const t of [0.3, 0.5, 0.65, 0.8, 0.95]) console.log(row(`taker ${t * 100}%`
 head("The meter at the end, with 3 teammates at 70%");
 for (const t of [0.3, 0.5, 0.65, 0.8, 0.95]) console.log(row(`taker ${t * 100}%`, run({ taker: t, team: [0.7, 0.7, 0.7] }, 5).map((s) => +s.meter.toFixed(2)), 2));
 
-console.log(`\nPer question: taker −5…+10, teammate −3…+1, both doubled on critical questions.`);
+console.log(`\nPer question: taker −3…+10, teammate −3…+1, both doubled on critical questions.`);
 console.log(`Most possible in a room: ${(N - CRIT) * 10 + CRIT * 20} (taker right every time, everyone else wrong every time).`);
-console.log(`Least possible in a room: −${(N - CRIT) * 5 + CRIT * 10} (taker wrong every time, everyone else right).`);
+console.log(`Least possible in a room: −${(N - CRIT) * 3 + CRIT * 6} (taker wrong every time, everyone else right).`);

@@ -50,13 +50,13 @@
   // ---------- points ----------
   // The taker's points depend on how the rest of the room did; each member's on how the taker did.
   // The taker's run between two ends, by the share of the team that got it wrong: right, +1 (the whole team right too)
-  // up to +10 (the whole team wrong); wrong, −5 (the whole team right) up to 0 (the whole team wrong too). In between,
+  // up to +10 (the whole team wrong); wrong, −3 (the whole team right) up to 0 (the whole team wrong too). In between,
   // each teammate who got it wrong is worth the same, so a bigger room doesn't change what a taker scores on average.
   // Teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker was wrong too.
   // Critical questions count double, both ways. With nobody else in the room, a right answer is +1 and a wrong one −1.
   const RULES = {
     solo: { right: 1, wrong: -1 },
-    taker: { right: { allRight: 1, allWrong: 10 }, wrong: { allRight: -5, allWrong: 0 } },
+    taker: { right: { allRight: 1, allWrong: 10 }, wrong: { allRight: -3, allWrong: 0 } },
     member: { right: 1, wrongTakerRight: -3, wrongTakerWrong: -2 },
   };
   /** Points for one question. takerRight: bool; memberRights: bools (an unanswered member counts as wrong). */
@@ -74,7 +74,8 @@
   //   call:   "Bet on the team": how many teammates get it wrong. Exactly right wins 2 + 2 a teammate (a bigger room is harder
   //           to call); off by any amount loses 3. The bet is on the main screen, so the team can play against it,
   //           though a wrong answer costs them.
-  // They only change the room's scoreboard: the recorded points, the meter and the award are worked out without them.
+  // They only change the room's scoreboard: the recorded points leave them out, and the meter and the award follow the
+  // taker's own answers (see Assess.meterReading).
   const POWER = { run: 3, hold: 2, call: { base: 2, each: 2, miss: -3 } };
   const spentAt = (p) => (p ? (p.double ? 1 : 0) + (p.gauge ? 1 : 0) + (p.call ? 1 : 0) : 0);
   /** What a call pays: `called` teammates wrong, `missed` actually were, out of `size`. */

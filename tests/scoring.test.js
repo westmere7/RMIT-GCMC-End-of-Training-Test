@@ -12,21 +12,21 @@ test("taker: the ends of each range", () => {
   assert.equal(T(true, [false, false, false]), 10, "right, the whole team wrong");
   assert.equal(T(true, [true, true, true]), 1, "right, the whole team right too");
   assert.equal(T(false, [false, false, false]), 0, "wrong, the whole team wrong too");
-  assert.equal(T(false, [true, true, true]), -5, "wrong, the whole team right");
+  assert.equal(T(false, [true, true, true]), -3, "wrong, the whole team right");
 });
 
 test("taker: in between, each teammate who got it wrong is worth the same", () => {
   const T = (right, wrongOf3) => G.points(false, right, [0, 1, 2].map((i) => i >= wrongOf3)).taker;
   assert.deepEqual([0, 1, 2, 3].map((w) => T(true, w)), [1, 4, 7, 10], "right: +3 for each of 3 teammates who missed it");
-  assert.deepEqual([0, 1, 2, 3].map((w) => T(false, w)), [-5, -3, -2, 0], "wrong: less of a loss for each one who missed it too");
+  assert.deepEqual([0, 1, 2, 3].map((w) => T(false, w)), [-3, -2, -1, 0], "wrong: less of a loss for each one who missed it too");
   assert.equal(G.points(false, true, [true, false]).taker, 6, "1 of 2 wrong: halfway, rounded");
-  assert.equal(G.points(false, false, [true, false]).taker, -2);
+  assert.equal(G.points(false, false, [true, false]).taker, -1, "halfway, rounded");
 });
 
 test("taker: with one teammate it's one end or the other", () => {
   assert.equal(G.points(false, true, [true]).taker, 1);
   assert.equal(G.points(false, true, [false]).taker, 10);
-  assert.equal(G.points(false, false, [true]).taker, -5);
+  assert.equal(G.points(false, false, [true]).taker, -3);
   assert.equal(G.points(false, false, [false]).taker, 0);
 });
 
@@ -108,7 +108,7 @@ test("powerups: a call wins 2 + 2 a teammate when exactly right, loses 3 otherwi
   assert.equal(G.charges([true, true, true, true], { 3: { call: { n: 0 } } }, 3).held, 0, "a call costs a charge");
 });
 
-test("per question, points stay within −5…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
+test("per question, points stay within −3…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
   for (const critical of [false, true])
     for (const takerRight of [true, false])
       for (let size = 1; size <= 8; size++)
@@ -116,7 +116,7 @@ test("per question, points stay within −5…+10 (taker) and −3…+1 (teammat
           const team = [...Array(size)].map((_, i) => !!(mask & (1 << i))), k = critical ? 2 : 1;
           const p = G.points(critical, takerRight, team);
           assert.ok(Number.isInteger(p.taker) && !Object.is(p.taker, -0));
-          assert.ok(p.taker >= -5 * k && p.taker <= 10 * k);
+          assert.ok(p.taker >= -3 * k && p.taker <= 10 * k);
           for (const m of p.members) assert.ok(m >= -3 * k && m <= 1 * k);
         }
 });
@@ -220,8 +220,8 @@ test("simulated: the size of the room barely changes what a taker scores on aver
   for (const taker of [0.6, 0.8, 0.95]) {
     const means = [1, 2, 3, 6].map((size) => stats(simulate({ taker, team: Array(size).fill(0.7) }).map((s) => s.takerPoints)).mean);
     const lo = Math.min(...means), hi = Math.max(...means);
-    // within about a dozen points (whole-number rounding of the in-between cases); it used to swing 119 vs 45
-    assert.ok(hi - lo <= Math.max(12, 0.1 * hi), `taker ${taker * 100}%: ${means.map((m) => m.toFixed(0)).join(" / ")}`);
+    // within about fifteen points over 45 questions (whole-number rounding of the in-between cases); it used to swing 119 vs 45
+    assert.ok(hi - lo <= Math.max(15, 0.1 * hi), `taker ${taker * 100}%: ${means.map((m) => m.toFixed(0)).join(" / ")}`);
   }
 });
 
@@ -232,13 +232,17 @@ test("simulated: teammates land either side of zero (a typical teammate breaks e
   assert.ok(mean(0.85) > 0, "a strong teammate gains");
 });
 
-test("simulated: with a team, the meter spreads players out sensibly", () => {
+test("simulated: the meter reads the taker's own answers, whoever's in the room", () => {
   const meter = new Meter(null, null, { left: "red", right: "welcome" }); meter.setThreshold(95);
-  const mean = (taker) => stats(simulate({ taker, team: [0.7, 0.7, 0.7] }).map((s) => s.meter)).mean;
-  assert.ok(mean(0.3) < -1 / 3, `a weak taker lands in the red (${mean(0.3).toFixed(2)})`);
-  assert.ok(Math.abs(mean(0.5)) < 0.2, `a coin-flip taker sits in the middle (${mean(0.5).toFixed(2)})`);
-  assert.ok(mean(0.8) >= 1 / 3 && mean(0.8) < meter.pg, `a good taker is welcome, short of confetti (${mean(0.8).toFixed(2)})`);
-  assert.ok(mean(0.97) >= 0.85, `a near-perfect taker is at the green end (${mean(0.97).toFixed(2)})`);
+  const mean = (taker, team) => stats(simulate({ taker, team }).map((s) => s.meter)).mean;
+  for (const taker of [0.3, 0.5, 0.65, 0.8, 0.97]) {
+    const alone = mean(taker, []);
+    // a newcomer with a strong team, or a weak one, lands where they would on their own
+    for (const team of [[0.9, 0.9, 0.9, 0.9], [0.5, 0.5], [0.7, 0.7, 0.7]]) assert.ok(Math.abs(mean(taker, team) - alone) < 0.02, `taker ${taker * 100}%, team ${team}`);
+  }
+  assert.ok(mean(0.3, [0.9, 0.9, 0.9, 0.9]) < -1 / 3, "a weak taker lands in the red");
+  assert.ok(Math.abs(mean(0.5, [0.9, 0.9, 0.9, 0.9])) < 0.2, "a coin-flip taker sits in the middle, even with a strong team");
+  assert.ok(mean(0.8, [0.9, 0.9, 0.9, 0.9]) >= 1 / 3 && mean(0.8, [0.9]) < meter.pg, "a good taker is welcome, short of confetti");
 });
 
 test("simulated: on your own, the meter lands in the same zones by accuracy", () => {

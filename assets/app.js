@@ -363,11 +363,16 @@
       const r = S.responses[q.id], k = q.critical ? 2 : 1; if (!r) return;
       if (r.correct) { c++; rw += k; } else { w++; ww += k; if (q.critical) crit++; }
     });
-    // the meter: with the team in it follows the taker's points; on your own, right against wrong (critical ×2)
-    const n = QS().length, pts = groupPoints();
-    return { c, w, crit, p: pts == null ? A.meterReading(rw, ww, n) : A.pointsReading(pts, c + w, n) };
+    // the meter: the taker's own answers, right against wrong (critical ×2), with or without the team, so the
+    // award doesn't depend on who's in the room
+    return { c, w, crit, p: A.meterReading(rw, ww, QS().length) };
   }
-  const groupPoints = () => (!HOSTING() ? null : S.board ? S.board.rows[0].points : ROOM ? tally().rows[0].points : null);
+  /** The taker's own points, as on their own (+1 right, −1 wrong, critical ×2; nothing for questions time ran out on).
+      The certificate shows these, so it doesn't depend on who's in the room either. */
+  const ownPoints = () => QS().reduce((n, q) => {
+    const r = S.responses[q.id], k = q.critical ? 2 : 1;
+    return !r || r.timedOut ? n : n + (r.correct ? G.RULES.solo.right : G.RULES.solo.wrong) * k;
+  }, 0);
 
   // the readout under the meter (points, question, streak); after an answer (k), its ripple and points chip too.
   // With the team in, the readout shows the room's scoreboard (powerups included); the needle stays on the recorded points.
@@ -861,7 +866,8 @@
 
   // ---------- powerups (the taker, with the team in the room) ----------
   // Charges come from runs of right answers (see Group.charges); each buys one powerup on the question on screen.
-  // They change the room's scoreboard only: the recorded points, the meter and the award are worked out without them.
+  // They change the room's scoreboard only: the recorded points leave them out, and the meter and the award follow the
+  // taker's own answers.
   const takerRights = (t) => t.rows[0].cells.map((c) => c === "ok");
   /** Did question k's answer earn a charge? */
   function chargeEarned(k) {
@@ -1001,7 +1007,7 @@
       + li("Double down:", "points ×2 on this question, right or wrong. No take-backs.")
       + li("Gauge the room:", "see one teammate's pick as it stands. They can still change it, and they may be wrong.")
       + li("Bet on the team:", `bet on how many teammates get it wrong. Exactly right wins ${win(1)} with one teammate, ${win(3)} with three (2 + 2 a teammate); anything else loses ${Math.abs(P.call.miss)}. Everyone sees the bet.`)
-      + `</ul><p class="rules-fine">Powerups change the room's scoreboard only: the training record, the meter and the award count the points without them.</p>`;
+      + `</ul><p class="rules-fine">Powerups change the room's scoreboard only: the training record leaves them out, and the meter and the award follow the answers alone.</p>`;
   }
   function rulesHtml() {
     const n = QS().length, group = GROUP(), mins = Math.round((group && S.clock ? S.clock.limitMs : S.limitMs) / 60000);
@@ -1011,7 +1017,7 @@
       + li(`${n} questions, ${mins} minutes.`, group ? "The clock stops while an answer is on show. When it runs out, the question on screen and any after it score nothing." : "When the clock runs out, the test submits itself, and anything unanswered scores nothing.")
       + li("Lock it in to answer.", MEMBER() ? `You can't change it after. Not submitted when ${tn} submits? Your pick still counts.` : "You can't change it after. A skip counts as wrong.")
       + li("Critical questions", "are flagged in red and count double, right or wrong.")
-      + li("The meter", `shows how ${MEMBER() ? tn + " is" : "you're"} doing: ${group ? `${MEMBER() ? tn + "'s" : "your"} points, without powerups` : "right answers against wrong ones"}. Finish in the purple award zone at the top for an award.`)
+      + li("The meter", `shows how ${MEMBER() ? tn + " is" : "you're"} doing: right answers against wrong ones, critical questions counting double${group ? `, whoever's in the room` : ""}. Finish in the purple award zone at the top for an award.`)
       + `</ul>`;
     if (!group) h += `<h3 class="rules-sub">Points</h3><ul class="rules-list">${li(`${G.signed(G.RULES.solo.right)} for a right answer,`, `${G.signed(G.RULES.solo.wrong)} for a wrong or skipped one (${G.signed(G.RULES.solo.right * 2)} and ${G.signed(G.RULES.solo.wrong * 2)} on a critical question).`)}</ul>`
       + powersHtml("Powerups: with the team in the room");
@@ -1235,7 +1241,7 @@
       fetch("/api/results", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         email: S.email, name: S.name, assessment: DATA.settings.assessmentCode, attempt: S.attempt || 1,
         startedAt: new Date(S.startedAt).toISOString(), finishedAt: new Date(S.finishedAt).toISOString(),
-        correct: sc.c, total: QS().length, criticalErrors: sc.crit, points: me.points, timedOut: S.timedOut, longestStreak: an.streak,
+        correct: sc.c, total: QS().length, criticalErrors: sc.crit, points: me.points, ownPoints: ownPoints(), timedOut: S.timedOut, longestStreak: an.streak,
         meter: +sc.p.toFixed(3), award: sc.p >= awardLine(),
         mode: HOSTING() ? "group" : "solo",
         room: HOSTING() ? { code: S.group.code, people: S.board.rows.slice(1).map(({ name, color, points, correct, crit }) => ({ name, color, points, correct, criticalErrors: crit })) } : undefined,
@@ -1267,8 +1273,9 @@
     const bd = S.board || board(), taker = bd.rows[0], group = bd.rows.length > 1;
     const sc = score(), an = analyse();
     const name = S.name || "", tName = taker.name || name;
-    // where the taker's meter ended: a teammate works it out from the taker's points
-    const reading = member ? A.pointsReading(taker.points, n, n) : sc.p, award = reading >= awardLine();
+    // where the taker's meter ended: a teammate works it out from the taker's answers (anything not right counts against)
+    const takerReading = () => { let rw = 0, ww = 0; taker.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else ww += k; }); return A.meterReading(rw, ww, n); };
+    const reading = member ? takerReading() : sc.p, award = reading >= awardLine();
 
     if (member) {
       $("resTitle").textContent = `${tName} scored ${G.signed(gameOf(taker))}.`;
@@ -1284,7 +1291,8 @@
     const zt = $("resZone"); zt.hidden = member;
     if (!member) { zt.textContent = "Meter: " + new Meter(null, null, LABELS()).zone(sc.p); zt.className = "zone-tag" + (sc.p >= 1 / 3 ? " good" : sc.p <= -1 / 3 ? " bad" : ""); }
     $("resOf").textContent = `${taker.correct} of ${n} correct` + (group ? ` · ${plural(bd.rows.length - 1, "teammate", "teammates")} in the room` : "")
-      + (!member && gameOf(taker) !== taker.points ? ` · ${G.signed(gameOf(taker))} on the room's scoreboard, with powerups` : "");
+      + (!member && gameOf(taker) !== taker.points ? ` · ${G.signed(gameOf(taker))} on the room's scoreboard, with powerups` : "")
+      + (!member && group ? ` · ${G.signed(ownPoints())} on your certificate, from your answers alone` : "");
     $("resCrit").hidden = !taker.crit; $("resCrit").textContent = `${taker.crit} critical ${taker.crit === 1 ? "error" : "errors"}`;
     // the taker sees their recorded points; a teammate sees the taker's points on the room's scoreboard
     const headPts = member ? gameOf(taker) : taker.points;
@@ -1333,7 +1341,7 @@
       else { $("worstCat").textContent = "Nothing"; $("worstSub").textContent = "Every answer right in every category"; }
       $("sName").textContent = name || "—"; $("sEmail").textContent = S.email || "";
       $("sDate").textContent = "Completed " + new Date(S.finishedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" });
-      $("certBtn").href = "certificate.html?" + new URLSearchParams({ n: name, c: sc.c, t: n, pts: taker.points, b: best && best.correct > 0 ? best.name : "", d: new Date(S.finishedAt).toISOString() });
+      $("certBtn").href = "certificate.html?" + new URLSearchParams({ n: name, c: sc.c, t: n, pts: ownPoints(), b: best && best.correct > 0 ? best.name : "", d: new Date(S.finishedAt).toISOString() });
     }
 
     renderReview("wrong");

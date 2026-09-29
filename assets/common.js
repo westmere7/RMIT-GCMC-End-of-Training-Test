@@ -155,8 +155,8 @@
       Pass the weighted totals: a critical question adds 2. Half right sits in the middle, two thirds reaches the
       welcome zone, 95% the green end. */
   function meterReading(rightW, wrongW, n) { return clamp1((rightW - wrongW) / Math.max(rightW + wrongW, stepsOf(n))); }
-  /** With the team in: the taker's points against POINTS_PAR a question (a taker's points run −5…+10 a question, and
-      a strong taker averages about +3). Breaking even sits in the middle. */
+  /** The taker's points against POINTS_PAR a question (a taker's points run −3…+10 a question). No longer what the
+      meter shows (that's meterReading, with the team in too); kept for the simulations. */
   const POINTS_PAR = 4;
   function pointsReading(points, answered, n) { return clamp1(points / (POINTS_PAR * Math.max(answered, stepsOf(n)))); }
 
