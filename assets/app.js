@@ -1264,6 +1264,28 @@
     })(t0);
   }
   const plural = (n, one, many) => `${n} ${Math.abs(n) === 1 ? one : many}`;
+  // line icons for the results (24×24, drawn in the current colour)
+  const ICONS = {
+    trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+    crown: '<path d="M3 18h18M4 18 2.5 8l5.5 4 4-7 4 7 5.5-4L20 18"/>',
+    star: '<path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5-4.8-4.6 6.6-.9z"/>',
+    rise: '<path d="M22 7l-8.5 8.5-5-5L2 17M16 7h6v6"/>',
+    retry: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/>',
+    clock: '<circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/>',
+    zap: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    flame: '<path d="M12 22c4 0 7-2.7 7-6.8 0-3.3-2-5.6-3.6-7.3-.3 2-1.4 3.3-2.6 3.8.5-3.3-.8-6.7-3.8-9.2.2 3.4-2 5.6-3.4 7.4C4.4 11.3 5 13 5 15.2 5 19.3 8 22 12 22z"/>',
+    target: '<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+    hourglass: '<path d="M6 2h12M6 22h12M7 2v3.5a5 5 0 0 0 2 4L12 12l3-2.5a5 5 0 0 0 2-4V2M7 22v-3.5a5 5 0 0 1 2-4l3-2.5 3 2.5a5 5 0 0 1 2 4V22"/>',
+    sparkle: '<path d="M12 2.5l2.2 6.6 6.6 2.4-6.6 2.4L12 20.5l-2.2-6.6-6.6-2.4 6.6-2.4z"/><path d="M19 3v4M17 5h4"/>',
+    users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/>',
+    bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/><path d="M19 2v3M20.5 3.5h-3"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 19.5"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  };
+  const icon = (k, fill) => `<svg viewBox="0 0 24 24" fill="${fill ? "currentColor" : "none"}" stroke="currentColor" stroke-width="${fill ? 1.2 : 2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ""}</svg>`;
+  for (const el of document.querySelectorAll("[data-icon]")) el.innerHTML = icon(el.dataset.icon);
   const gameOf = (r) => (r.game != null ? r.game : r.points); // the room's scoreboard (a board saved before powerups has none)
 
   function showResults() {
@@ -1288,8 +1310,18 @@
         : "Everything you missed is something you'll pick up fast on real tasks. The breakdown below shows where to look next.";
     }
     $("resBadge").hidden = !award;
-    const zt = $("resZone"); zt.hidden = member;
-    if (!member) { zt.textContent = "Meter: " + new Meter(null, null, LABELS()).zone(sc.p); zt.className = "zone-tag" + (sc.p >= 1 / 3 ? " good" : sc.p <= -1 / 3 ? " bad" : ""); }
+    // the rank, where the meter ended: an emblem in the tier's colour, and a star for each zone up from the red
+    const tier = award ? "award" : reading >= 1 / 3 ? "good" : reading <= -1 / 3 ? "low" : "mid";
+    const stars = { low: 0, mid: 1, good: 2, award: 3 }[tier];
+    $("resHero").dataset.tier = tier;
+    $("resEmblem").innerHTML = icon({ award: "crown", good: "star", mid: "rise", low: "retry" }[tier], tier === "award" || tier === "good");
+    [...$("resStars").children].forEach((st, i) => { st.className = i < stars ? "on" : ""; st.style.setProperty("--d", 0.9 + i * 0.25 + "s"); });
+    $("resStars").setAttribute("aria-label", `${stars} of 3 stars`);
+    $("resZone").textContent = award ? "Award zone" : new Meter(null, null, LABELS()).zone(reading);
+    $("resLevel").textContent = award ? "Award unlocked" : tier === "low" ? "Run complete" : "Level complete";
+    const acc = n ? taker.correct / n : 0, ring = $("resRing");
+    ring.style.setProperty("--acc", 0);
+    requestAnimationFrame(() => requestAnimationFrame(() => ring.style.setProperty("--acc", acc)));
     $("resOf").textContent = `${taker.correct} of ${n} correct` + (group ? ` · ${plural(bd.rows.length - 1, "teammate", "teammates")} in the room` : "")
       + (!member && gameOf(taker) !== taker.points ? ` · ${G.signed(gameOf(taker))} on the room's scoreboard, with powerups` : "")
       + (!member && group ? ` · ${G.signed(ownPoints())} on your certificate, from your answers alone` : "");
@@ -1299,6 +1331,7 @@
     $("resPtsUnit").textContent = Math.abs(headPts) === 1 ? "point" : "points";
     show("scrResults");
     countUp($("resPts"), headPts, 1200, G.signed);
+    countUp($("resAcc"), Math.round(100 * acc), 1600, (v) => v + "%");
 
     // every answer, in order
     const strip = $("resStrip"); strip.innerHTML = "";
@@ -1314,7 +1347,7 @@
     renderRoomBoard(bd, award);
 
     // the rest is about the viewer's own attempt; the team sees the room, then their own answers
-    $("resStats").hidden = member; $("resGrid").hidden = member;
+    $("resStats").hidden = member; $("resGrid").hidden = member; $("achCard").hidden = member;
     $("certBtn").hidden = member; $("retakeBtn").hidden = member;
     $("againBtn").textContent = member ? "Leave the room" : "Sign out";
     $("reviewTitle").textContent = member ? `Your answers, ${name}` : "Your answers";
@@ -1325,11 +1358,32 @@
       const aced = an.byCat.filter((c) => c.correct === c.total).length;
       countUp($("sAced"), aced, 900); $("sAcedSub").textContent = `of ${an.byCat.length} with every answer right`;
 
+      // achievements: what this run unlocked (first), and what's still there to earn
+      const critN = qs.filter((q) => q.critical).length, avgS = an.avgMs / 1000;
+      const achs = [
+        { ico: "crown", name: "Award zone", on: award, won: "Finished at the very top of the meter", need: "Finish in the purple zone" },
+        { ico: "flame", name: "Hot streak", on: an.streak >= 5, won: `${an.streak} right in a row`, need: "Get 5 right in a row" },
+        { ico: "shield", name: "Clean criticals", on: critN > 0 && !sc.crit, won: `All ${critN} critical questions right`, need: "No critical misses" },
+        { ico: "target", name: "Category ace", on: aced > 0, won: `${plural(aced, "category", "categories")} with every answer right`, need: "Every answer right in one category" },
+        { ico: "zap", name: "Quick thinker", on: an.answered >= 5 && avgS <= 12, won: `${Math.round(avgS)}s a question on average`, need: "Average 12s or less a question" },
+        { ico: "hourglass", name: "Beat the clock", on: !S.timedOut, won: "Every question answered in time", need: "Answer everything before time runs out" },
+        { ico: "sparkle", name: "Flawless", on: sc.c === n, won: "Every answer right", need: "Get every answer right" },
+      ];
+      if (group) {
+        achs.push({ ico: "users", name: "Team game", on: true, won: `Played with ${plural(bd.rows.length - 1, "teammate", "teammates")}`, need: "" });
+        achs.push({ ico: "bolt", name: "Powered up", on: bd.powered > 0, won: `${plural(bd.powered, "powerup", "powerups")} used`, need: "Use a powerup" });
+      }
+      const got = achs.filter((a) => a.on).length;
+      $("achSub").innerHTML = `<b>${got}</b> of ${achs.length} unlocked`;
+      $("achGrid").innerHTML = [...achs.filter((a) => a.on), ...achs.filter((a) => !a.on)].map((a, i) =>
+        `<div class="ach${a.on ? " on" : ""}" style="--d:${reduced ? 0 : 0.5 + i * 0.07}s"><span class="ach-ico">${icon(a.ico)}</span><b>${esc(a.name)}</b><small>${esc(a.on ? a.won : a.need)}</small>${a.on ? "" : `<span class="ach-lock" title="Locked">${icon("lock")}</span>`}</div>`).join("");
+
       // by category
       const list = $("catList"); list.innerHTML = "";
       an.byCat.forEach((c) => {
         const row = document.createElement("div"); row.className = "cat-row";
-        row.innerHTML = `<span class="name">${esc(c.name)}</span><span class="track"><span class="fill ${c.share >= 0.8 ? "" : c.share >= 0.5 ? "mid" : "low"}"></span></span><span class="num">${c.correct}/${c.total}<small>right</small></span>`;
+        const lvl = c.share >= 1 ? ["max", "Mastered"] : c.share >= 0.8 ? ["strong", "Strong"] : c.share >= 0.5 ? ["mid", "Getting there"] : ["low", "Revisit"];
+        row.innerHTML = `<span class="name">${esc(c.name)}</span><span class="track"><span class="fill ${lvl[0] === "strong" ? "" : lvl[0]}"></span></span><span class="num">${c.correct}/${c.total}<small class="${lvl[0]}">${lvl[1]}</small></span>`;
         list.append(row);
       });
       requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1369,7 +1423,21 @@
         <span class="pts ${gameOf(r) > 0 ? "up" : gameOf(r) < 0 ? "down" : ""}">${G.signed(gameOf(r))}<small>${Math.abs(gameOf(r)) === 1 ? "point" : "points"}</small></span>
       </div>`;
     };
-    $("roomBoard").innerHTML = row(taker, -1) + `<p class="board-label">The team</p>` + team.map(row).join("");
+    $("roomBoard").innerHTML = row(taker, -1) + `<p class="board-label">Leaderboard</p>` + team.map(row).join("");
+    [...$("roomBoard").querySelectorAll(".board-row")].forEach((el, i) => el.style.setProperty("--d", (reduced ? 0 : 0.2 + i * 0.07) + "s"));
+    // the podium: second, first, third, the blocks rising in that order of drama (third, second, then first)
+    const pod = $("podium"), top = team.slice(0, 3);
+    pod.hidden = top.length < 2;
+    if (!pod.hidden) {
+      const rise = [0.25, 0.1, 0.4];
+      pod.innerHTML = [1, 0, 2].filter((k) => top[k]).map((k) => {
+        const r = top[k], pts = gameOf(r);
+        return `<div class="pod p${k + 1}" style="--c:${esc(r.color)};--d:${reduced ? 0 : rise[k]}s">
+          <span class="avatar" aria-hidden="true">${initial(r.name)}</span><b>${esc(r.name)}</b>
+          <span class="pp ${pts > 0 ? "up" : pts < 0 ? "down" : ""}">${G.signed(pts)}</span>
+          <span class="block"><span class="medal" aria-hidden="true">${medals[k]}</span>${k + 1}</span></div>`;
+      }).join("");
+    }
   }
 
   function renderReview(which) {
