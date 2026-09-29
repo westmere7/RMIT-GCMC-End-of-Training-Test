@@ -84,8 +84,13 @@
     const old = new Map(this.marks.map((m) => [m.id, m]));
     this.marks = (marks || []).map((m) => ({ ...m, a: old.has(m.id) ? old.get(m.id).a : 0 }));
   };
-  /** An answer just landed: a ripple at the needle tip and a points chip that floats up from it. */
-  Meter.prototype.pulse = function (delta, right) { if (this.reduced) return; this.pulses.push({ t0: this.t, delta, right }); };
+  /** An answer just landed: a ripple at the needle tip and a points chip that floats up from it. Both are pinned to
+      where the needle is heading, and the chip's side is picked once, so they hold still while the needle bounces. */
+  Meter.prototype.pulse = function (delta, right) {
+    if (this.reduced) return;
+    const a = this.aim(this.p) * this.span;
+    this.pulses.push({ t0: this.t, delta, right, a, side: a >= 0 ? 1 : -1 });
+  };
   // flicks towards the end the needle is already near are softened, so it can hold the green (or the red) instead of rattling off the stop
   Meter.prototype.soften = function (dir) { const e = Math.abs(this.theta) / this.span; return dir * this.theta > 0 ? 1 - 0.75 * smooth(0.6, 0.9, e) : 1; };
   Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6 * this.soften(dir); };
@@ -331,20 +336,20 @@
     jewel.addColorStop(0, "#fff"); jewel.addColorStop(0.25, here); jewel.addColorStop(1, here);
     g.fillStyle = jewel; g.beginPath(); g.arc(hx, hy, Math.max(3, lw / 2 - 5), 0, Math.PI * 2); g.fill();
 
-    // each answer: a ripple from the bead, and its points floating up from the tip
+    // each answer: a ripple where the needle is heading, and its points floating straight up beside it
     for (const p of this.pulses) {
-      const age = this.t - p.t0, col = p.right ? C.green : C.red;
+      const age = this.t - p.t0, col = p.right ? C.green : C.red, [rx, ry] = pt(p.a, rr);
       if (age < 0.9) {
         const k = age / 0.9;
         g.strokeStyle = col; g.globalAlpha = (1 - k) * 0.8; g.lineWidth = 4;
-        g.beginPath(); g.arc(hx, hy, lw / 2 + k * 56, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1;
+        g.beginPath(); g.arc(rx, ry, lw / 2 + k * 56, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1;
       }
       const rise = 1 - Math.pow(1 - Math.min(1, age / 1.2), 3), fade = age < 1.1 ? 1 : 1 - (age - 1.1) / 0.5;
       const label = p.delta == null ? (p.right ? "✓" : "✕") : signed(p.delta);
       g.font = `700 ${this.compact ? 17 : 22}px ` + DISPLAY;
       const tw = g.measureText(label).width + 22, chh = this.compact ? 28 : 34;
-      const [tx, ty] = pt(this.theta, rr + lw / 2 + 30 + rise * 26);
-      const cxp = Math.max(tw / 2 + 4, Math.min(w - tw / 2 - 4, tx + (this.theta >= 0 ? 58 : -58))), cyp = Math.max(chh / 2 + 2, ty);
+      const [tx, ty] = pt(p.a, rr + lw / 2 + 30), lift = rise * 26;
+      const cxp = Math.max(tw / 2 + 4, Math.min(w - tw / 2 - 4, tx + p.side * 58)), cyp = Math.max(chh / 2 + 2, ty - lift);
       g.globalAlpha = Math.max(0, fade);
       g.save(); g.shadowColor = col; g.shadowBlur = 12;
       g.fillStyle = col; g.beginPath();
