@@ -483,6 +483,9 @@
     $("submitBtn").hidden = false; $("skipBtn").hidden = MEMBER(); $("nextBtn").hidden = true;
     const body = $("qBody"); body.innerHTML = "";
     current = A.isChoiceQ(q) ? [] : q.type === "match" ? (q.pairs || []).map(() => null) : "";
+    // a teammate back after a refresh gets their pick back: submitted (locked in), or still in progress
+    const back = MEMBER() && ROOM && ROOM.mine && ROOM.index === S.index && ROOM.phase === "question" ? ROOM.mine : null;
+    if (back && back.r != null && Array.isArray(back.r) === Array.isArray(current)) current = JSON.parse(JSON.stringify(back.r));
     $("qCard").dataset.type = q.type;
 
     if (q.type === "fill") {
@@ -493,6 +496,7 @@
       inp.className = "blank"; inp.id = "answerInput"; inp.maxLength = 40; inp.autocomplete = "off"; inp.spellcheck = false; inp.setAttribute("aria-label", "Your answer");
       // the gap grows with the answer, so a long word never scrolls out of sight
       inp.addEventListener("input", () => { current = inp.value; inp.style.setProperty("--len", inp.value.length); $("submitBtn").disabled = !A.normalize(current); reportBusy(); });
+      if (current) { inp.value = current; inp.style.setProperty("--len", current.length); }
       p.append(inp, parts.slice(1).join("___") || "");
       body.append(p); setTimeout(() => inp.focus(), 30);
     } else {
@@ -508,6 +512,7 @@
         body.append(wrap);
         const inp = wrap.querySelector("input");
         inp.addEventListener("input", () => { current = inp.value; $("submitBtn").disabled = !A.normalize(current); reportBusy(); });
+        if (current) inp.value = current;
         setTimeout(() => inp.focus(), 30);
       } else if (q.type === "match") {
         body.append(renderMatch(q));
@@ -516,7 +521,7 @@
         const multi = A.isMultiPick(q), pics = A.imageAnswers(q);
         const how = document.createElement("p"); how.className = "pick-how " + (multi ? "multi" : "single"); how.id = "pickHow";
         how.innerHTML = multi
-          ? '<span class="pick-icon" aria-hidden="true"></span><b>Select all that apply</b><span class="pick-count" id="pickCount">None selected</span>'
+          ? `<span class="pick-icon" aria-hidden="true"></span><b>Select all that apply</b><span class="pick-count" id="pickCount">${current.length ? `${current.length} selected` : "None selected"}</span>`
           : `<span class="pick-icon" aria-hidden="true"></span><b>Choose one ${pics ? "picture" : "answer"}</b>`;
         body.append(how);
         const grid = document.createElement("div"); grid.className = "options" + (pics ? " pictures" : ""); grid.setAttribute("role", multi ? "group" : "radiogroup");
@@ -524,7 +529,7 @@
         S.order[S.index].forEach((orig, k) => {
           const b = document.createElement("button");
           b.type = "button"; b.className = "opt" + (multi ? " multi" : "") + (pics ? " pic" : "");
-          b.setAttribute("role", multi ? "checkbox" : "radio"); b.setAttribute("aria-checked", "false");
+          b.setAttribute("role", multi ? "checkbox" : "radio"); b.setAttribute("aria-checked", String(current.includes(orig)));
           b.dataset.orig = orig;
           b.innerHTML = pics
             ? `<span class="key">${LETTERS[k]}</span><img src="${esc(q.options[orig])}" alt="Picture ${LETTERS[k]}" decoding="async" draggable="false">`
@@ -535,8 +540,8 @@
         body.append(grid);
       }
     }
-    $("submitBtn").disabled = true;
-    if (MEMBER() && ROOM && ROOM.mine && ROOM.index === S.index && ROOM.phase === "question") answerIn(q, ROOM.mine.r);
+    $("submitBtn").disabled = !(Array.isArray(current) ? current.length && current.every((x) => x != null) : A.normalize(current));
+    if (back) { if (back.draft) draftSent = JSON.stringify(current); else answerIn(q, back.r); }
   }
 
   // tell the room whether you've started on this question (Thinking… → Answering…); a teammate also sends what
@@ -1202,7 +1207,7 @@
   // everyone's result, kept with the attempt so the results survive a refresh (and the room closing)
   function board() {
     const t = tally();
-    const powered = Object.values((ROOM && ROOM.powers) || {}).reduce((n, p) => n + (p.double ? 1 : 0) + (p.gauge ? 1 : 0), 0);
+    const powered = Object.values((ROOM && ROOM.powers) || {}).reduce((n, p) => n + (p.double ? 1 : 0) + (p.gauge ? 1 : 0) + (p.call ? 1 : 0), 0);
     return { reached: t.reached, powered, rows: t.rows.map(({ id, name, color, taker, points, correct, crit, cells, deltas, game, gameDeltas }) => ({ id, name, color, taker: !!taker, points, correct, crit, cells, deltas, game, gameDeltas })) };
   }
 

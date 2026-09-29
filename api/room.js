@@ -72,6 +72,8 @@ async function snapshot(room, me, since, withPaper) {
       if (mine && a.member_id === mine.id) out.mine = { r: a.response };
     }
   }
+  // a teammate back after a refresh: the pick they hadn't submitted yet (it still counts if the taker submits first)
+  if (mine && !out.mine && st.phase === "question" && mine.draft_q === st.index && mine.draft != null) out.mine = { r: mine.draft, draft: true };
   if (withPaper) out.paper = room.paper || null;
   return out;
 }

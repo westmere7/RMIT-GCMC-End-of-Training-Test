@@ -196,7 +196,7 @@ const rooms = {
     await rest(`assessment_room_members?room=eq.${code}&seen_at=lt.${new Date(Date.now() - 120e3).toISOString()}`, { method: "DELETE" });
   },
   async members(code) {
-    return (await rest(`assessment_room_members?room=eq.${code}&select=id,device_hash,name,color,busy_q,seen_at&order=id.asc`)) || [];
+    return (await rest(`assessment_room_members?room=eq.${code}&select=id,device_hash,name,color,busy_q,seen_at,draft,draft_q&order=id.asc`)) || [];
   },
   /** A new seat; throws with `code: 409` when the colour is taken. */
   async join(code, deviceHash, name, color) {
