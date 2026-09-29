@@ -244,8 +244,14 @@
       g.font = "700 11px " + TEXT; g.fillStyle = C.soft; g.fillText("POINTS", cx, y - big - 4);
       if ("letterSpacing" in g) g.letterSpacing = "0px";
       const val = Math.round(this.pointsNow());
-      g.font = `700 ${big}px ` + DISPLAY; g.fillStyle = val > 0 ? C.up : val < 0 ? C.down : C.ink;
+      // a change pops the number and makes it glow while it counts: green for a gain, red for a loss
+      const tw = this.tween, tk = tw && tw.to !== tw.from && !this.reduced ? Math.min(1, (performance.now() - tw.t0) / 700) : 1;
+      const bump = tk < 1 ? Math.sin(Math.PI * tk) : 0;
+      g.save();
+      if (bump) { g.shadowColor = tw.to > tw.from ? C.up : C.down; g.shadowBlur = 28 * bump; }
+      g.font = `700 ${Math.round(big * (1 + 0.22 * bump))}px ` + DISPLAY; g.fillStyle = val > 0 ? C.up : val < 0 ? C.down : C.ink;
       g.fillText(signed(val), cx, y);
+      g.restore();
       const bits = [`Question ${Math.min(st.total, st.answered + 1)} of ${st.total}`];
       if (st.streak >= 2) bits.push(`${st.streak} in a row`);
       g.font = "700 13px " + TEXT; g.fillStyle = C.soft;

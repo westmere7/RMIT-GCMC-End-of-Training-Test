@@ -30,16 +30,16 @@ test("taker: with one teammate it's one end or the other", () => {
   assert.equal(G.points(false, false, [false]).taker, 0);
 });
 
-test("teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker didn't", () => {
+test("teammates: +1 right, −2 wrong, whatever the taker did", () => {
   const M = (right, takerRight) => G.points(false, takerRight, [right]).members[0];
   assert.equal(M(true, true), 1);
   assert.equal(M(true, false), 1);
-  assert.equal(M(false, true), -3);
+  assert.equal(M(false, true), -2);
   assert.equal(M(false, false), -2);
 });
 
 test("each teammate is scored on their own answer", () => {
-  assert.deepEqual([...G.points(false, true, [true, false, true]).members], [1, -3, 1]);
+  assert.deepEqual([...G.points(false, true, [true, false, true]).members], [1, -2, 1]);
   assert.deepEqual([...G.points(false, false, [false, true]).members], [-2, 1]);
 });
 
@@ -66,8 +66,8 @@ test("the numbers on the start page are the ones the scoring uses", () => {
   assert.equal(G.points(false, false, [false, false]).taker, T.wrong.allWrong);
   assert.equal(G.points(false, false, [true, true]).taker, T.wrong.allRight);
   assert.equal(G.points(false, true, [true]).members[0], M.right);
-  assert.equal(G.points(false, true, [false]).members[0], M.wrongTakerRight);
-  assert.equal(G.points(false, false, [false]).members[0], M.wrongTakerWrong);
+  assert.equal(G.points(false, true, [false]).members[0], M.wrong);
+  assert.equal(G.points(false, false, [false]).members[0], M.wrong);
 });
 
 test("powerups: every run of 3 right in a row earns a charge, up to 2 held", () => {
@@ -108,7 +108,7 @@ test("powerups: a call wins 2 + 2 a teammate when exactly right, loses 3 otherwi
   assert.equal(G.charges([true, true, true, true], { 3: { call: { n: 0 } } }, 3).held, 0, "a call costs a charge");
 });
 
-test("per question, points stay within −3…+10 (taker) and −3…+1 (teammate), doubled when critical", () => {
+test("per question, points stay within −3…+10 (taker) and −2…+1 (teammate), doubled when critical", () => {
   for (const critical of [false, true])
     for (const takerRight of [true, false])
       for (let size = 1; size <= 8; size++)
@@ -117,7 +117,7 @@ test("per question, points stay within −3…+10 (taker) and −3…+1 (teammat
           const p = G.points(critical, takerRight, team);
           assert.ok(Number.isInteger(p.taker) && !Object.is(p.taker, -0));
           assert.ok(p.taker >= -3 * k && p.taker <= 10 * k);
-          for (const m of p.members) assert.ok(m >= -3 * k && m <= 1 * k);
+          for (const m of p.members) assert.ok(m >= -2 * k && m <= 1 * k);
         }
 });
 

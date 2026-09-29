@@ -52,19 +52,20 @@
   // The taker's run between two ends, by the share of the team that got it wrong: right, +1 (the whole team right too)
   // up to +10 (the whole team wrong); wrong, −3 (the whole team right) up to 0 (the whole team wrong too). In between,
   // each teammate who got it wrong is worth the same, so a bigger room doesn't change what a taker scores on average.
-  // Teammates: +1 right; wrong costs 3 if the taker got it right, 2 if the taker was wrong too.
+  // Teammates: +1 right, −2 wrong, whatever the taker did, so teammates are ranked on their own answers alone
+  // (a rule that also looked at the taker's answer split equally good teammates by luck).
   // Critical questions count double, both ways. With nobody else in the room, a right answer is +1 and a wrong one −1.
   const RULES = {
     solo: { right: 1, wrong: -1 },
     taker: { right: { allRight: 1, allWrong: 10 }, wrong: { allRight: -3, allWrong: 0 } },
-    member: { right: 1, wrongTakerRight: -3, wrongTakerWrong: -2 },
+    member: { right: 1, wrong: -2 },
   };
   /** Points for one question. takerRight: bool; memberRights: bools (an unanswered member counts as wrong). */
   function points(critical, takerRight, memberRights) {
     const k = critical ? 2 : 1, n = memberRights.length, share = n ? memberRights.filter((x) => !x).length / n : 0;
     const ends = takerRight ? RULES.taker.right : RULES.taker.wrong, M = RULES.member;
     const t = !n ? (takerRight ? RULES.solo.right : RULES.solo.wrong) : Math.round(ends.allRight + (ends.allWrong - ends.allRight) * share) || 0;
-    return { taker: t * k, members: memberRights.map((ok) => (ok ? M.right : takerRight ? M.wrongTakerRight : M.wrongTakerWrong) * k) };
+    return { taker: t * k, members: memberRights.map((ok) => (ok ? M.right : M.wrong) * k) };
   }
   // ---------- powerups (the taker, with the team in the room) ----------
   // Every run of three right answers in a row earns a charge; the taker holds two at most (a run that ends with two

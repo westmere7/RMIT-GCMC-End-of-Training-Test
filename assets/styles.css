@@ -1476,3 +1476,110 @@ body::after { width: 120px; height: 118px; left: 3%; top: 38%; animation: drift 
   .emblem-core, .emblem-rays, .stars i.on, .ach, .ach.on::after, .pod .block, .pod .avatar, .room-board .board-row, .cat-row .fill::after { animation: none !important; }
   .ring .bar { transition: none; }
 }
+
+/* ============================================================================================
+   The arena: the taker's test screen (and the editor's preview), made to feel like a game. The question gets a
+   navy HUD bar and a run track of every question; answers land with a verdict that counts the points, says what
+   the powerups did, bursts and plays a sound; the right tile lights up and a wrong pick shakes. The team's screens
+   (html.joiner) keep the plain look.
+   ============================================================================================ */
+/* the question's HUD: navy (red on a critical question), with the number standing out */
+.arena .q-card .q-head { background: linear-gradient(135deg, #2f22b8, #0d0d78 55%, #000054); border-bottom: 0; }
+.arena .q-card.critical .q-head { background: linear-gradient(135deg, #ff4a52, #d0141f 55%, #8e0d15); }
+.arena .q-head > div + div { border-left-color: rgba(255, 255, 255, 0.12); }
+.arena .q-no span { color: #fff; font-size: 48px; text-shadow: 0 4px 0 var(--red); }
+.arena .q-card.critical .q-no span { text-shadow: 0 4px 0 #5c0008; }
+.arena .q-no small, .arena .q-info .k { color: rgba(255, 255, 255, 0.6); }
+.arena .q-info b, .arena .q-marks { color: #fff; }
+.arena .q-marks small { color: #ffd0d3; }
+.arena .q-marks .crit-chip { background: #fff; color: var(--red); }
+.arena .q-marks .call-chip { background: #fff; color: var(--navy); }
+@media (max-width: 640px) { .arena .q-info { border-top-color: rgba(255, 255, 255, 0.12); } }
+
+/* answer tiles: a picked tile lifts and glows; the right one lights up green with a tick, a wrong pick shakes */
+.arena .options .opt[aria-checked="true"] { transform: translateY(-2px); box-shadow: 0 5px 0 var(--k), 0 0 0 4px color-mix(in srgb, var(--k) 20%, transparent); }
+.arena .q-card.revealed .opt.is-right { opacity: 1; animation: tile-win 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both; box-shadow: 0 4px 0 var(--ok), 0 0 0 5px rgba(18, 161, 80, 0.22), 0 0 28px rgba(52, 215, 123, 0.55); }
+.arena .q-card.revealed .opt.is-right::after { content: "✓"; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 700; background: var(--ok); border-color: var(--ok); box-shadow: none; }
+.arena .q-card.revealed .opt.is-wrong { opacity: 1; animation: tile-shake 0.5s ease both; }
+.arena .q-card.revealed .opt.is-wrong::after { content: "✕"; display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700; background: var(--red); border-color: var(--red); box-shadow: none; }
+@keyframes tile-win { 0% { transform: scale(1); } 40% { transform: scale(1.045); } 100% { transform: scale(1); } }
+@keyframes tile-shake { 15% { transform: translateX(-7px); } 35% { transform: translateX(7px); } 55% { transform: translateX(-4px); } 75% { transform: translateX(3px); } 100% { transform: none; } }
+
+/* Lock it in: glows once there's an answer to lock in */
+.arena #submitBtn:not(:disabled) { animation: ready-glow 1.6s ease-in-out infinite; }
+@keyframes ready-glow { 50% { box-shadow: 0 5px 0 #9c0f18, 0 0 0 6px rgba(230, 30, 42, 0.22), 0 12px 30px -6px rgba(230, 30, 42, 0.85); } }
+
+/* the clock: a heartbeat in the last thirty seconds; a speaker button beside Rules */
+.arena .timer.critical { animation: heartbeat 1s ease-in-out infinite; }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.035); } 28% { transform: scale(1); } 42% { transform: scale(1.02); } 56% { transform: scale(1); } }
+.sound-btn { position: absolute; top: 16px; right: 88px; z-index: 1; display: grid; place-items: center; width: 32px; height: 30px; padding: 0; border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, 0.4); background: transparent; color: #fff; }
+.sound-btn svg { width: 16px; height: 16px; }
+.sound-btn:hover { background: rgba(255, 255, 255, 0.12); border-color: #fff; }
+.sound-btn[aria-pressed="false"] { opacity: 0.6; }
+html.joiner .sound-btn, html.preview .sound-btn { display: none; }
+@media (max-width: 860px) {
+  .sound-btn { position: static; margin-left: auto; }
+  .arena .rules-btn { margin-left: 6px; }
+}
+
+/* powerups: an icon on each, and the card flashes gold when a charge lands */
+.power { grid-template-columns: 34px auto minmax(0, 1fr); }
+.pw-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: #fff; background: linear-gradient(160deg, #4a3be0, #000054); box-shadow: 0 3px 0 rgba(0, 0, 40, 0.25); }
+.pw-ico svg { width: 18px; height: 18px; }
+.pw-ico.x2 { font-family: var(--display); font-size: 15px; background: linear-gradient(160deg, #ff5a61, #e61e2a); }
+#pwCall .pw-ico { background: linear-gradient(160deg, #ffd23f, #e39a00); color: var(--navy); }
+.power.on .pw-ico { background: linear-gradient(160deg, #fff1a8, #fac800 50%, #e39a00); color: var(--navy); }
+.power-card.charged { animation: charged 1s ease both; }
+@keyframes charged { 0% { box-shadow: 0 7px 0 var(--edge), 0 0 0 0 rgba(250, 200, 0, 0.7); } 35% { box-shadow: 0 7px 0 var(--edge), 0 0 0 8px rgba(250, 200, 0, 0.35), 0 0 44px rgba(250, 200, 0, 0.7); } 100% { box-shadow: 0 7px 0 var(--edge), 0 0 0 0 rgba(250, 200, 0, 0); } }
+
+/* the verdict: bigger, with the points counting, chips for what changed them, a gold version for a big win
+   (the whole team beaten, a bet won, a double down paid off, ten or more points) and a shake for a miss */
+.verdict { --dur: 1500ms; }
+.verdict.show, .verdict.show .verdict-card { animation-duration: var(--dur); }
+.verdict-card { min-width: 320px; max-width: min(460px, calc(100vw - 32px)); padding: 30px 44px 24px; border-radius: 26px; text-align: center; box-shadow: 0 10px 0 rgba(0, 0, 40, 0.25), 0 40px 90px -24px rgba(0, 0, 40, 0.7); }
+.verdict-mark { position: relative; width: 104px; height: 104px; }
+.verdict-mark::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 4px solid currentColor; opacity: 0; }
+.verdict.ok .verdict-mark { color: #34d77b; }
+.verdict.ok .verdict-mark::before { color: #fff; }
+.verdict.show.ok .verdict-mark::after { animation: ring-out 0.8s ease-out 0.12s both; }
+@keyframes ring-out { from { transform: scale(0.9); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+.verdict-kicker { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #c98a00; }
+.verdict-kicker:empty { display: none; }
+#verdictPts { font-size: 42px; line-height: 1; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.verdict.show #verdictPts { animation: pts-pop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) 0.12s both; }
+@keyframes pts-pop { from { transform: scale(0.4); } to { transform: none; } }
+.verdict-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 8px; }
+.verdict-chips:empty { display: none; }
+.verdict-chips span { font-size: 12px; font-weight: 700; line-height: 1.3; padding: 5px 11px; border-radius: 999px; background: var(--grey-50); color: var(--ink); animation: chip-in 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+.verdict-chips span:nth-child(1) { animation-delay: 0.35s; }
+.verdict-chips span:nth-child(2) { animation-delay: 0.5s; }
+.verdict-chips span:nth-child(3) { animation-delay: 0.65s; }
+.verdict-chips span:nth-child(4) { animation-delay: 0.8s; }
+.verdict-chips .win { background: linear-gradient(135deg, #fff1a8, #fac800); color: var(--navy); box-shadow: 0 3px 0 #b88a00; }
+.verdict-chips .lose { background: #ffe1e3; color: var(--red-dark); box-shadow: 0 3px 0 #f0a9ad; }
+.verdict-chips .crit { background: var(--red); color: #fff; }
+.verdict-chips .charge { background: var(--navy); color: var(--yellow); }
+@keyframes chip-in { from { opacity: 0; transform: translateY(8px) scale(0.6); } to { opacity: 1; transform: none; } }
+/* a big win: gold */
+.verdict.big { background: radial-gradient(circle at 50% 45%, rgba(250, 200, 0, 0.34), rgba(250, 200, 0, 0) 62%); }
+.verdict.big .verdict-card { background: linear-gradient(160deg, #fff8d6, #fff 45%); box-shadow: 0 10px 0 #b88a00, 0 0 0 4px rgba(250, 200, 0, 0.55), 0 40px 90px -20px rgba(250, 200, 0, 0.75); }
+.verdict.big .verdict-mark { background: linear-gradient(160deg, #fff1a8, #fac800 50%, #e39a00); color: #fac800; box-shadow: 0 0 0 10px rgba(250, 200, 0, 0.25); }
+.verdict.big .verdict-mark::before { content: "★"; font-size: 54px; }
+.verdict.big #verdictPts { color: #c98a00; }
+.verdict.big .verdict-card b { background: linear-gradient(90deg, #e61e2a, #c98a00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+/* a miss: a red edge to the screen, the card shakes, the points drop in */
+.verdict.no { box-shadow: inset 0 0 180px rgba(230, 30, 42, 0.45); }
+.verdict.show.no .verdict-card { animation-name: verdict-shake; }
+.verdict.show.no #verdictPts { animation-name: pts-drop; }
+.verdict.backfire .verdict-card { box-shadow: 0 10px 0 #9c0f18, 0 0 0 4px rgba(230, 30, 42, 0.4), 0 40px 90px -24px rgba(230, 30, 42, 0.7); }
+@keyframes verdict-shake { 0% { opacity: 0; transform: scale(0.8); } 9% { opacity: 1; transform: scale(1.02); } 13% { transform: translateX(-11px); } 17% { transform: translateX(10px); } 21% { transform: translateX(-6px); } 25% { transform: translateX(4px); } 29% { transform: none; } 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(12px) scale(0.97); } }
+@keyframes pts-drop { from { transform: translateY(-18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 640px) {
+  .verdict-card { min-width: 0; padding: 24px 24px 20px; }
+  .verdict-mark { width: 80px; height: 80px; }
+  #verdictPts { font-size: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arena .q-card.revealed .opt.is-right, .arena .q-card.revealed .opt.is-wrong, .arena #submitBtn:not(:disabled),
+  .arena .timer.critical, .power-card.charged, .verdict.show .verdict-mark::after, .verdict.show #verdictPts, .verdict-chips span { animation: none !important; }
+}

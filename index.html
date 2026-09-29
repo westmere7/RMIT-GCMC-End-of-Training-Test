@@ -178,7 +178,7 @@
       <aside class="side">
         <div class="timer" id="timer">
           <p class="eyebrow">Time remaining</p>
-          <div class="clock"><span class="digits" id="digits">10:00</span><button type="button" class="rules-btn" id="rulesBtn" aria-haspopup="dialog">Rules</button></div>
+          <div class="clock"><span class="digits" id="digits">10:00</span><button type="button" class="sound-btn" id="soundBtn" aria-pressed="true" aria-label="Sound"></button><button type="button" class="rules-btn" id="rulesBtn" aria-haspopup="dialog">Rules</button></div>
           <div class="t-track"><i id="tFill"></i></div>
           <p class="sub" id="timerSub">Submits automatically at 00:00</p>
         </div>
@@ -186,9 +186,9 @@
           <div class="power-head"><p class="eyebrow">Powerups</p><span class="charges" id="powerCharges" role="img"></span></div>
           <p class="power-run" id="powerRun"></p>
           <div class="power-btns">
-            <button type="button" class="power" id="pwDouble"><b>Double down</b><small></small></button>
-            <button type="button" class="power" id="pwGauge" aria-controls="gaugePick"><b>Gauge the room</b><small></small></button>
-            <button type="button" class="power" id="pwCall" aria-controls="callPick"><b>Bet on the team</b><small></small></button>
+            <button type="button" class="power" id="pwDouble"><span class="pw-ico x2" aria-hidden="true">×2</span><b>Double down</b><small></small></button>
+            <button type="button" class="power" id="pwGauge" aria-controls="gaugePick"><span class="pw-ico" data-icon="eye"></span><b>Gauge the room</b><small></small></button>
+            <button type="button" class="power" id="pwCall" aria-controls="callPick"><span class="pw-ico" data-icon="dice"></span><b>Bet on the team</b><small></small></button>
           </div>
           <div class="gauge-pick" id="gaugePick" hidden></div>
           <div class="call-pick" id="callPick" hidden></div>
@@ -299,7 +299,7 @@
   </dialog>
 
   <!-- right or wrong, on the taker's screen -->
-  <div class="verdict" id="verdict" hidden aria-live="polite"><div class="verdict-card"><span class="verdict-mark" aria-hidden="true"></span><b id="verdictText"></b><span id="verdictPts"></span><small id="verdictNote"></small></div></div>
+  <div class="verdict" id="verdict" hidden aria-live="polite"><div class="verdict-card"><span class="verdict-mark" aria-hidden="true"></span><p class="verdict-kicker" id="verdictKicker"></p><b id="verdictText"></b><span id="verdictPts"></span><div class="verdict-chips" id="verdictChips"></div><small id="verdictNote"></small></div></div>
 
   <canvas id="confetti" hidden></canvas>
 

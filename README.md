@@ -81,19 +81,19 @@ The score is points, not a percentage.
 
   Because each teammate counts the same, a bigger room doesn't change what a taker scores on average (see `node tests/simulate.js`).
 
-  | Teammate | Taker | Teammate's points |
-  | --- | --- | --- |
-  | Right | either | +1 |
-  | Wrong | wrong | −2 |
-  | Wrong | right | −3 |
+  | Teammate | Teammate's points |
+  | --- | --- |
+  | Right | +1 |
+  | Wrong (or no answer) | −2 |
 
-  A teammate who gets about 70% right ends up around zero; better than that gains, worse loses.
+  Whatever the taker did, so teammates are ranked on their own answers alone. A teammate who gets about two thirds right ends up around zero; better than that gains, worse loses.
 - **Critical questions count double**, both ways.
 - **Time running out:** the question on screen and any after it score nothing for anyone (they still count as wrong).
 - **The meter** (taker's screen) shows where you stand: right answers against wrong ones, critical questions counting double, with or without the team in the room, so a newcomer's meter and award don't depend on how good the team is. Half right sits in the middle, two thirds reaches "welcome", about 95% the award zone at the top end (see below). Under the arc it shows the points so far, the question and the current streak; each answer sends a ripple and its points up from the needle. With the team in, each teammate is a small mark on the arc (their colour and initial) showing their right against wrong so far, critical questions counting double, linked to a badge with their name. The marks glide, without the needle's bounce, and the badges never overlap each other, the taker's name tag, the needle or the award label.
 - **The award zone** is the purple top of the meter (it starts to glow and shimmer as the needle nears it), the top 5% by default ("Award zone" in Settings). Finish in it and there's confetti, the results say **🏆 Award**, and the result row stores `award: true` (with `meter`, the final reading), so you know who's earned one.
 - **Rules** (the small button on the timer) opens the rules during the test: time, submitting, critical questions, the meter, the points for this game and the powerups. It's on every screen, teammates' included. The briefing's points card lists the powerups too.
-- **Right or wrong** flashes up on the taker's screen after each answer, with the points (and, with the team in, how many teammates got it wrong). It fades by itself and never blocks a click.
+- **Right or wrong** flashes up on the taker's screen after each answer: a headline, the points counting up, and chips for whatever changed them (a critical question, a double down that paid off or backfired, a bet won or lost, a charge earned). A big win (the whole team beaten, a bet won, a double down paid off, 10 points or more) goes gold with a burst of confetti; a miss shakes. It fades by itself and never blocks a click. The right tile lights up and a wrong pick is marked.
+- **The taker's screen** is the arena: a navy HUD over the question, a glowing Lock it in, a heartbeat on the clock in the last 30 seconds, and short synthesised sounds (a chime that climbs with a streak, a fanfare for a big win, a buzz for a miss). The speaker button on the timer mutes them, and it's remembered. The team's screens keep the plain look, without sound.
 - **The certificate** shows the taker's own points (+1 right, −1 wrong, critical ×2), with or without the team, and the results say so in group play. The recorded `points` are the room's (without powerups); `ownPoints` stores the taker's own.
 - Each result row's payload stores `points`, `ownPoints`, `mode` (`solo` or `group`), each answer's points, and in group play `room.people` (everyone's name, colour, points and right answers).
 
@@ -137,6 +137,7 @@ Double-click `Start Test.bat`. It opens http://localhost:8765/.
 
 ## Tests
 
+- `node --test tests/*.test.js` also runs `tests/fairness.test.js`: simulated rooms, powerups included, checking that teammates are scored on their own answers alone (the same answers score the same whatever the taker does, and more right always ranks higher), that breaking the taker's bet on purpose costs the saboteur, that powerups never touch the recorded points or the meter, that the meter reads the taker's answers however strong the team, that copying a teammate with Gauge never reaches the award, and that powerups don't let a weak taker overtake a strong one.
 - `node --test tests/*.test.js` checks the points rules (every case, critical ×2, on your own), their limits, and the meter (range, zones, when confetti lands), plus simulated sittings that check a stronger player always scores more.
 - `node tests/simulate.js` prints what scores look like in practice: taker and teammate points at different skill levels and room sizes, and where the meter ends up.
 - They run the real `assets/common.js`, `group.js` and `meter.js`, with nothing to install.

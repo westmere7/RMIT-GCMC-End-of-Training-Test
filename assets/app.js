@@ -267,7 +267,7 @@
       <div class="pts-who">
         <h3><span class="team-dots" aria-hidden="true"><i></i><i></i><i></i></span>Everyone else</h3>
         ${row(true, "up", G.signed(M.right), "every time")}
-        ${row(false, "down", G.signed(M.wrongTakerRight), `if ${name} got it right, ${G.signed(M.wrongTakerWrong)} if not`)}
+        ${row(false, "down", G.signed(M.wrong), "every time")}
       </div>`;
   }
 
@@ -296,7 +296,7 @@
       DATA = { questions: [q], settings: st }; BYID = { [q.id]: q };
       S = { preview: true, name: e.data.name || "Preview", qids: [q.id], index: 0, responses: {}, order: [orderFor(q, st)],
         startedAt: Date.now(), limitMs: (st.timeLimitMinutes || 10) * 60000 };
-      show("scrTest");
+      show("scrTest"); document.documentElement.classList.add("arena"); paintSound();
       meter = meter || new Meter($("meter"), $("lamp"), LABELS());
       meter.setThreshold(st.confettiThreshold); meter.onGreen = null;
       meter.resize(); meter.setName(S.name); meter.setScore(0); meter.start();
@@ -347,7 +347,7 @@
       if (HOSTING()) S.clock = ROOM.clock;
       save();
     }
-    show("scrTest");
+    show("scrTest"); document.documentElement.classList.add("arena"); paintSound();
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.setThreshold((DATA.settings || {}).confettiThreshold); meter.greenLit = score().p >= (meter.pg || 0.9);
     meter.onGreen = (pt) => confetti({ x: pt.x, y: pt.y, n: 90, life: 2.6 });
@@ -395,21 +395,77 @@
     return me;
   }
 
-  // right or wrong, big and quick, on the taker's screen only (it fades by itself and never blocks a click)
+  // ---------- sound: short synthesised cues on the taker's screen (the main screen everyone watches) ----------
+  // Built from a few oscillator notes, so there's nothing to download. The speaker button on the timer mutes it.
+  const SOUND_KEY = "gcmc-sound";
+  let audio = null, soundOn = (() => { try { return localStorage.getItem(SOUND_KEY) !== "off"; } catch (e) { return true; } })();
+  function tone(freq, at, dur, type, vol, slide) {
+    const t = audio.currentTime + at, o = audio.createOscillator(), g = audio.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.16, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.03);
+  }
+  /** kind: right (level = the streak, so a run climbs), big, wrong, coins, backfire, charge, lock. */
+  function sfx(kind, level) {
+    if (!soundOn || MEMBER()) return;
+    try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch (e) { return; }
+    const up = (n) => 523.25 * Math.pow(2, n / 12); // n semitones above C5
+    if (kind === "right") { const k = [0, 2, 4, 5, 7, 9, 11, 12][Math.min(7, Math.max(0, (level || 1) - 1))]; tone(up(k), 0, 0.13, "triangle", 0.16); tone(up(k + 7), 0.08, 0.26, "triangle", 0.15); }
+    else if (kind === "big") { [0, 4, 7, 12].forEach((n, i) => tone(up(n), i * 0.075, 0.24, "triangle", 0.17)); tone(up(16), 0.3, 0.5, "sine", 0.12); tone(up(19), 0.34, 0.5, "sine", 0.08); }
+    else if (kind === "wrong") { tone(220, 0, 0.26, "sawtooth", 0.07, 123); tone(165, 0.06, 0.3, "square", 0.045, 98); }
+    else if (kind === "coins") { [0, 0.07, 0.14, 0.21].forEach((t, i) => tone(up(19 + (i % 2) * 5), t, 0.11, "square", 0.05)); }
+    else if (kind === "backfire") { tone(up(7), 0, 0.2, "triangle", 0.13, up(-5)); tone(up(-5), 0.18, 0.36, "sawtooth", 0.06, 87); }
+    else if (kind === "charge") { tone(up(12), 0, 0.12, "sine", 0.11, up(24)); tone(up(24), 0.12, 0.2, "sine", 0.09); tone(up(31), 0.2, 0.22, "sine", 0.06); }
+    else if (kind === "lock") tone(up(-12), 0, 0.05, "square", 0.04);
+  }
+  function paintSound() { const b = $("soundBtn"); b.setAttribute("aria-pressed", String(soundOn)); b.title = soundOn ? "Sound on (click to mute)" : "Sound off (click to turn on)"; b.innerHTML = icon(soundOn ? "sound" : "mute"); }
+  $("soundBtn").addEventListener("click", () => { soundOn = !soundOn; try { localStorage.setItem(SOUND_KEY, soundOn ? "on" : "off"); } catch (e) {} paintSound(); if (soundOn) sfx("lock"); });
+
+  // right or wrong, big and quick, on the taker's screen only (it fades by itself and never blocks a click): a
+  // headline, the points counting up, chips for whatever changed them (a critical question, a double down that paid
+  // off or backfired, a bet won or lost, a charge earned), a burst of confetti for a right answer and a sound
   let verdictTimer = null;
+  const PRAISE = ["Nailed it!", "Spot on!", "Got it!", "Correct!", "Right!"];
+  /** The run of right answers ending at question k. */
+  function streakAt(k) { const qs = QS(); let n = 0; for (let i = 0; i <= k && i < qs.length; i++) { const r = S.responses[qs[i].id]; n = r && r.correct ? n + 1 : 0; } return n; }
   function showVerdict(q, k, me) {
     if (MEMBER() || S.preview || !me) return;
-    const r = S.responses[q.id] || {}, d = me.gameDeltas[k] || 0, v = $("verdict");
+    const r = S.responses[q.id] || {}, d = me.gameDeltas[k] || 0, base = me.deltas[k] || 0, v = $("verdict");
     const t = tally(), team = t.rows.slice(1), missed = team.filter((p) => p.cells[k] !== "ok").length;
-    v.className = "verdict " + (r.correct ? "ok" : "no");
-    $("verdictText").textContent = r.correct ? "Right" : r.skipped ? "Skipped" : "Wrong";
-    $("verdictPts").textContent = `${G.signed(d)} ${Math.abs(d) === 1 ? "point" : "points"}`;
-    $("verdictNote").textContent = (!team.length ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`)
-      + (HOSTING() && (ROOM && ROOM.powers || {})[k] && ROOM.powers[k].double ? " · Doubled" : "")
-      + (HOSTING() ? callNote(k, missed, team.length) : "")
-      + (HOSTING() && chargeEarned(k) ? " · ⚡ Powerup earned" : "");
+    const pw = (HOSTING() && ROOM && ROOM.powers && ROOM.powers[k]) || {}, streak = r.correct ? streakAt(k) : 0, charged = HOSTING() && chargeEarned(k);
+    const chips = [];
+    // a word or two each: the card is read at a glance
+    if (q.critical) chips.push(["crit", "Critical ×2"]);
+    if (pw.double) chips.push(base > 0 ? ["win", "×2 paid off"] : base < 0 ? ["lose", "×2 backfired"] : ["", "×2"]);
+    if (pw.call) { const c = G.callPoints(pw.call.n, missed, team.length); chips.push(pw.call.n === missed ? ["win", `Bet won ${G.signed(c)}`] : ["lose", `Bet lost ${G.signed(c)}`]); }
+    if (charged) chips.push(["charge", "⚡ Charged"]);
+    const won = chips.some((c) => c[0] === "win"), lost = chips.some((c) => c[0] === "lose");
+    const clutch = r.correct && team.length > 1 && missed === team.length;
+    const big = r.correct && (clutch || won || d >= 10);
+    $("verdictKicker").textContent = streak >= 3 ? `🔥 ${streak} in a row` : "";
+    $("verdictText").textContent = r.correct
+      ? (clutch ? "Clutch!" : streak >= 5 ? "On fire!" : won ? "Jackpot!" : PRAISE[k % PRAISE.length])
+      : r.skipped ? "Skipped" : lost ? "Ouch!" : team.length && missed === team.length ? "Tough one" : "Wrong";
+    $("verdictChips").innerHTML = chips.map(([c, text]) => `<span class="${c}">${esc(text)}</span>`).join("");
+    // one short line about the team, unless the chips already say plenty
+    $("verdictNote").textContent = !team.length || chips.length > 1 ? "" : missed === 0 ? "The whole team got it right" : missed === team.length ? "The whole team got it wrong" : `${missed} of ${team.length} teammates got it wrong`;
+    const dur = reduced ? 900 : chips.length ? 1900 : 1500;
+    v.style.setProperty("--dur", dur + "ms");
+    v.className = "verdict " + (r.correct ? "ok" : "no") + (big ? " big" : "") + (lost ? " backfire" : "");
     v.hidden = false; void v.offsetWidth; v.classList.add("show");
-    clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, reduced ? 900 : 1250);
+    countUp($("verdictPts"), d, reduced ? 0 : 650, (x) => `${G.signed(x)} ${Math.abs(d) === 1 ? "point" : "points"}`);
+    clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, dur);
+    // the sound, then any powerup's own, then a charge
+    sfx(big ? "big" : r.correct ? "right" : "wrong", streak);
+    if (won) setTimeout(() => sfx("coins"), 260);
+    if (lost) setTimeout(() => sfx("backfire"), 260);
+    if (charged) setTimeout(() => sfx("charge"), 520);
+    if (r.correct && !reduced) {
+      const c = v.querySelector(".verdict-card").getBoundingClientRect();
+      confetti({ x: c.left + c.width / 2, y: c.top + 40, n: big ? 120 : 44, life: big ? 2.8 : 1.9,
+        cols: big ? ["#fac800", "#fff1a8", "#e39a00", "#ffffff", "#e61e2a"] : ["#34d77b", "#12a150", "#ffffff", "#fac800", "#e61e2a"] });
+    }
   }
   // the award: the meter ended in its award zone (the top of the meter; its size is a setting in the editor)
   const awardLine = () => { const m = new Meter(null, null, {}); m.setThreshold((DATA.settings || {}).confettiThreshold); return m.pg; };
@@ -665,6 +721,7 @@
     }
     const curve = (a, b) => { const dx = Math.max(30, Math.abs(b.x - a.x) * 0.45); return `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`; };
     function drawLines() {
+      if (!board.isConnected) return; // the question has moved on: `current` belongs to the next one now
       svg.setAttribute("width", board.clientWidth); svg.setAttribute("height", board.clientHeight);
       svg.innerHTML = "";
       ord.a.forEach((ap, i) => {
@@ -710,7 +767,8 @@
       drawLines();
       reportBusy();
     }
-    new ResizeObserver(() => drawLines()).observe(board);
+    const ro = new ResizeObserver(() => { if (!board.isConnected) return ro.disconnect(); drawLines(); });
+    ro.observe(board);
     setTimeout(paint, 0);
     return wrap;
   }
@@ -732,11 +790,23 @@
       return previewResult(q, resp, correct, skipped);
     }
     setStatus("recorded", skipped ? "Skipped" : "Answer recorded");
+    markTiles(q);
     bounce(q, correct);
     setTimeout(() => {
       if (S.index >= QS().length - 1) return finish(false);
       S.index++; save(); renderQuestion(); meterInfo();
-    }, 1100);
+    }, reduced ? 1100 : 1500);
+  }
+  /** The right option lights up, and a wrong pick is marked (choice questions). */
+  function markTiles(q) {
+    if (!A.isChoiceQ(q)) return;
+    const right = new Set(q.correct || []);
+    $("qCard").classList.add("revealed");
+    for (const o of document.querySelectorAll(".opt")) {
+      const i = +o.dataset.orig;
+      o.classList.toggle("is-right", right.has(i));
+      o.classList.toggle("is-wrong", !right.has(i) && o.getAttribute("aria-checked") === "true");
+    }
   }
   function bounce(q, correct) {
     if (!meter) return;
@@ -750,7 +820,7 @@
     card.classList.remove("flash-ok", "flash-no"); void card.offsetWidth; card.classList.add(correct ? "flash-ok" : "flash-no");
     showVerdict(q, S.index, meterInfo(S.index));
   }
-  $("submitBtn").addEventListener("click", () => submit(false));
+  $("submitBtn").addEventListener("click", () => { if (!$("submitBtn").disabled) sfx("lock"); submit(false); });
   $("skipBtn").addEventListener("click", () => submit(true));
   $("nextBtn").addEventListener("click", () => nextQuestion());
 
@@ -820,14 +890,7 @@
     revealShown = true; locked = true;
     $("qCard").classList.add("locked", "revealed");
     $("submitBtn").hidden = true; $("skipBtn").hidden = true;
-    if (A.isChoiceQ(q)) {
-      const right = new Set(q.correct || []);
-      for (const o of document.querySelectorAll(".opt")) {
-        const i = +o.dataset.orig;
-        o.classList.toggle("is-right", right.has(i));
-        o.classList.toggle("is-wrong", !right.has(i) && o.getAttribute("aria-checked") === "true");
-      }
-    }
+    markTiles(q);
     const t = tally(), id = MEMBER() ? S.memberId : 0, me = t.rows.find((r) => r.id === id) || t.rows[0];
     const cell = me.cells[k], d = me.gameDeltas[k] || 0;
     const head = cell === "ok" ? "<b>✓ Right</b>" : cell === "skip" ? `<b>✕ ${MEMBER() ? "No answer in time" : "Skipped"}</b>` : "<b>✕ Wrong</b>";
@@ -890,7 +953,7 @@
     }
     return `${name} ${verb} <b>“${esc(A.responseText(q, r))}”</b>`;
   }
-  let gaugeOpen = false, callOpen = false, doubleArmed = 0, powerBusy = false, powerQ = -1;
+  let gaugeOpen = false, callOpen = false, doubleArmed = 0, powerBusy = false, powerQ = -1, lastHeld = null;
   /** After the reveal: what the taker's call on question k won or lost. */
   function callNote(k, missed, size) {
     const c = ((ROOM && ROOM.powers) || {})[k] && ROOM.powers[k].call;
@@ -910,6 +973,8 @@
     const reveal = ROOM.phase === "reveal" && ROOM.index === k;
     // after the reveal, the charge this answer earned shows straight away
     const { held, run } = G.charges(takerRights(t), powers, reveal ? k + 1 : k);
+    if (lastHeld != null && held > lastHeld) { card.classList.remove("charged"); void card.offsetWidth; card.classList.add("charged"); }
+    lastHeld = held;
     const open = ROOM.phase === "question" && ROOM.index === k && !locked && !powerBusy;
     setHtml($("powerCharges"), [...Array(G.POWER.hold)].map((_, i) => `<i class="${i < held ? "on" : ""}"></i>`).join(""));
     $("powerCharges").setAttribute("aria-label", `${held} of ${G.POWER.hold} charges`);
@@ -1246,7 +1311,7 @@
         mode: HOSTING() ? "group" : "solo",
         room: HOSTING() ? { code: S.group.code, people: S.board.rows.slice(1).map(({ name, color, points, correct, crit }) => ({ name, color, points, correct, criticalErrors: crit })) } : undefined,
         byCategory: an.byCat.map(({ name, correct, total }) => ({ name, correct, total })),
-        responses: QS().map((q, k) => ({ id: q.id, category: A.categoryOf(q), prompt: q.prompt, given: A.responseText(q, S.responses[q.id].response), correct: S.responses[q.id].correct, points: me.deltas[k] })),
+        responses: QS().map((q, k) => ({ id: q.id, category: A.categoryOf(q), prompt: q.prompt, given: A.responseText(q, S.responses[q.id].response), correct: S.responses[q.id].correct, points: me.deltas[k], ...(((ROOM && ROOM.powers) || {})[k] || {}).gauge ? { gauged: true } : {} })),
       }) }).catch(() => {});
     } catch (e) { /* results logging is best effort */ }
     showResults();
@@ -1283,6 +1348,10 @@
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14zM20 17v4H6.5A2.5 2.5 0 0 1 4 19.5"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    eye: '<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    dice: '<rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.3" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
+    sound: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/>',
+    mute: '<path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/>',
   };
   const icon = (k, fill) => `<svg viewBox="0 0 24 24" fill="${fill ? "currentColor" : "none"}" stroke="currentColor" stroke-width="${fill ? 1.2 : 2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ""}</svg>`;
   for (const el of document.querySelectorAll("[data-icon]")) el.innerHTML = icon(el.dataset.icon);
@@ -1499,7 +1568,7 @@
     o = o || {};
     const cv = $("confetti"), burst = o.x != null, now = performance.now();
     // the burst from the award zone is purple, like the zone; the big celebration mixes it with the brand colours
-    const cols = burst ? ["#a445ff", "#d9a6ff", "#7a1fd6", "#ecd2ff", "#fac800"] : ["#a445ff", "#e61e2a", "#000054", "#fac800", "#d9a6ff", "#ffffff"];
+    const cols = o.cols || (burst ? ["#a445ff", "#d9a6ff", "#7a1fd6", "#ecd2ff", "#fac800"] : ["#a445ff", "#e61e2a", "#000054", "#fac800", "#d9a6ff", "#ffffff"]);
     for (let i = 0; i < (o.n || 260); i++) pieces.push({
       x: burst ? o.x : innerWidth / 2 + (Math.random() - 0.5) * 240, y: burst ? o.y : innerHeight * 0.35,
       vx: (Math.random() - 0.5) * (burst ? 10 : 16), vy: -Math.random() * (burst ? 10 : 16) - (burst ? 3 : 4),
