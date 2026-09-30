@@ -350,7 +350,7 @@
     show("scrTest"); document.documentElement.classList.add("arena"); paintSound();
     meter = meter || new Meter($("meter"), $("lamp"), LABELS());
     meter.setThreshold((DATA.settings || {}).confettiThreshold); meter.greenLit = score().p >= (meter.pg || 0.9);
-    meter.onGreen = (pt) => confetti({ x: pt.x, y: pt.y, n: 90, life: 2.6 });
+    meter.onGreen = (pt) => { confetti({ x: pt.x, y: pt.y, n: 140, life: 3 }); sfx("award"); };
     meter.resize(); meter.setName(S.name); meter.setScore(score().p); meter.start(); meterInfo();
     renderQuestion(); runClock();
     if (HOSTING()) { renderPlayers(); startPolling(1000, (gone) => (gone ? roomGone() : syncTaker())); }
@@ -365,7 +365,7 @@
     });
     // the meter: the taker's own answers, right against wrong (critical ×2), with or without the team, so the
     // award doesn't depend on who's in the room
-    return { c, w, crit, p: A.meterReading(rw, ww, QS().length) };
+    return { c, w, crit, p: A.meterReading(rw, ww, QS().length, A.paperWeight(QS())) };
   }
   /** The taker's own points, as on their own (+1 right, −1 wrong, critical ×2; nothing for questions time ran out on).
       The certificate shows these, so it doesn't depend on who's in the room either. */
@@ -388,7 +388,7 @@
       meter.setMarks(t.rows.slice(1).map((r) => {
         let rw = 0, ww = 0;
         r.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else if (c !== "none") ww += k; });
-        return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterReading(rw, ww, qs.length) };
+        return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterReading(rw, ww, qs.length, A.paperWeight(qs)) };
       }));
     }
     if (k != null) meter.pulse(me.gameDeltas[k], !!(S.responses[qs[k].id] || {}).correct);
@@ -406,7 +406,7 @@
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.16, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.03);
   }
-  /** kind: right (level = the streak, so a run climbs), big, wrong, coins, backfire, charge, lock. */
+  /** kind: right (level = the streak, so a run climbs), big, wrong, coins, backfire, charge, award (the needle reaches the award zone), lock. */
   function sfx(kind, level) {
     if (!soundOn || MEMBER()) return;
     try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); if (audio.state === "suspended") audio.resume(); } catch (e) { return; }
@@ -417,6 +417,7 @@
     else if (kind === "coins") { [0, 0.07, 0.14, 0.21].forEach((t, i) => tone(up(19 + (i % 2) * 5), t, 0.11, "square", 0.05)); }
     else if (kind === "backfire") { tone(up(7), 0, 0.2, "triangle", 0.13, up(-5)); tone(up(-5), 0.18, 0.36, "sawtooth", 0.06, 87); }
     else if (kind === "charge") { tone(up(12), 0, 0.12, "sine", 0.11, up(24)); tone(up(24), 0.12, 0.2, "sine", 0.09); tone(up(31), 0.2, 0.22, "sine", 0.06); }
+    else if (kind === "award") { [0, 4, 7, 12, 16, 19, 24].forEach((n, i) => tone(up(n), i * 0.06, 0.3, "triangle", 0.14)); tone(up(24), 0.44, 0.9, "sine", 0.1, up(31)); tone(up(28), 0.5, 0.8, "sine", 0.06); }
     else if (kind === "lock") tone(up(-12), 0, 0.05, "square", 0.04);
   }
   function paintSound() { const b = $("soundBtn"); b.setAttribute("aria-pressed", String(soundOn)); b.title = soundOn ? "Sound on (click to mute)" : "Sound off (click to turn on)"; b.innerHTML = icon(soundOn ? "sound" : "mute"); }
@@ -1365,7 +1366,7 @@
     const sc = score(), an = analyse();
     const name = S.name || "", tName = taker.name || name;
     // where the taker's meter ended: a teammate works it out from the taker's answers (anything not right counts against)
-    const takerReading = () => { let rw = 0, ww = 0; taker.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else ww += k; }); return A.meterReading(rw, ww, n); };
+    const takerReading = () => { let rw = 0, ww = 0; taker.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else ww += k; }); return A.meterReading(rw, ww, n, A.paperWeight(qs)); };
     const reading = member ? takerReading() : sc.p, award = reading >= awardLine();
 
     if (member) {

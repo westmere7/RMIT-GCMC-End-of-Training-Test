@@ -147,19 +147,27 @@
   }
 
   // ---------- the meter's reading, −1 … 1 ----------
-  // Each answer moves it a fixed step until half the attempt is in, then it tracks the running balance. The step is
-  // sized to the attempt, so a run of right answers climbs steadily instead of pinning the needle early.
+  // Right against wrong over a scale that starts at half the attempt (so early answers move it a real step) and widens
+  // steadily to the whole paper, where the reading is exactly right against wrong. Because the scale widens with
+  // progress rather than jumping to the running total, a right answer always moves the needle up by a real share of what
+  // a wrong one takes off, even near the top. (A scale that tracked the running total barely budged for a right answer
+  // up there, and dropped hard for a wrong one.)
   const clamp1 = (x) => Math.max(-1, Math.min(1, x));
   const stepsOf = (n) => Math.max(8, Math.round(n / 2));
   /** On your own: right answers against wrong ones, critical questions counting double (as they do in the points).
-      Pass the weighted totals: a critical question adds 2. Half right sits in the middle, two thirds reaches the
-      welcome zone, 95% the green end. */
-  function meterReading(rightW, wrongW, n) { return clamp1((rightW - wrongW) / Math.max(rightW + wrongW, stepsOf(n))); }
+      Pass the weighted totals: a critical question adds 2; `total` is the whole paper weighted the same way (default n).
+      Half right sits in the middle, two thirds reaches the welcome zone, 95% the award zone at the end. */
+  function meterReading(rightW, wrongW, n, total) {
+    const T = rightW + wrongW, D = Math.max(total || n, T), s0 = Math.min(stepsOf(n), D);
+    return clamp1((rightW - wrongW) / (s0 + (D - s0) * Math.min(1, T / D)));
+  }
+  /** The paper's weight for meterReading's `total`: critical questions count double. */
+  const paperWeight = (qs) => (qs || []).reduce((w, q) => w + (q && q.critical ? 2 : 1), 0);
   /** The taker's points against POINTS_PAR a question (a taker's points run −3…+10 a question). No longer what the
       meter shows (that's meterReading, with the team in too); kept for the simulations. */
   const POINTS_PAR = 4;
   function pointsReading(points, answered, n) { return clamp1(points / (POINTS_PAR * Math.max(answered, stepsOf(n)))); }
 
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading, pointsReading, POINTS_PAR };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading, paperWeight, pointsReading, POINTS_PAR };
 })(window);

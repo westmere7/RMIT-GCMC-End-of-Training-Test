@@ -1223,6 +1223,16 @@ body::after { width: 120px; height: 118px; left: 3%; top: 38%; animation: drift 
 .test > .meter-card.flash-ok::after { background: radial-gradient(closest-side, rgba(52, 215, 123, 0.7), rgba(52, 215, 123, 0.28) 45%, rgba(52, 215, 123, 0) 100%); animation: meter-flash 1.4s ease-out both; }
 .test > .meter-card.flash-no::after { background: radial-gradient(closest-side, rgba(255, 70, 82, 0.7), rgba(255, 70, 82, 0.28) 45%, rgba(255, 70, 82, 0) 100%); animation: meter-flash 1.4s ease-out both; }
 @keyframes meter-flash { 0% { opacity: 0; } 16% { opacity: 1; } 100% { opacity: 0; } }
+/* in the award zone the glow turns purple and breathes; arriving there flashes it bright, and a big bounce gives the meter a shake */
+.test > .meter-card::before { transition: filter 0.6s; }
+.test > .meter-card.in-award::before { background: radial-gradient(closest-side, rgba(180, 90, 255, 0.62), rgba(122, 31, 214, 0.34) 45%, rgba(80, 20, 170, 0.12) 75%, rgba(60, 12, 140, 0) 100%); animation: meter-breathe 2.4s ease-in-out infinite; }
+.test > .meter-card.award-hit::after { background: radial-gradient(closest-side, rgba(236, 210, 255, 0.95), rgba(164, 69, 255, 0.55) 40%, rgba(164, 69, 255, 0) 100%); animation: meter-flash 1.8s ease-out both; }
+.test > .meter-card.award-hit canvas { animation: meter-pop 0.7s cubic-bezier(.2, 1.6, .4, 1) both; }
+.test > .meter-card.jolt canvas { animation: meter-jolt 0.5s ease-out both; }
+@keyframes meter-breathe { 0%, 100% { opacity: 0.85; transform: translateY(-50%) scale(1); } 50% { opacity: 1; transform: translateY(-50%) scale(1.06); } }
+@keyframes meter-pop { 0% { transform: scale(1); } 35% { transform: scale(1.035); } 100% { transform: scale(1); } }
+@keyframes meter-jolt { 0% { transform: none; } 15% { transform: translate(-3px, 1px) rotate(-0.4deg); } 35% { transform: translate(3px, -1px) rotate(0.35deg); } 55% { transform: translate(-2px, 0) rotate(-0.2deg); } 75% { transform: translate(1px, 0); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .test > .meter-card.in-award::before, .test > .meter-card.award-hit canvas, .test > .meter-card.jolt canvas { animation: none; } }
 /* the question and the side cards sit above the glow (it spills under them, never over them) */
 .test > main { position: relative; }
 :where(.test > .side > .card, .test > .side > .timer) { position: relative; }
