@@ -30,7 +30,7 @@
   function Meter(canvas, lamp, labels) {
     this.c = canvas; this.ctx = canvas && canvas.getContext("2d"); this.lamp = lamp;
     this.labels = labels || {}; this.name = ""; this.p = 0; this.theta = 0; this.vel = 0; this.t = 0; this.last = 0;
-    this.stats = null; this.tween = null; this.pulses = []; this.marks = []; this.sparks = []; this.trail = [];
+    this.stats = null; this.tween = null; this.pulses = []; this.marks = []; this.sparks = []; this.trail = []; this.moves = [];
     this.card = canvas && canvas.closest ? canvas.closest(".meter-card") : null;
     this.reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     this.resize = this.resize.bind(this); this.frame = this.frame.bind(this);
@@ -43,17 +43,27 @@
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // arc through three points: apex at `top`, ends at ±half-chord near the bottom; on a phone it's narrower and thinner
     this.compact = this.w < 600;
-    this.lw = this.compact ? 22 : 34; // the arc's thickness
-    this.nw = this.compact ? 5 : 7; // the needle's
-    this.top = this.compact ? 60 : 78; this.ends = this.h - (this.compact ? 34 : 40);
-    const half = this.w * (this.compact ? 0.42 : 0.36), sag = Math.max(40, this.ends - this.top);
+    // on a wide screen it's a slice of a bigger circle: wider, the same height, so flatter, and thicker
+    this.lw = this.compact ? 22 : 46; // the arc's thickness
+    this.nw = this.compact ? 5 : 8; // the needle's
+    this.top = this.compact ? 60 : 82; this.ends = this.h - (this.compact ? 34 : 40);
+    const half = this.w * (this.compact ? 0.42 : 0.44), sag = Math.max(40, this.ends - this.top);
     this.half = half;
     this.R = (half * half + sag * sag) / (2 * sag);
     this.span = Math.asin(Math.min(0.99, half / this.R));
     this.cx = this.w / 2; this.cy = this.top + this.R;
     this.rr = this.R - this.lw / 2; // the arc's centre line
   };
-  Meter.prototype.setScore = function (p) { this.p = Math.max(-1, Math.min(1, p)); };
+  // every change of reading, however small, is marked on the arc: the stretch it moved over lights up (green up, red
+  // down) and fades, a ghost tick stays where it was for a moment, and a wave of light runs out along the reading
+  Meter.prototype.setScore = function (p) {
+    p = Math.max(-1, Math.min(1, p));
+    if (this.span && Math.abs(p - this.p) > 1e-6 && !this.reduced) {
+      this.moves.push({ t0: this.t, from: this.aim(this.p) * this.span, to: this.aim(p) * this.span, up: p > this.p });
+      if (this.moves.length > 4) this.moves.shift();
+    }
+    this.p = p;
+  };
   // The award zone: the top of the meter, from the reading `pg` up. `pct` is the editor's setting (95 = the top 5% of
   // the arc). A reading maps straight onto the arc, so the zone on screen is exactly that share of it; inside the zone
   // it runs only a touch slower, so answers there still move the needle almost as far, but a perfect run rests just
@@ -73,8 +83,10 @@
   Meter.prototype.setName = function (n) { this.name = String(n || "").trim(); };
   /** The readout under the arc: { points, answered, total, streak }. */
   Meter.prototype.setStats = function (s) {
-    const now = this.pointsNow();
-    if (s && (!this.stats || s.points !== this.stats.points)) this.tween = { from: this.stats ? now : s.points, to: s.points, t0: performance.now() };
+    const now = this.pointsNow(), old = this.stats;
+    if (s && (!old || s.points !== old.points)) this.tween = { from: old ? now : s.points, to: s.points, t0: performance.now() };
+    // the line under the points pops when it changes; a streak growing flashes gold, one ending flashes red
+    if (s && old && (s.answered !== old.answered || s.streak !== old.streak)) this.statT = { t0: this.t, streak: s.streak > old.streak ? 1 : s.streak < old.streak ? -1 : 0 };
     this.stats = s;
   };
   // the readout counts up (or down) to a new total over about 0.7s, timed by the clock rather than by frames
@@ -86,7 +98,11 @@
   /** The rest of the room: [{ id, name, color, initial, p }] with p a reading (−1 … 1). Each mark glides to its place. */
   Meter.prototype.setMarks = function (marks) {
     const old = new Map(this.marks.map((m) => [m.id, m]));
-    this.marks = (marks || []).map((m) => ({ ...m, a: old.has(m.id) ? old.get(m.id).a : 0 }));
+    // a mark whose reading changed sends out a small ring as it sets off
+    this.marks = (marks || []).map((m) => {
+      const o = old.get(m.id);
+      return { ...m, a: o ? o.a : 0, t0: o && Math.abs(o.p - m.p) > 1e-6 ? this.t : o ? o.t0 : null, up: o && Math.abs(o.p - m.p) > 1e-6 ? m.p > o.p : o && o.up };
+    });
   };
   /** An answer just landed: a ripple at the needle tip and a points chip that floats up from it. Both are pinned to
       where the needle is heading, and the chip's side is picked once, so they hold still while the needle bounces. */
@@ -174,6 +190,7 @@
     if (!earned) this.greenLit = false;
     if (this.card && this.cardLit !== !!this.greenLit) { this.cardLit = !!this.greenLit; this.card.classList.toggle("in-award", this.cardLit); }
     this.pulses = this.pulses.filter((p) => this.t - p.t0 < 1.6);
+    this.moves = this.moves.filter((m) => this.t - m.t0 < 1.6);
     // sparks fly and fall; the trail keeps where the needle was over the last moment (longer just after a jolt)
     this.sparks = this.sparks.filter((s) => this.t - s.t0 < s.life);
     for (const s of this.sparks) { s.vy += 420 * dt; s.vx *= 1 - 1.6 * dt; s.vy *= 1 - 1.2 * dt; s.x += s.vx * dt; s.y += s.vy * dt; s.spin += dt * 5; }
@@ -236,10 +253,14 @@
     // instrument rings: a hairline outside the arc, and the tick ring inside it
     g.lineWidth = 1; g.strokeStyle = C.faint;
     arc(-S - 0.02, S + 0.02, rr + lw / 2 + 7); g.stroke();
+    // the ticks near the needle light up and stretch as it passes, like a scanner following it
     for (let i = 0; i <= 60; i++) {
       const a = -S + (2 * S * i) / 60, major = i % 10 === 0, mid = i % 5 === 0;
-      const [x1, y1] = pt(a, rr - lw / 2 - 7), [x2, y2] = pt(a, rr - lw / 2 - (major ? 20 : mid ? 14 : 11));
-      g.strokeStyle = major ? "rgba(255,255,255,0.6)" : mid ? "rgba(255,255,255,0.36)" : "rgba(255,255,255,0.18)"; g.lineWidth = major ? 2 : 1;
+      const near = this.reduced ? 0 : Math.max(0, 1 - Math.abs(a - this.theta) / (S * 0.09)), glow = near * near;
+      const [x1, y1] = pt(a, rr - lw / 2 - 7), [x2, y2] = pt(a, rr - lw / 2 - (major ? 20 : mid ? 14 : 11) - 9 * glow);
+      const base = major ? 0.6 : mid ? 0.36 : 0.18;
+      g.strokeStyle = `rgba(255,255,255,${(base + (1 - base) * glow).toFixed(3)})`;
+      g.lineWidth = (major ? 2 : 1) + 1.5 * glow;
       g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
     }
 
@@ -254,6 +275,25 @@
     // depth: a shine along the outer edge, a shade along the inner one (a glossy tube)
     g.lineWidth = lw * 0.16; g.strokeStyle = "rgba(255,255,255,0.45)"; arc(-S, S, rr + lw * 0.26); g.stroke();
     g.lineWidth = lw * 0.12; g.strokeStyle = "rgba(0,0,0,0.2)"; arc(-S, S, rr - lw * 0.34); g.stroke();
+    // each change of reading: the stretch it moved over glows green (up) or red (down) and fades; a ghost tick marks
+    // where it was; a wave of light runs from the middle out to the new reading
+    for (const mv of this.moves) {
+      const age = this.t - mv.t0, k = age / 1.6, col = mv.up ? C.up : C.down;
+      const a0 = Math.max(-S, Math.min(S, Math.min(mv.from, mv.to))), a1 = Math.max(-S, Math.min(S, Math.max(mv.from, mv.to)));
+      g.save(); g.lineCap = "round"; g.shadowColor = col; g.shadowBlur = 18 * (1 - k);
+      g.globalAlpha = 0.85 * (1 - k) * (1 - k); g.lineWidth = lw + 8 * (1 - k); g.strokeStyle = col;
+      arc(a0, Math.max(a1, a0 + 0.004)); g.stroke(); g.restore();
+      if (age < 1.1) { // the ghost tick, where the reading was
+        const [x1, y1] = pt(mv.from, rr - lw / 2 - 4), [x2, y2] = pt(mv.from, rr + lw / 2 + 4);
+        g.globalAlpha = 0.8 * (1 - age / 1.1); g.strokeStyle = "#fff"; g.lineWidth = 2; g.lineCap = "round";
+        g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.globalAlpha = 1;
+      }
+      if (age < 0.6) { // the wave
+        const e = age / 0.6, head = mv.to * (1 - Math.pow(1 - e, 2)), wd = S * 0.06, h0 = head - Math.sign(mv.to || 1) * wd;
+        g.globalAlpha = 0.7 * (1 - e); g.strokeStyle = "#fff"; g.lineWidth = lw * 0.5; g.lineCap = "round";
+        arc(Math.min(head, h0), Math.max(head, h0)); g.stroke(); g.globalAlpha = 1;
+      }
+    }
     // fine white breaks at the thirds
     g.lineCap = "butt";
     for (const a of [-S / 3, S / 3]) {
@@ -327,8 +367,14 @@
       g.restore();
       const bits = [`Question ${Math.min(st.total, st.answered + 1)} of ${st.total}`];
       if (st.streak >= 2) bits.push(`${st.streak} in a row`);
-      g.font = "700 13px " + TEXT; g.fillStyle = C.soft;
+      // it pops when it changes, glowing gold as a streak grows (red as one ends)
+      const sa = this.statT && !this.reduced ? (this.t - this.statT.t0) / 0.7 : 1, sp = sa < 1 ? Math.sin(Math.PI * sa) : 0;
+      g.save();
+      if (sp) { const sc = this.statT.streak > 0 ? "#fac800" : this.statT.streak < 0 ? C.down : "#fff"; g.shadowColor = sc; g.shadowBlur = 14 * sp; }
+      g.font = `700 ${Math.round(13 * (1 + 0.14 * sp))}px ` + TEXT;
+      g.fillStyle = sp && this.statT.streak > 0 ? `rgba(255,236,160,${(0.64 + 0.36 * sp).toFixed(3)})` : C.soft;
       g.fillText(bits.join("   ·   "), cx, y + (this.compact ? 20 : 26));
+      g.restore();
       if (tease > 0.35) { // the tease, in words
         g.save();
         g.globalAlpha = inAward ? 1 : 0.55 + 0.45 * Math.sin(this.t * 5);
@@ -402,6 +448,12 @@
         // the link from the mark to its badge
         g.strokeStyle = m.color; g.globalAlpha = 0.6; g.lineWidth = 1.5;
         g.beginPath(); g.moveTo(mx, my); g.lineTo(bx0, by0); g.stroke(); g.globalAlpha = 1;
+        // a ring off the mark as its reading changes
+        const ma = m.t0 != null && !this.reduced ? this.t - m.t0 : 9;
+        if (ma < 0.9) {
+          g.strokeStyle = m.up ? C.up : C.down; g.globalAlpha = 0.9 * (1 - ma / 0.9); g.lineWidth = 3;
+          g.beginPath(); g.arc(mx, my, r + (ma / 0.9) * 24, 0, Math.PI * 2); g.stroke(); g.globalAlpha = 1;
+        }
         // the mark, on the arc
         g.save(); g.shadowColor = "rgba(0,0,40,0.35)"; g.shadowBlur = 6; g.shadowOffsetY = 1.5;
         g.fillStyle = m.color; g.beginPath(); g.arc(mx, my, r, 0, Math.PI * 2); g.fill(); g.restore();
