@@ -457,15 +457,72 @@
     v.hidden = false; void v.offsetWidth; v.classList.add("show");
     countUp($("verdictPts"), d, reduced ? 0 : 650, (x) => `${G.signed(x)} ${Math.abs(d) === 1 ? "point" : "points"}`);
     clearTimeout(verdictTimer); verdictTimer = setTimeout(() => { v.hidden = true; }, dur);
-    // the sound, then any powerup's own, then a charge
+    // the sound, then a charge; what each powerup did follows the verdict full screen, with its own sound
     sfx(big ? "big" : r.correct ? "right" : "wrong", streak);
-    if (won) setTimeout(() => sfx("coins"), 260);
-    if (lost) setTimeout(() => sfx("backfire"), 260);
     if (charged) setTimeout(() => sfx("charge"), 520);
+    setTimeout(() => powerOutcomes(k, r, base, missed, team), dur - 150);
     if (r.correct && !reduced) {
       const c = v.querySelector(".verdict-card").getBoundingClientRect();
       confetti({ x: c.left + c.width / 2, y: c.top + 40, n: big ? 120 : 44, life: big ? 2.8 : 1.9,
         cols: big ? ["#fac800", "#fff1a8", "#e39a00", "#ffffff", "#e61e2a"] : ["#34d77b", "#12a150", "#ffffff", "#fac800", "#e61e2a"] });
+    }
+  }
+
+  // ---------- powerups, full screen: using one, and what it did at the reveal, take over the screen for a moment ----------
+  // Like the verdict it fades by itself and never blocks a click. Several in a row (a double and a bet on the same
+  // question) queue up and play one after another.
+  let pfxQueue = [], pfxTimer = null;
+  /** o: { kind: double | gauge | call, tone: on (just used) | win | lose | info, kicker, title, big (text) or bigHtml, sub } */
+  function powerFx(o) { if (MEMBER() || S.preview) return; pfxQueue.push(o); if (!pfxTimer) nextPowerFx(); }
+  function nextPowerFx() {
+    const o = pfxQueue.shift(), el = $("powerFx");
+    if (!o) { pfxTimer = null; el.hidden = true; el.className = "pfx"; return; }
+    const dur = reduced ? 1500 : o.dur || 2400;
+    $("pfxIco").innerHTML = o.kind === "double" ? "×2" : icon(o.kind === "gauge" ? "eye" : "dice");
+    $("pfxKicker").textContent = o.kicker || "";
+    $("pfxTitle").textContent = o.title || "";
+    if (o.bigHtml != null) $("pfxBig").innerHTML = o.bigHtml; else $("pfxBig").textContent = o.big || "";
+    $("pfxSub").textContent = o.sub || "";
+    el.style.setProperty("--dur", dur + "ms");
+    el.className = `pfx ${o.kind} ${o.tone}` + (o.bigHtml != null ? " rich" : "");
+    el.hidden = false; void el.offsetWidth; el.classList.add("show");
+    sfx(o.tone === "on" ? "charge" : o.tone === "win" ? "coins" : o.tone === "lose" ? "backfire" : "lock");
+    if (!reduced && (o.tone === "on" || o.tone === "win")) {
+      const c = el.querySelector(".pfx-card").getBoundingClientRect();
+      confetti({ x: c.left + c.width / 2, y: c.top + 30, n: o.tone === "win" ? 130 : 60, life: 2.4,
+        cols: o.tone === "win" ? ["#fac800", "#fff1a8", "#e39a00", "#ffffff", "#34d77b"] : ["#fac800", "#fff1a8", "#8f7cff", "#ffffff"] });
+    }
+    pfxTimer = setTimeout(nextPowerFx, dur);
+  }
+  /** The moment a powerup goes on: what it is and what it does, for the whole room to see. */
+  function powerOn(kind, m, n) {
+    const k = S.index, q = QS()[k], used = ((ROOM && ROOM.powers) || {})[k] || {}, t = tally(), size = t.rows.length - 1;
+    const me = S.name || "The taker";
+    if (kind === "double") powerFx({ kind, tone: "on", kicker: "⚡ Powerup", title: "Double down!", big: "×2", sub: "This question's points count double. Right or wrong, no take-backs." });
+    else if (kind === "gauge") {
+      const who = t.rows.find((p) => p.id === m), g = used.gauge, name = who ? who.name : "a teammate";
+      powerFx({ kind, tone: "on", kicker: "⚡ Powerup · Gauge the room", title: `Peeking at ${name}`,
+        bigHtml: g && "r" in g ? `<span class="pfx-pick" style="--c:${esc((who && who.color) || "#fff")}">${pickHtml(`<b>${esc(name)}</b>`, q, g.r, g.final)}</span>` : `<span class="pfx-pick">${esc(name)} hasn't picked yet</span>`,
+        sub: g && g.final ? "Their answer is in. Right or wrong? The reveal will tell." : "Still choosing: they can change it." });
+    } else if (kind === "call") powerFx({ kind, tone: "on", kicker: "⚡ Powerup · Bet on the team", title: `${me} bets`, big: `${n} of ${size}`,
+      sub: `teammates get this one wrong. Exactly right wins ${G.signed(G.callPoints(0, 0, size))}; off by any loses ${Math.abs(G.POWER.call.miss)}.` });
+  }
+  /** After the verdict: what each powerup on question k actually did. */
+  function powerOutcomes(k, r, base, missed, team) {
+    const pw = (HOSTING() && ROOM && ROOM.powers && ROOM.powers[k]) || {};
+    if (pw.double) powerFx(base > 0 ? { kind: "double", tone: "win", kicker: "Double down", title: "×2 paid off!", big: `${G.signed(base)} → ${G.signed(base * 2)}`, sub: "Doubled, straight onto the scoreboard." }
+      : base < 0 ? { kind: "double", tone: "lose", kicker: "Double down", title: "×2 backfired", big: `${G.signed(base)} → ${G.signed(base * 2)}`, sub: "The loss counts double too." }
+      : { kind: "double", tone: "info", kicker: "Double down", title: "Nothing to double", big: "0 × 2 = 0", sub: "No points either way on this one." });
+    if (pw.call) {
+      const c = G.callPoints(pw.call.n, missed, team.length), hit = pw.call.n === missed;
+      powerFx(hit ? { kind: "call", tone: "win", kicker: "Bet on the team", title: "Bet won!", big: G.signed(c), sub: `Called it: exactly ${missed} of ${team.length} got it wrong.` }
+        : { kind: "call", tone: "lose", kicker: "Bet on the team", title: "Bet lost", big: G.signed(c), sub: `The bet was ${pw.call.n} wrong. It was ${missed} of ${team.length}.` });
+    }
+    if (pw.gauge) {
+      const who = team.find((p) => p.id === pw.gauge.m); if (!who) return;
+      const right = who.cells[k] === "ok";
+      powerFx({ kind: "gauge", tone: right ? "win" : "lose", kicker: "Gauge the room", title: `${who.name} was ${right ? "right" : "wrong"}`, big: right ? "✓" : "✕",
+        sub: r.correct === right ? (right ? "You both got it right." : "You both got it wrong.") : r.correct ? "You went your own way, and got it right." : "They had it, and you didn't." });
     }
   }
   // the award: the meter ended in its award zone (the top of the meter; its size is a setting in the editor)
@@ -1047,7 +1104,7 @@
   async function usePower(kind, m, n) {
     if (!HOSTING() || !ROOM || powerBusy) return;
     powerBusy = true; $("powerNote").textContent = ""; renderPowers();
-    try { await roomAct({ action: "power", q: S.index, kind, m, n }); gaugeOpen = false; callOpen = false; }
+    try { await roomAct({ action: "power", q: S.index, kind, m, n }); gaugeOpen = false; callOpen = false; powerOn(kind, m, n); }
     catch (e) { $("powerNote").textContent = e.message || "Couldn't reach the room. Try again."; }
     powerBusy = false; doubleArmed = 0; renderPowers();
   }

@@ -1593,3 +1593,65 @@ html.joiner .sound-btn, html.preview .sound-btn { display: none; }
   .arena .q-card.revealed .opt.is-right, .arena .q-card.revealed .opt.is-wrong, .arena #submitBtn:not(:disabled),
   .arena .timer.critical, .power-card.charged, .verdict.show .verdict-mark::after, .verdict.show #verdictPts, .verdict-chips span { animation: none !important; }
 }
+
+/* ---------- powerups, full screen: using one, and what it did at the reveal (see powerFx in app.js) ---------- */
+/* fades by itself and never blocks a click; the colour says what happened: gold for a powerup going on, gold and
+   green for a win, red (with a shake) for a loss, navy for nothing either way */
+.pfx { --dur: 2400ms; --tone: 250, 200, 0; position: fixed; inset: 0; z-index: 46; display: grid; place-items: center; pointer-events: none; overflow: hidden; }
+.pfx.win { --tone: 52, 215, 123; }
+.pfx.lose { --tone: 230, 30, 42; }
+.pfx.info { --tone: 143, 124, 255; }
+.pfx.show { animation: pfx-bg var(--dur) ease both; }
+.pfx::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50% 46%, rgba(var(--tone), 0.34), rgba(0, 0, 40, 0.55) 55%, rgba(0, 0, 40, 0.7)); }
+.pfx.lose::before { box-shadow: inset 0 0 200px rgba(230, 30, 42, 0.55); }
+.pfx-rays { position: absolute; left: 50%; top: 46%; width: 170vmax; height: 170vmax; margin: -85vmax 0 0 -85vmax; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(var(--tone), 0.2) 0deg 7deg, rgba(var(--tone), 0) 7deg 20deg);
+  -webkit-mask: radial-gradient(closest-side, #000 10%, rgba(0, 0, 0, 0.5) 45%, transparent 75%); mask: radial-gradient(closest-side, #000 10%, rgba(0, 0, 0, 0.5) 45%, transparent 75%); }
+.pfx.show .pfx-rays { animation: pfx-spin 9s linear infinite, pfx-rays-in var(--dur) ease both; }
+.pfx.lose .pfx-rays { display: none; }
+.pfx-card { position: relative; display: grid; justify-items: center; gap: 6px; min-width: 380px; max-width: min(620px, calc(100vw - 32px)); padding: 34px 52px 30px; border-radius: 30px; text-align: center; color: #fff;
+  background: linear-gradient(165deg, #2a1fa0, #0b0670 55%, #000054); box-shadow: 0 12px 0 rgba(0, 0, 30, 0.45), 0 0 0 4px rgba(var(--tone), 0.8), 0 0 60px 6px rgba(var(--tone), 0.45), 0 50px 110px -20px rgba(0, 0, 40, 0.8); }
+.pfx.show .pfx-card { animation: pfx-pop var(--dur) cubic-bezier(0.2, 1.3, 0.4, 1) both; }
+.pfx.show.lose .pfx-card { animation-name: pfx-shake; }
+.pfx-ico { position: relative; display: grid; place-items: center; width: 112px; height: 112px; margin: -86px 0 8px; border-radius: 50%; color: var(--navy); font-family: var(--display); font-size: 46px; line-height: 1;
+  background: linear-gradient(160deg, #fff1a8, #fac800 50%, #e39a00); box-shadow: 0 6px 0 #9a7300, 0 0 0 8px rgba(var(--tone), 0.3), 0 0 50px rgba(var(--tone), 0.8); }
+.pfx-ico svg { width: 54px; height: 54px; }
+.pfx.win .pfx-ico { background: linear-gradient(160deg, #b8ffd6, #34d77b 50%, #12a150); color: #04361b; box-shadow: 0 6px 0 #0b6b36, 0 0 0 8px rgba(var(--tone), 0.3), 0 0 50px rgba(var(--tone), 0.8); }
+.pfx.lose .pfx-ico { background: linear-gradient(160deg, #ff9aa0, #ff5a61 50%, #e61e2a); color: #fff; box-shadow: 0 6px 0 #9c0f18, 0 0 0 8px rgba(var(--tone), 0.3), 0 0 50px rgba(var(--tone), 0.7); }
+.pfx.info .pfx-ico { background: linear-gradient(160deg, #c9c0ff, #8f7cff 50%, #4a3be0); color: #fff; box-shadow: 0 6px 0 #2a1fa0, 0 0 0 8px rgba(var(--tone), 0.3); }
+.pfx.show .pfx-ico { animation: pfx-ico 0.8s cubic-bezier(0.2, 1.6, 0.4, 1) 0.08s both; }
+.pfx-ico::after { content: ""; position: absolute; width: 112px; height: 112px; border-radius: 50%; border: 5px solid rgba(var(--tone), 0.9); opacity: 0; }
+.pfx.show .pfx-ico::after { animation: ring-out 0.9s ease-out 0.25s both; }
+.pfx-kicker { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgb(var(--tone)); }
+.pfx.lose .pfx-kicker { color: #ff9aa0; }
+.pfx-title { font-family: var(--display); font-size: 46px; line-height: 1.05; }
+.pfx-big { font-family: var(--display); font-size: 84px; line-height: 1; margin: 6px 0 2px; color: rgb(var(--tone)); text-shadow: 0 0 34px rgba(var(--tone), 0.75), 0 5px 0 rgba(0, 0, 30, 0.45); }
+.pfx.lose .pfx-big { color: #ff7a80; }
+.pfx.on .pfx-big { background: linear-gradient(100deg, #fff1a8 20%, #fff 45%, #fac800 70%); background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pfx.show.on .pfx-big { animation: pfx-num 0.6s cubic-bezier(0.2, 1.7, 0.4, 1) 0.3s both, pfx-shine 1.4s ease 0.6s both; }
+.pfx.show:not(.on) .pfx-big { animation: pfx-num 0.6s cubic-bezier(0.2, 1.7, 0.4, 1) 0.3s both; }
+.pfx.rich .pfx-big { font-family: var(--text); font-size: 24px; line-height: 1.35; color: #fff; text-shadow: none; background: none; }
+.pfx-pick { display: block; padding: 14px 20px; border-radius: 16px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 0 0 2px var(--c, rgba(255, 255, 255, 0.3)); }
+.pfx-pick b { color: rgb(var(--tone)); }
+.pfx-pick .gauge-pairs { margin: 8px 0 0; padding: 0; list-style: none; font-size: 17px; text-align: left; }
+.pfx-sub { max-width: 440px; font-size: 16px; line-height: 1.4; color: rgba(255, 255, 255, 0.78); }
+.pfx-sub:empty { display: none; }
+@keyframes pfx-bg { 0% { opacity: 0; } 10% { opacity: 1; } 82% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes pfx-rays-in { 0% { transform: scale(0.3); } 30% { transform: scale(1); } }
+@keyframes pfx-spin { to { rotate: 360deg; } }
+@keyframes pfx-pop { 0% { opacity: 0; transform: scale(0.5) rotate(-4deg); } 12% { opacity: 1; transform: scale(1.06) rotate(1deg); } 20% { transform: scale(1) rotate(0); } 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-16px) scale(0.96); } }
+@keyframes pfx-shake { 0% { opacity: 0; transform: scale(0.8); } 9% { opacity: 1; transform: scale(1.02); } 13% { transform: translateX(-14px) rotate(-1deg); } 17% { transform: translateX(12px) rotate(1deg); } 21% { transform: translateX(-8px); } 25% { transform: translateX(5px); } 29% { transform: none; } 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(14px) scale(0.97); } }
+@keyframes pfx-ico { 0% { transform: scale(0) rotate(-120deg); } 100% { transform: none; } }
+@keyframes pfx-num { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: none; } }
+@keyframes pfx-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
+@media (max-width: 640px) {
+  .pfx-card { min-width: 0; width: calc(100vw - 32px); padding: 28px 22px 24px; }
+  .pfx-ico { width: 88px; height: 88px; margin-top: -68px; font-size: 36px; }
+  .pfx-ico::after { width: 88px; height: 88px; }
+  .pfx-ico svg { width: 42px; height: 42px; }
+  .pfx-title { font-size: 34px; }
+  .pfx-big { font-size: 64px; }
+  .pfx.rich .pfx-big { font-size: 19px; }
+  .pfx-sub { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .pfx.show .pfx-rays, .pfx.show .pfx-card, .pfx.show .pfx-ico, .pfx.show .pfx-ico::after, .pfx.show .pfx-big { animation: none !important; } }
