@@ -9,7 +9,7 @@
   "use strict";
   // drawn on a dark gradient card: light lines and text, bright colours
   const C = { red: "#e61e2a", green: "#12a150", navy: "#000054", award: "#a445ff", awardInk: "#e6ccff", spark: "#ecd2ff",
-    up: "#34d77b", down: "#ff5a61", ink: "#ffffff", soft: "rgba(255,255,255,0.64)", faint: "rgba(255,255,255,0.14)", tease: "#cf96ff" };
+    up: "#34d77b", down: "#ff5a61", boost: "#fac800", ink: "#ffffff", soft: "rgba(255,255,255,0.64)", faint: "rgba(255,255,255,0.14)", tease: "#cf96ff" };
   const AWARD = [[0, "#d9a6ff"], [0.5, "#a445ff"], [1, "#7a1fd6"]];
   const STOPS = [[0, "#e61e2a"], [0.24, "#ff5b36"], [0.5, "#ffb000"], [0.74, "#6fcf3c"], [1, "#12a150"]]; // left end → right end
   const TEXT = "'Helvetica Neue LT Pro', 'Helvetica Neue', Arial, sans-serif";
@@ -87,6 +87,12 @@
     if (s && (!old || s.points !== old.points)) this.tween = { from: old ? now : s.points, to: s.points, t0: performance.now() };
     // the line under the points pops when it changes; a streak growing flashes gold, one ending flashes red
     if (s && old && (s.answered !== old.answered || s.streak !== old.streak)) this.statT = { t0: this.t, streak: s.streak > old.streak ? 1 : s.streak < old.streak ? -1 : 0 };
+    // the streak boost (see Assess.meterRun): a new or bigger boost flares its badge; a climb it sped up glows gold
+    const boost = (s && s.boost) || 1, was = this.boost || 1;
+    if (boost > 1.01 && (was <= 1.01 || (old && s.streak > old.streak && [3, 5].includes(s.streak)))) this.boostT = this.t;
+    const mv = this.moves[this.moves.length - 1];
+    if (mv && mv.up && boost > 1.01 && this.t - mv.t0 < 0.05) mv.boost = true;
+    this.boost = boost;
     this.stats = s;
   };
   // the readout counts up (or down) to a new total over about 0.7s, timed by the clock rather than by frames
@@ -136,7 +142,8 @@
   // flicks towards the end the needle is already near are softened a little, so it doesn't rattle off the stop, but
   // only a little: a right answer up in the award zone still gets a proper flick, like a wrong one does the other way
   Meter.prototype.soften = function (dir) { const e = Math.abs(this.theta) / this.span; return dir * this.theta > 0 ? 1 - 0.35 * smooth(0.8, 1, e) : 1; };
-  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6 * this.soften(dir); };
+  // on a streak boost, the flick up is a little livelier too
+  Meter.prototype.kick = function (dir) { this.vel += dir * (this.reduced ? 0.3 : 1.0) * (this.span / 0.52) * 1.6 * this.soften(dir) * (dir > 0 ? 1 + 0.8 * ((this.boost || 1) - 1) : 1); };
   // a harder bounce now and then: a big flick while the spring goes loose, so the needle swings through
   // a few decaying oscillations; the looseness then fades and the needle is back to its usual steady self
   Meter.prototype.jolt = function (dir) {
@@ -278,7 +285,7 @@
     // each change of reading: the stretch it moved over glows green (up) or red (down) and fades; a ghost tick marks
     // where it was; a wave of light runs from the middle out to the new reading
     for (const mv of this.moves) {
-      const age = this.t - mv.t0, k = age / 1.6, col = mv.up ? C.up : C.down;
+      const age = this.t - mv.t0, k = age / 1.6, col = mv.boost ? C.boost : mv.up ? C.up : C.down;
       const a0 = Math.max(-S, Math.min(S, Math.min(mv.from, mv.to))), a1 = Math.max(-S, Math.min(S, Math.max(mv.from, mv.to)));
       g.save(); g.lineCap = "round"; g.shadowColor = col; g.shadowBlur = 18 * (1 - k);
       g.globalAlpha = 0.85 * (1 - k) * (1 - k); g.lineWidth = lw + 8 * (1 - k); g.strokeStyle = col;
@@ -360,11 +367,36 @@
       // a change pops the number and makes it glow while it counts: green for a gain, red for a loss
       const tw = this.tween, tk = tw && tw.to !== tw.from && !this.reduced ? Math.min(1, (performance.now() - tw.t0) / 700) : 1;
       const bump = tk < 1 ? Math.sin(Math.PI * tk) : 0;
-      g.save();
-      if (bump) { g.shadowColor = tw.to > tw.from ? C.up : C.down; g.shadowBlur = 28 * bump; }
-      g.font = `700 ${Math.round(big * (1 + 0.22 * bump))}px ` + DISPLAY; g.fillStyle = val > 0 ? C.up : val < 0 ? C.down : C.ink;
-      g.fillText(signed(val), cx, y);
+      // flat, no depth: each digit rolls into place like a counter as it changes (up for a gain, down for a loss), a
+      // light sheen sweeps across now and then, and a bar of the same colour sits underneath, stretching on a change
+      const str = signed(val), fsz = Math.round(big * (1 + 0.12 * bump)), dir = tw && tw.to < tw.from ? -1 : 1;
+      const base = val > 0 ? C.up : val < 0 ? C.down : C.ink, shine = val > 0 ? "#c8ffe0" : val < 0 ? "#ffd0d3" : "#ffffff";
+      g.save(); g.font = `700 ${fsz}px ` + DISPLAY; g.textAlign = "left";
+      const chars = [...str], cw = chars.map((ch) => g.measureText(ch).width), tot = cw.reduce((a, b) => a + b, 0), nx0 = cx - tot / 2;
+      this.dg = this.dg || [];
+      const n = chars.length; // matched from the right, so the units digit is always the units digit
+      for (let i = 0; i < n; i++) { const ch = chars[n - 1 - i], st = this.dg[i]; if (!st || st.ch !== ch) this.dg[i] = { ch, prev: st ? st.ch : null, t0: this.reduced || !st ? -9 : this.t, dir }; }
+      this.dg.length = n;
+      const sh = ((this.t * 0.22) % 1.8) - 0.4, fill = g.createLinearGradient(nx0 - 20, 0, nx0 + tot + 20, 0);
+      const sp0 = Math.max(0, Math.min(1, bump ? 0.5 : sh));
+      fill.addColorStop(0, base); fill.addColorStop(Math.max(0, sp0 - 0.12), base); fill.addColorStop(sp0, bump ? base : shine); fill.addColorStop(Math.min(1, sp0 + 0.12), base); fill.addColorStop(1, base);
+      if (bump) { g.shadowColor = base; g.shadowBlur = 18 * bump; }
+      g.beginPath(); g.rect(nx0 - 12, y - fsz * 0.86, tot + 24, fsz * 1.02); g.clip();
+      let x = nx0;
+      for (let j = 0; j < n; j++) {
+        const st = this.dg[n - 1 - j], k = Math.min(1, (this.t - st.t0) / 0.22), e = 1 - Math.pow(1 - k, 3), off = fsz * 0.62;
+        g.fillStyle = fill;
+        if (k < 1 && st.prev != null) { g.globalAlpha = 1 - e; g.fillText(st.prev, x, y - st.dir * off * e); }
+        g.globalAlpha = k < 1 ? e : 1; g.fillText(st.ch, x, y + st.dir * off * (1 - e));
+        x += cw[j];
+      }
       g.restore();
+      { // the bar underneath
+        const bw = tot * (0.5 + 0.35 * bump) + 10, bh = this.compact ? 3 : 4, by = y + (this.compact ? 6 : 9);
+        g.save(); g.fillStyle = base; g.globalAlpha = 0.85; g.beginPath();
+        if (g.roundRect) g.roundRect(cx - bw / 2, by, bw, bh, bh / 2); else g.rect(cx - bw / 2, by, bw, bh);
+        g.fill(); g.restore();
+      }
       const bits = [`Question ${Math.min(st.total, st.answered + 1)} of ${st.total}`];
       if (st.streak >= 2) bits.push(`${st.streak} in a row`);
       // it pops when it changes, glowing gold as a streak grows (red as one ends)
@@ -372,8 +404,17 @@
       g.save();
       if (sp) { const sc = this.statT.streak > 0 ? "#fac800" : this.statT.streak < 0 ? C.down : "#fff"; g.shadowColor = sc; g.shadowBlur = 14 * sp; }
       g.font = `700 ${Math.round(13 * (1 + 0.14 * sp))}px ` + TEXT;
+      // the streak boost rides at the end of the line, small and gold (it glows for a moment when it lights or steps up)
+      const line = bits.join("   ·   "), boosted = (this.boost || 1) > 1.01, bt = boosted ? `   ·   ×${+this.boost.toFixed(2)} boost` : "";
+      const ly = y + (this.compact ? 20 : 26), lw1 = g.measureText(line).width, lw2 = bt ? g.measureText(bt).width : 0, x0 = cx - (lw1 + lw2) / 2;
+      g.textAlign = "left";
       g.fillStyle = sp && this.statT.streak > 0 ? `rgba(255,236,160,${(0.64 + 0.36 * sp).toFixed(3)})` : C.soft;
-      g.fillText(bits.join("   ·   "), cx, y + (this.compact ? 20 : 26));
+      g.fillText(line, x0, ly);
+      if (bt) {
+        const fa = this.boostT != null && !this.reduced ? this.t - this.boostT : 9, flare = fa < 0.9 ? Math.sin(Math.PI * Math.min(1, fa / 0.9)) : 0;
+        g.shadowColor = C.boost; g.shadowBlur = 10 * flare; g.fillStyle = `rgba(250,200,0,${(0.8 + 0.2 * flare).toFixed(3)})`;
+        g.fillText(bt, x0 + lw1, ly);
+      }
       g.restore();
       if (tease > 0.35) { // the tease, in words
         g.save();

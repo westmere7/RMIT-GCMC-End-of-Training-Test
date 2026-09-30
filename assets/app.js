@@ -65,7 +65,7 @@
       if (!window.crypto || !crypto.subtle) throw new Error("Open this page through the local server (Start Test.bat) or a secure (https) address.");
       DATA = await A.loadData();
     } catch (e) {
-      $("bootTitle").textContent = "The game couldn't start"; $("bootSpinner").hidden = true;
+      $("bootTitle").textContent = "The test couldn't start"; $("bootSpinner").hidden = true;
       $("bootMsg").textContent = e.message;
       return;
     }
@@ -80,7 +80,7 @@
     $("dQ").textContent = n; $("dT").textContent = mins;
     const cats = new Set(DATA.questions.map(A.categoryOf));
     $("dCats").textContent = cats.size;
-    $("briefLead").textContent = "A quick game on everything from your onboarding. No trick questions.";
+    $("briefLead").textContent = "A short test on everything from your onboarding. No trick questions.";
 
     S = load();
     if (S && S.role) S = null; // a joiner's tab, now without its link
@@ -126,7 +126,7 @@
     $("nameStep").hidden = false; $("firstName").value = guessName(email); $("firstName").select(); $("firstName").focus();
     btn.textContent = "Continue";
   });
-  $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Let's play"; pendingHash = null; } });
+  $("email").addEventListener("input", () => { if (!$("nameStep").hidden) { $("nameStep").hidden = true; $("loginBtn").textContent = "Sign in"; pendingHash = null; } });
   function enter(email, name, attempt) {
     S = { email, name, attempt: attempt || 1, started: false, finished: false }; save();
     busy($("startBtn"), false); $("startLabel").textContent = "Press start"; $("dAttempt").textContent = S.attempt;
@@ -184,7 +184,7 @@
     const me = MEMBER() ? S.memberId === p.id : p.taker;
     return `<li class="player${p.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(p.color)}" data-id="${p.id}">`
       + `<span class="avatar" aria-hidden="true">${initial(p.name)}</span>`
-      + `<span class="pname"><b>${esc(p.name)}</b><small>${p.taker ? "In the hot seat" : me ? "You" : esc(G.colourName(p.color))}</small></span>`
+      + `<span class="pname"><b>${esc(p.name)}</b><small>${p.taker ? "Taking the test" : me ? "You" : esc(G.colourName(p.color))}</small></span>`
       + (extra || "") + "</li>";
   }
   const away = (p) => ROOM && ROOM.now - p.seen > 25000;
@@ -214,7 +214,7 @@
     $("lobbyCode").textContent = S.group.code;
     $("lobbyUrl").textContent = joinUrl().replace(/^https?:\/\//, ""); $("lobbyUrl").href = url;
     $("lobbyRules").innerHTML = pointsHtml() + `<div class="pts-powers">${powersHtml("Powerups for " + esc(S.name || "the taker"))}</div>`; $("lobbyRules").hidden = false;
-    $("briefLead").textContent = "A quick game on everything from your onboarding. Bring the team: they scan in and play along.";
+    $("briefLead").textContent = "A short test on everything from your onboarding. Bring the team: they scan in and answer alongside you.";
     $("startNote").textContent = "Start when everyone's in. Each question moves on when you submit it.";
     lobbySeen.clear(); $("lobby").hidden = false; $("briefMain").classList.add("has-lobby"); renderLobby();
     startPolling(1500, (gone) => { if (gone) return openLobby(); renderLobby(); });
@@ -358,14 +358,18 @@
 
   // ---------- scoring ----------
   function score() {
-    let c = 0, w = 0, crit = 0, rw = 0, ww = 0;
-    QS().forEach((q) => {
+    let c = 0, w = 0, crit = 0;
+    const run = [];
+    const powers = (GROUP() && ROOM && ROOM.powers) || {};
+    QS().forEach((q, i) => {
       const r = S.responses[q.id], k = q.critical ? 2 : 1; if (!r) return;
-      if (r.correct) { c++; rw += k; } else { w++; ww += k; if (q.critical) crit++; }
+      run.push({ right: !!r.correct, w: k, noBoost: !!(powers[i] && powers[i].gauge) }); // a gauged answer gets no boost
+      if (r.correct) c++; else { w++; if (q.critical) crit++; }
     });
     // the meter: the taker's own answers, right against wrong (critical ×2), with or without the team, so the
-    // award doesn't depend on who's in the room
-    return { c, w, crit, p: A.meterReading(rw, ww, QS().length, A.paperWeight(QS())) };
+    // award doesn't depend on who's in the room; a streak climbs faster (see Assess.meterRun)
+    const m = A.meterRun(run, QS().length, A.paperWeight(QS()));
+    return { c, w, crit, p: m.p, boost: m.boost };
   }
   /** The taker's own points, as on their own (+1 right, −1 wrong, critical ×2; nothing for questions time ran out on).
       The certificate shows these, so it doesn't depend on who's in the room either. */
@@ -381,14 +385,13 @@
     const qs = QS(), me = tally().rows[0];
     let streak = 0;
     for (const q of qs) { const r = S.responses[q.id]; if (!r) break; streak = r.correct ? streak + 1 : 0; }
-    meter.setStats({ points: me.game, answered: Object.keys(S.responses).length, total: qs.length, streak });
+    meter.setStats({ points: me.game, answered: Object.keys(S.responses).length, total: qs.length, streak, boost: score().boost });
     // the room on the taker's meter: each teammate's right against wrong so far (critical ×2), the scale the meter uses on your own
     if (HOSTING()) {
       const t = tally();
       meter.setMarks(t.rows.slice(1).map((r) => {
-        let rw = 0, ww = 0;
-        r.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else if (c !== "none") ww += k; });
-        return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterReading(rw, ww, qs.length, A.paperWeight(qs)) };
+        const run = r.cells.map((c, i) => (c === "none" ? null : { right: c === "ok", w: qs[i] && qs[i].critical ? 2 : 1 }));
+        return { id: r.id, name: r.name, color: r.color, initial: (String(r.name || "?").trim()[0] || "?").toUpperCase(), p: A.meterRun(run, qs.length, A.paperWeight(qs)).p };
       }));
     }
     if (k != null) meter.pulse(me.gameDeltas[k], !!(S.responses[qs[k].id] || {}).correct);
@@ -430,6 +433,8 @@
   const PRAISE = ["Nailed it!", "Spot on!", "Got it!", "Correct!", "Right!"];
   /** The run of right answers ending at question k. */
   function streakAt(k) { const qs = QS(); let n = 0; for (let i = 0; i <= k && i < qs.length; i++) { const r = S.responses[qs[i].id]; n = r && r.correct ? n + 1 : 0; } return n; }
+  /** A streak boost as shown on screen: ×1.15, ×1.3. */
+  const boostText = (m) => String(+m.toFixed(2));
   function showVerdict(q, k, me) {
     if (MEMBER() || S.preview || !me) return;
     const r = S.responses[q.id] || {}, d = me.gameDeltas[k] || 0, base = me.deltas[k] || 0, v = $("verdict");
@@ -444,9 +449,10 @@
     const won = chips.some((c) => c[0] === "win"), lost = chips.some((c) => c[0] === "lose");
     const clutch = r.correct && team.length > 1 && missed === team.length;
     const big = r.correct && (clutch || won || d >= 10);
-    $("verdictKicker").textContent = streak >= 3 ? `🔥 ${streak} in a row` : "";
+    const boost = score().boost;
+    $("verdictKicker").textContent = streak >= 3 ? `🔥 ${streak} in a row` + (boost > 1.01 ? ` · meter ×${boostText(boost)}` : "") : "";
     $("verdictText").textContent = r.correct
-      ? (clutch ? "Clutch!" : streak >= 5 ? "On fire!" : won ? "Jackpot!" : PRAISE[k % PRAISE.length])
+      ? (clutch ? "Clutch!" : streak >= 5 ? "On fire!" : won ? "Paid off!" : PRAISE[k % PRAISE.length])
       : r.skipped ? "Skipped" : lost ? "Ouch!" : team.length && missed === team.length ? "Tough one" : "Wrong";
     $("verdictChips").innerHTML = chips.map(([c, text]) => `<span class="${c}">${esc(text)}</span>`).join("");
     // one short line about the team, unless the chips already say plenty
@@ -937,7 +943,7 @@
   function roomGone() {
     stopPolling(); clearInterval(tick);
     setStatus("error", "The room has closed.");
-    if (MEMBER()) return memberScreen("closed", "This room has closed", "The game was ended. Thanks for playing along.");
+    if (MEMBER()) return memberScreen("closed", "This room has closed", "The test was ended. Thanks for taking part.");
     // the taker's room vanished (it's pruned after two days): finish on your own from here
     S.group.live = false; save(); runClock(); renderPlayers(); renderQuestion();
   }
@@ -1140,7 +1146,7 @@
       + li(`${n} questions, ${mins} minutes.`, group ? "The clock stops while an answer is on show. When it runs out, the question on screen and any after it score nothing." : "When the clock runs out, the test submits itself, and anything unanswered scores nothing.")
       + li("Lock it in to answer.", MEMBER() ? `You can't change it after. Not submitted when ${tn} submits? Your pick still counts.` : "You can't change it after. A skip counts as wrong.")
       + li("Critical questions", "are flagged in red and count double, right or wrong.")
-      + li("The meter", `shows how ${MEMBER() ? tn + " is" : "you're"} doing: right answers against wrong ones, critical questions counting double${group ? `, whoever's in the room` : ""}. Finish in the purple award zone at the top for an award.`)
+      + li("The meter", `shows how ${MEMBER() ? tn + " is" : "you're"} doing: right answers against wrong ones, critical questions counting double${group ? `, whoever's in the room` : ""}. On a streak it climbs further: ×${A.BOOST[1][1]} from ${A.BOOST[1][0]} right in a row, ×${A.BOOST[0][1]} from ${A.BOOST[0][0]}. What a streak adds stays, even after a miss${group ? "; a question answered with Gauge neither adds to a streak nor ends one" : ""}. Finish in the purple award zone at the top for an award.`)
       + `</ul>`;
     if (!group) h += `<h3 class="rules-sub">Points</h3><ul class="rules-list">${li(`${G.signed(G.RULES.solo.right)} for a right answer,`, `${G.signed(G.RULES.solo.wrong)} for a wrong or skipped one (${G.signed(G.RULES.solo.right * 2)} and ${G.signed(G.RULES.solo.wrong * 2)} on a critical question).`)}</ul>`
       + powersHtml("Powerups: with the team in the room");
@@ -1175,7 +1181,7 @@
   // /join on its own: type the room code (for a laptop, which can't scan the QR code)
   function codeEntry() {
     document.documentElement.classList.add("joiner");
-    memberScreen("code", "Join a game", "Type the room code from the big screen.");
+    memberScreen("code", "Join a room", "Type the room code from the big screen.");
     $("joinCode").textContent = "code";
     setTimeout(() => $("codeInput").focus(), 30);
   }
@@ -1209,7 +1215,7 @@
     }
     if (!me || (ROOM.roster && !ROOM.roster.includes(me.id))) {
       stopPolling();
-      return memberScreen("closed", ROOM.phase === "finished" ? "This game has finished" : "This game has already started", `Catch ${taker} for the next one.`);
+      return memberScreen("closed", ROOM.phase === "finished" ? "This test has finished" : "This test has already started", `Catch ${taker} for the next one.`);
     }
     if (!S.qids) {
       // the paper: the same questions, in the same order, as the taker
@@ -1242,7 +1248,7 @@
   }
   function memberForm(taker) {
     if ($("joinForm").hidden) {
-      memberScreen("form", `Join ${taker}'s game`, `Play along with ${taker}: same questions, same clock. Get them right and you both do well; get them wrong and it costs you.`);
+      memberScreen("form", `Join ${taker}'s test`, `Answer alongside ${taker}: same questions, same clock. Get them right and you both do well; get them wrong and it costs you.`);
       $("joinError").textContent = "";
       if (!$("joinName").value) setTimeout(() => $("joinName").focus(), 30);
     }
@@ -1423,7 +1429,8 @@
     const sc = score(), an = analyse();
     const name = S.name || "", tName = taker.name || name;
     // where the taker's meter ended: a teammate works it out from the taker's answers (anything not right counts against)
-    const takerReading = () => { let rw = 0, ww = 0; taker.cells.forEach((c, i) => { const k = qs[i] && qs[i].critical ? 2 : 1; if (c === "ok") rw += k; else ww += k; }); return A.meterReading(rw, ww, n, A.paperWeight(qs)); };
+    const pws = (ROOM && ROOM.powers) || {};
+    const takerReading = () => A.meterRun(taker.cells.map((c, i) => ({ right: c === "ok", w: qs[i] && qs[i].critical ? 2 : 1, noBoost: !!(pws[i] && pws[i].gauge) })), n, A.paperWeight(qs)).p;
     const reading = member ? takerReading() : sc.p, award = reading >= awardLine();
 
     if (member) {
@@ -1445,7 +1452,7 @@
     [...$("resStars").children].forEach((st, i) => { st.className = i < stars ? "on" : ""; st.style.setProperty("--d", 0.9 + i * 0.25 + "s"); });
     $("resStars").setAttribute("aria-label", `${stars} of 3 stars`);
     $("resZone").textContent = award ? "Award zone" : new Meter(null, null, LABELS()).zone(reading);
-    $("resLevel").textContent = award ? "Award unlocked" : tier === "low" ? "Run complete" : "Level complete";
+    $("resLevel").textContent = award ? "Award earned" : "Test complete";
     const acc = n ? taker.correct / n : 0, ring = $("resRing");
     ring.style.setProperty("--acc", 0);
     requestAnimationFrame(() => requestAnimationFrame(() => ring.style.setProperty("--acc", acc)));
@@ -1497,7 +1504,7 @@
         { ico: "sparkle", name: "Flawless", on: sc.c === n, won: "Every answer right", need: "Get every answer right" },
       ];
       if (group) {
-        achs.push({ ico: "users", name: "Team game", on: true, won: `Played with ${plural(bd.rows.length - 1, "teammate", "teammates")}`, need: "" });
+        achs.push({ ico: "users", name: "Team effort", on: true, won: `Taken with ${plural(bd.rows.length - 1, "teammate", "teammates")}`, need: "" });
         achs.push({ ico: "bolt", name: "Powered up", on: bd.powered > 0, won: `${plural(bd.powered, "powerup", "powerups")} used`, need: "Use a powerup" });
       }
       const got = achs.filter((a) => a.on).length;
@@ -1537,14 +1544,14 @@
     const n = QS().length, taker = bd.rows[0];
     const team = bd.rows.slice(1).sort((a, b) => gameOf(b) - gameOf(a) || b.correct - a.correct);
     const medals = ["🥇", "🥈", "🥉"];
-    $("roomSub").textContent = `${plural(team.length, "teammate", "teammates")} played along with ${taker.name}` + (bd.reached < n ? ` · the room reached question ${bd.reached} of ${n}` : "");
+    $("roomSub").textContent = `${plural(team.length, "teammate", "teammates")} answered alongside ${taker.name}` + (bd.reached < n ? ` · the room reached question ${bd.reached} of ${n}` : "");
     const cells = (r) => `<span class="mini-strip" aria-hidden="true">${r.cells.map((c, i) => `<i class="${c}${QS()[i] && QS()[i].critical ? " crit" : ""}"></i>`).join("")}</span>`;
     const row = (r, rank) => {
       const me = MEMBER() ? r.id === S.memberId : r.taker;
       return `<div class="board-row${r.taker ? " taker" : ""}${me ? " me" : ""}" style="--c:${esc(r.color)}">
         <span class="rank">${r.taker ? "" : rank < 3 && team.length > 1 ? medals[rank] : rank + 1}</span>
         <span class="avatar" aria-hidden="true">${initial(r.name)}</span>
-        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "In the hot seat" + (award ? " · 🏆 Award" : "") + (bd.powered ? ` · ⚡ ${plural(bd.powered, "powerup", "powerups")}` : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
+        <span class="who"><b>${esc(r.name)}</b><small>${r.taker ? "Taking the test" + (award ? " · 🏆 Award" : "") + (bd.powered ? ` · ⚡ ${plural(bd.powered, "powerup", "powerups")}` : "") : me ? "You" : esc(G.colourName(r.color))}${r.crit ? ` · ${plural(r.crit, "critical miss", "critical misses")}` : ""}</small></span>
         ${cells(r)}
         <span class="right-n"><b>${r.correct}</b><small>of ${n}</small></span>
         <span class="pts ${gameOf(r) > 0 ? "up" : gameOf(r) < 0 ? "down" : ""}">${G.signed(gameOf(r))}<small>${Math.abs(gameOf(r)) === 1 ? "point" : "points"}</small></span>

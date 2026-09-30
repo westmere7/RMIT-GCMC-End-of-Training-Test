@@ -167,6 +167,23 @@ test("meter on your own: confetti needs about 95%, and a critical miss costs as 
   assert.ok(!green(43, 1), "43 right with a critical miss: like 42 right");
 });
 
+test("streak boost: a run of right answers climbs further than the same answers scattered, and never less", () => {
+  const seq = (pattern) => [...pattern].map((ch, i) => ({ right: ch === "1", w: i < CRIT ? 2 : 1 }));
+  const plain = (run) => A.meterReading(run.filter((a) => a.right).reduce((s, a) => s + a.w, 0), run.filter((a) => !a.right).reduce((s, a) => s + a.w, 0), N, N + CRIT);
+  const streaky = seq("1".repeat(20) + "0000" + "1".repeat(21)), scattered = seq("11011011011011011011011011111111111111111111".padEnd(45, "1"));
+  assert.equal(A.meterRun(seq("1101101101"), N, N + CRIT).p, plain(seq("1101101101")), "no streak of 3: no boost");
+  assert.ok(A.meterRun(streaky, N, N + CRIT).p > plain(streaky), "a streak lifts the reading");
+  for (let r = rng(5), i = 0; i < 300; i++) {
+    const run = seq([...Array(45)].map(() => (r() < 0.8 ? "1" : "0")).join("")), p = A.meterRun(run, N, N + CRIT).p;
+    assert.ok(p >= plain(run) - 1e-12 && p <= 1, "never below right against wrong");
+    const more = run.map((a) => ({ ...a })), k = more.findIndex((a) => !a.right);
+    if (k >= 0) { more[k].right = true; assert.ok(A.meterRun(more, N, N + CRIT).p >= p - 1e-12, "one more right never lowers it"); }
+  }
+  assert.equal(A.meterRun(seq("111"), N, N + CRIT).boost, 1.15);
+  assert.equal(A.meterRun(seq("11111"), N, N + CRIT).boost, 1.3);
+  assert.equal(A.meterRun(seq("111110"), N, N + CRIT).boost, 1, "a miss ends the streak");
+});
+
 test("meter: early on, one answer moves it a small, steady step", () => {
   assert.ok(A.meterReading(1, 0, N) > 0 && A.meterReading(1, 0, N) < 0.06, "one right answer is a nudge, not a jump");
   assert.ok(A.meterReading(5, 0, N) < 0.25, "five in a row is still short of the welcome zone");

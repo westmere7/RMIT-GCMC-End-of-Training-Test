@@ -31,7 +31,8 @@ function rng(seed) {
  * Returns the taker's and each teammate's points and right answers, and the meter's reading at the end.
  */
 function sit({ A, G }, random, { n = 45, crit = 9, taker = 0.8, team = [], spread = 0.2 }) {
-  let tp = 0, tc = 0, tw = 0, rw = 0, ww = 0;
+  let tp = 0, tc = 0, tw = 0;
+  const run = [];
   const mp = team.map(() => 0), mc = team.map(() => 0);
   for (let i = 0; i < n; i++) {
     const critical = i < crit, shift = (random() * 2 - 1) * spread;
@@ -39,10 +40,11 @@ function sit({ A, G }, random, { n = 45, crit = 9, taker = 0.8, team = [], sprea
     const tr = right(taker), mr = team.map(right);
     const pts = G.points(critical, tr, mr);
     tp += pts.taker; pts.members.forEach((d, k) => { mp[k] += d; if (mr[k]) mc[k]++; });
-    if (tr) { tc++; rw += critical ? 2 : 1; } else { tw++; ww += critical ? 2 : 1; }
+    if (tr) tc++; else tw++;
+    run.push({ right: tr, w: critical ? 2 : 1 });
   }
-  // the meter: right against wrong (critical ×2), with or without a team
-  const meter = A.meterReading(rw, ww, n);
+  // the meter: right against wrong (critical ×2), streaks boosted, with or without a team
+  const meter = A.meterRun(run, n, n + crit).p;
   return { takerPoints: tp, takerRight: tc, meter, memberPoints: mp, memberRight: mc };
 }
 

@@ -163,7 +163,7 @@ async function act(body) {
       add = { call: { n } };
     } else if (kind === "gauge") {
       const m = +body.m;
-      if (!(st.roster || []).includes(m)) throw fail(400, "That teammate isn't playing this one.");
+      if (!(st.roster || []).includes(m)) throw fail(400, "That teammate isn't in this room.");
       // a submitted answer if there is one, otherwise what they've picked so far
       const sent = (await rooms.answers(code, q)).find((a) => a.qidx === q && a.member_id === m);
       const draft = sent ? null : (await rooms.drafts(code, q)).find((d) => d.id === m);
@@ -190,7 +190,7 @@ async function act(body) {
 
 module.exports = async (req, res) => {
   try {
-    if (!configured()) return send(res, 503, { error: "Group play needs the live site (Supabase isn't set up here)." });
+    if (!configured()) return send(res, 503, { error: "Taking the test with a team needs the live site (Supabase isn't set up here)." });
     if (req.method === "GET") {
       const q = Object.fromEntries(new URL(req.url, "http://x").searchParams);
       const code = String(q.r || "").toUpperCase();

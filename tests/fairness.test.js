@@ -12,7 +12,8 @@ const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
 /** One room. The taker's strategy with the charges they earn: none | double | bet | gauge (copy teammate 0) | all. */
 function play(random, { taker, team, strategy = "none", spread = 0.2 }) {
   const size = team.length, powers = {}, rights = [], guess = Math.round(size * (1 - mean(team.length ? team : [0])));
-  let rec = 0, game = 0, rw = 0, ww = 0;
+  let rec = 0, game = 0;
+  const run = [];
   const mp = team.map(() => 0), sheets = team.map(() => []);
   for (let i = 0; i < N; i++) {
     const crit = i < CRIT, shift = (random() * 2 - 1) * spread, r = (p) => random() < Math.max(0.02, Math.min(0.98, p + shift));
@@ -28,9 +29,9 @@ function play(random, { taker, team, strategy = "none", spread = 0.2 }) {
     const p = G.points(crit, tr, mr), missed = mr.filter((x) => !x).length;
     rec += p.taker; game += G.gamePoints(p.taker, pw, missed, size);
     p.members.forEach((d, k) => { mp[k] += d; sheets[k].push(mr[k]); });
-    rights.push(tr); if (tr) rw += crit ? 2 : 1; else ww += crit ? 2 : 1;
+    rights.push(tr); run.push({ right: tr, w: crit ? 2 : 1, noBoost: !!pw.gauge });
   }
-  return { rec, game, meter: A.meterReading(rw, ww, N), mp, sheets };
+  return { rec, game, meter: A.meterRun(run, N, N + CRIT).p, mp, sheets };
 }
 const runs = (opts, seed = 1) => { const r = rng(seed); return [...Array(RUNS)].map(() => play(r, opts)); };
 const weighted = (sheet) => sheet.reduce((n, ok, i) => n + (ok ? (i < CRIT ? 2 : 1) : 0), 0);
@@ -79,12 +80,13 @@ test("the record: the meter reads the taker's answers, however strong the team",
   }
 });
 
-test("the record: copying a teammate with Gauge lifts it only a little, and never into the award zone", () => {
+test("the record: copying a teammate with Gauge lifts it only a little, and almost never into the award zone", () => {
   for (const taker of [0.4, 0.5, 0.65]) {
     const own = runs({ taker, team: [0.95, 0.8, 0.8] }, 9), copied = runs({ taker, team: [0.95, 0.8, 0.8], strategy: "gauge" }, 9);
     const lift = mean(copied.map((s) => s.meter)) - mean(own.map((s) => s.meter));
     assert.ok(lift < 0.1, `taker ${taker * 100}%: the meter moves ${lift.toFixed(2)}`);
-    assert.ok(copied.every((s) => s.meter < meterAt.pg), "no award from copying");
+    // (with the streak boost counting, a lucky hot run can scrape in, but it's rare)
+    assert.ok(copied.filter((s) => s.meter >= meterAt.pg).length / copied.length < 0.005, "hardly ever an award from copying");
   }
 });
 

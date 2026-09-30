@@ -163,11 +163,34 @@
   }
   /** The paper's weight for meterReading's `total`: critical questions count double. */
   const paperWeight = (qs) => (qs || []).reduce((w, q) => w + (q && q.critical ? 2 : 1), 0);
+  // The streak boost: on a run of right answers the needle climbs further (×1.15 from the 3rd in a row, ×1.3 from the
+  // 5th). What a boost adds stays: a miss ends the streak but doesn't take the boost back. It counts towards the final
+  // reading, and so the award, the way a streak bonus would: a run of right answers is worth a little more than the
+  // same answers scattered. (A boost that had to be paid back by the end would make late streaks climb slower.)
+  const BOOST = [[5, 1.3], [3, 1.15]];
+  const streakBoost = (streak) => { for (const [s, m] of BOOST) if (streak >= s) return m; return 1; };
+  /** The meter along a run of answers, in order: [{ right, w, noBoost }] (w = 2 for a critical question; noBoost for
+      one answered with a teammate's pick in view (Gauge), which neither ends the streak nor adds to it, and gets no
+      boost; null
+      for one not answered yet, skipped over). Returns the reading `p`, the current `streak`, and `boost`: what the current streak
+      multiplies a right answer's climb by (1 when there's no streak boost). */
+  function meterRun(answers, n, total) {
+    let rw = 0, ww = 0, streak = 0, bank = 0;
+    for (const a of answers || []) {
+      if (!a) continue;
+      if (a.right) {
+        const before = meterReading(rw, ww, n, total);
+        rw += a.w || 1;
+        if (!a.noBoost) { streak++; bank += (meterReading(rw, ww, n, total) - before) * (streakBoost(streak) - 1); }
+      } else { ww += a.w || 1; streak = 0; }
+    }
+    return { p: clamp1(meterReading(rw, ww, n, total) + bank), streak, boost: streakBoost(streak) };
+  }
   /** The taker's points against POINTS_PAR a question (a taker's points run −3…+10 a question). No longer what the
       meter shows (that's meterReading, with the team in too); kept for the simulations. */
   const POINTS_PAR = 4;
   function pointsReading(points, answered, n) { return clamp1(points / (POINTS_PAR * Math.max(answered, stepsOf(n)))); }
 
   global.Assess = { normalize, sha256, normEmail, normStaffId, loadData, escapeHtml, isCorrect, correctText, responseText, TYPE_LABEL, isChoiceQ, isMultiPick, imageAnswers,
-    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading, paperWeight, pointsReading, POINTS_PAR };
+    DEFAULT_CATEGORIES, categoriesOf, categoryOf, drawQuestions, criticalShareOf, MIN_PER_ATTEMPT, perAttemptOf, shuffle, meterReading, meterRun, streakBoost, BOOST, paperWeight, pointsReading, POINTS_PAR };
 })(window);

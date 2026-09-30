@@ -29,7 +29,7 @@
         <div>
           <p class="eyebrow" id="loginCode">GCMC-VN-ONB-2026</p>
           <h1 id="loginTitle">Onboarding Challenge</h1>
-          <p class="lead">Show off everything you picked up in onboarding. Beat the clock, bring the team, chase the award.</p>
+          <p class="lead">Show what you picked up in onboarding. Answer against the clock, bring the team, aim for the award.</p>
         </div>
         <dl class="meta">
           <div><dt>Questions</dt><dd><b id="metaQ">30</b></dd></div>
@@ -40,7 +40,7 @@
       <div class="panel">
         <form id="loginForm" novalidate>
           <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
-          <h2>Player sign-in</h2>
+          <h2>Sign in</h2>
           <p class="hint">Use your RMIT staff email and your staff ID.</p>
           <div class="field">
             <label for="email">RMIT email</label>
@@ -56,8 +56,8 @@
             <p class="hint">We don't have your name on file yet. We'll remember it for next time.</p>
           </div>
           <p class="error-msg" id="loginError" role="alert"></p>
-          <button class="btn" type="submit" id="loginBtn">Let's play</button>
-          <p class="join-instead">Here to play along with a teammate? <a href="join">Enter a room code</a></p>
+          <button class="btn" type="submit" id="loginBtn">Sign in</button>
+          <p class="join-instead">Here to take part with a teammate? <a href="join">Enter a room code</a></p>
           <p class="fineprint">For RMIT staff. Your answers, points and time go to your training record.</p>
         </form>
       </div>
@@ -89,7 +89,7 @@
           <div class="card lobby-join">
             <button type="button" class="qr" id="lobbyQr" aria-label="Show the QR code bigger" title="Show it bigger"></button>
             <div class="lobby-how">
-              <p class="eyebrow">Play along</p>
+              <p class="eyebrow">Bring the team</p>
               <h2 id="lobbyTitle">Scan to join</h2>
               <p class="lobby-code"><span>Room code</span><b id="lobbyCode">·····</b></p>
               <p class="lobby-link"><span>No camera? Go to <a id="lobbyUrl" href="#" target="_blank" rel="noopener"></a></span><button type="button" class="copy-btn" id="lobbyCopy">Copy link</button></p>
@@ -102,7 +102,7 @@
         </section>
 
         <aside class="card start-card">
-          <p class="eyebrow">Your game</p>
+          <p class="eyebrow">Your test</p>
           <h2>Ready?</h2>
           <p class="start-note" id="startNote">The clock starts as soon as you do. Take your time with each one.</p>
           <button class="btn" id="startBtn"><span id="startLabel">Press start</span> <span aria-hidden="true">→</span></button>
@@ -209,14 +209,14 @@
     <div class="container results">
       <!-- hero: the rank emblem (from the meter), stars, the points and an accuracy ring, then the run -->
       <div class="res-hero" id="resHero" data-tier="mid">
-        <div class="res-hero-top"><img class="res-logo" src="assets/rmit-logo-white.png" alt="RMIT University"><span class="res-level">Onboarding Challenge · <b id="resLevel">Level complete</b></span></div>
+        <div class="res-hero-top"><img class="res-logo" src="assets/rmit-logo-white.png" alt="RMIT University"><span class="res-level">Onboarding Challenge · <b id="resLevel">Test complete</b></span></div>
         <div class="res-rank">
           <div class="emblem" aria-hidden="true"><span class="emblem-rays"></span><span class="emblem-core" id="resEmblem"></span></div>
           <div class="stars" id="resStars" role="img" aria-label="0 of 3 stars"><i></i><i></i><i></i></div>
           <span class="rank-name" id="resZone">Too close to call</span>
         </div>
         <div class="res-hero-text">
-          <p class="eyebrow">Game over</p>
+          <p class="eyebrow">Your results</p>
           <h1 id="resTitle">Congratulations.</h1>
           <p id="resMsg"></p>
           <div class="res-tags"><span class="badge award" id="resBadge" hidden>🏆 Award</span><span class="zone-tag bad" id="resCrit" hidden></span></div>
@@ -262,7 +262,7 @@
         <div class="card insight-card">
           <div class="insight best"><span class="ico" data-icon="trophy"></span><span class="k">Strongest</span><span class="v" id="bestCat">—</span><span class="s" id="bestSub"></span></div>
           <div class="insight worst"><span class="ico" data-icon="book"></span><span class="k">Worth a refresher</span><span class="v" id="worstCat">—</span><span class="s" id="worstSub"></span></div>
-          <div class="insight who"><span class="ico" data-icon="user"></span><span class="k">Player</span><span class="v" id="sName">—</span><span class="s" id="sEmail">—</span><span class="s" id="sDate"></span></div>
+          <div class="insight who"><span class="ico" data-icon="user"></span><span class="k">Candidate</span><span class="v" id="sName">—</span><span class="s" id="sEmail">—</span><span class="s" id="sDate"></span></div>
         </div>
       </div>
 
@@ -277,7 +277,7 @@
         </div>
         <div id="reviewList"></div>
       </div>
-      <div class="res-actions"><button class="btn" id="retakeBtn" type="button">Play again <span aria-hidden="true">↻</span></button><a class="btn navy" id="certBtn" href="certificate.html" target="_blank" rel="noopener">View your certificate ↗</a><button class="btn ghost" id="againBtn">Sign out</button></div>
+      <div class="res-actions"><button class="btn" id="retakeBtn" type="button">Retake the test <span aria-hidden="true">↻</span></button><a class="btn navy" id="certBtn" href="certificate.html" target="_blank" rel="noopener">View your certificate ↗</a><button class="btn ghost" id="againBtn">Sign out</button></div>
     </div>
   </section>
 
