@@ -480,6 +480,12 @@ button { cursor: pointer; }
 .match-board.picking-b .match-item.b:not(.linked), .match-board.picking-a .match-item.a:not(.linked) { border-style: dashed; border-color: var(--navy-30); }
 .match-board.picking-b .match-item.b:hover, .match-board.picking-a .match-item.a:hover { border-style: solid; border-color: var(--navy); background: #fff; }
 .match-board.dragging, .match-board.dragging .match-item { cursor: grabbing; }
+/* marching ants: an outline laid over the item's border, shown on phones while the other column has a pick waiting */
+.match-item { position: relative; }
+.match-item .ants { display: none; position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); overflow: visible; pointer-events: none; }
+.match-item .ants rect { fill: none; stroke: var(--navy); stroke-width: 2; stroke-dasharray: 7 5; animation: ants 0.6s linear infinite; }
+.match-item.linked .ants rect { stroke: var(--c); }
+@keyframes ants { to { stroke-dashoffset: -12; } }
 .q-card.locked .match { pointer-events: none; opacity: 0.75; }
 
 /* ---------- image questions: a picture with the question, or pictures as the options ---------- */
@@ -841,6 +847,9 @@ html.preview body::before { content: "Preview · nothing is recorded"; position:
   .match-item .dot { display: none; }
   .match-item .mi-n { width: 26px; height: 26px; font-size: 13px; }
   .match-item.b .mi-n:empty { visibility: visible; border: 1.5px dashed var(--navy-30); }
+  /* one picked: every item in the other column marches, to say "now tap one of these" */
+  .match-board.picking-b .match-item.b:is(.linked, :not(.linked)), .match-board.picking-a .match-item.a:is(.linked, :not(.linked)) { border-style: solid; border-color: transparent; }
+  .match-board.picking-b .match-item.b .ants, .match-board.picking-a .match-item.a .ants { display: block; }
 
   /* submit bar */
   .q-card .q-actions { padding: 14px 16px; flex-wrap: wrap; gap: 8px 10px; }

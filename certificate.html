@@ -42,34 +42,45 @@
       box-shadow: 0 10px 0 rgba(0,0,40,.35), 0 40px 90px -30px rgba(0,0,0,.8); border-radius: 6px;
     }
     .frame { position: absolute; inset: 0; width: 100%; height: 100%; }
-    .content { position: absolute; inset: 20mm 26mm 17mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .frame #micro path { fill: none; }
+    .frame .micro { font-family: var(--text); font-weight: 700; font-size: 1.25px; letter-spacing: .32px; fill: #8c8cb4; }
+    .content { position: absolute; inset: 21mm 27mm 17mm; display: flex; flex-direction: column; align-items: center; text-align: center; }
 
     .top { width: 100%; display: flex; justify-content: space-between; align-items: center; }
     .logo { height: 11mm; }
-    .issuer { font-weight: 700; font-size: 7.5pt; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); }
+    .issuer { font-weight: 700; font-size: 7.5pt; letter-spacing: .22em; text-transform: uppercase; color: var(--muted); text-align: right; line-height: 1.6; }
+    .issuer i { font-style: normal; color: var(--red); }
 
-    .kicker { font-weight: 700; font-size: 10pt; letter-spacing: .36em; text-transform: uppercase; color: var(--red); margin-top: 10mm; }
-    .certify { font-family: var(--display-light); font-size: 14pt; color: var(--muted); margin-top: 7mm; }
-    .name { font-family: var(--display); color: var(--navy); font-size: 64pt; line-height: 1.02; letter-spacing: -.01em; margin-top: 2mm; max-width: 220mm; overflow-wrap: anywhere; }
-    .rule { width: 20mm; height: 1mm; background: var(--red); margin-top: 6mm; }
-    .body { font-size: 12pt; line-height: 1.55; max-width: 175mm; margin-top: 6mm; text-wrap: balance; }
+    /* the title block: a red kicker between pixel flourishes, then the title in Museo */
+    .kicker { display: flex; align-items: center; gap: 3.5mm; font-weight: 700; font-size: 8.5pt; letter-spacing: .38em; text-transform: uppercase; color: var(--red); margin-top: 5mm; }
+    .kicker::before, .kicker::after { content: ""; width: 16mm; height: 2mm; background: linear-gradient(var(--red), var(--red)) no-repeat right center / 2mm 2mm, linear-gradient(var(--navy-30), var(--navy-30)) no-repeat left center / calc(100% - 3.2mm) .25mm; }
+    .kicker::before { transform: scaleX(-1); }
+    .title { font-family: var(--display-light); color: var(--navy); font-size: 25pt; line-height: 1.1; letter-spacing: .01em; margin-top: 2.5mm; }
+    .title b { font-family: var(--display); font-weight: normal; }
+    .certify { font-family: var(--display-light); font-size: 12.5pt; color: var(--muted); margin-top: 5mm; }
+    .name { font-family: var(--display); color: var(--navy); font-size: 60pt; line-height: 1.02; letter-spacing: -.01em; margin-top: 1mm; max-width: 220mm; overflow-wrap: anywhere; }
+    /* under the name: a hairline with the red pixel at its centre */
+    .rule { position: relative; width: 120mm; height: 2.4mm; margin-top: 3.5mm; background: linear-gradient(90deg, transparent, var(--navy-30) 18%, var(--navy-30) 82%, transparent) no-repeat center / 100% .25mm; }
+    .rule::after { content: ""; position: absolute; left: 50%; top: 0; width: 2.4mm; height: 2.4mm; margin-left: -1.2mm; background: var(--red); box-shadow: 0 0 0 1.2mm #fff; }
+    .body { font-size: 11.5pt; line-height: 1.55; max-width: 175mm; margin-top: 4mm; text-wrap: balance; }
     .body b { color: var(--navy); }
 
-    .results { display: grid; grid-template-columns: repeat(3, 1fr); width: 205mm; margin-top: 9mm; border-top: .25mm solid var(--line); border-bottom: .25mm solid var(--line); }
-    .results div { padding: 5.5mm 4mm 5mm; display: grid; gap: 1.5mm; align-content: center; }
+    /* results: three cells between double rules */
+    .results { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); width: 210mm; margin-top: 6.5mm; border-top: .5mm double var(--navy-30); border-bottom: .5mm double var(--navy-30); padding: .8mm 0; }
+    .results div { padding: 4mm 4mm 3.8mm; display: grid; gap: 1.5mm; align-content: center; }
     .results div + div { border-left: .25mm solid var(--line); }
-    .results b { font-family: var(--display); color: var(--navy); font-size: 26pt; line-height: 1; font-variant-numeric: tabular-nums; }
+    .results b { font-family: var(--display); color: var(--navy); font-size: 25pt; line-height: 1; font-variant-numeric: tabular-nums; }
     .results b.pts { color: var(--red); }
-    .results b.latin { font-size: 17pt; line-height: 1.15; }
-    .results span { font-weight: 700; font-size: 7pt; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+    .results b.latin { font-size: 16.5pt; line-height: 1.15; }
+    .results span { font-weight: 700; font-size: 6.8pt; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
 
-    .signs { margin-top: auto; width: 100%; display: grid; grid-template-columns: 1fr 30mm 1fr; align-items: end; gap: 14mm; }
-    .sig { text-align: center; }
-    .sig .line { border-bottom: .3mm solid var(--navy); height: 10mm; margin: 0 8mm; }
+    .signs { margin-top: auto; width: 100%; display: grid; grid-template-columns: 1fr 34mm 1fr; align-items: end; gap: 12mm; }
+    .sig { text-align: center; padding-bottom: 5mm; }
+    .sig .line { border-bottom: .3mm solid var(--navy); height: 9mm; margin: 0 8mm; }
     .sig b { display: block; font-size: 9.5pt; color: var(--navy); margin-top: 2mm; }
     .sig span { display: block; font-size: 7.5pt; color: var(--muted); letter-spacing: .04em; margin-top: .5mm; }
-    .seal { width: 30mm; height: 30mm; justify-self: center; }
-    .foot { margin-top: 5mm; font-size: 7pt; letter-spacing: .08em; color: var(--muted); }
+    .seal { width: 34mm; height: 39mm; justify-self: center; }
+    .foot { margin-top: 3mm; font-size: 7pt; letter-spacing: .08em; color: var(--muted); }
     .foot b { color: var(--navy); font-weight: 700; }
 
     @page { size: A4 landscape; margin: 0; }
@@ -101,20 +112,31 @@
 
   <div class="stage"><div class="scaler" id="scaler">
     <div class="page" id="page">
-      <!-- a double hairline frame, with RMIT's red pixel in each corner -->
+      <!-- the frame, in mm: a navy line, a band of fine guilloche waves, a hairline, a line of microtext, and a navy
+           block with RMIT's red pixel in each corner. Behind the text, a faint rosette. The waves, rosette and microtext
+           are drawn by the script below. -->
       <svg class="frame" viewBox="0 0 297 210" aria-hidden="true">
-        <rect x="9" y="9" width="279" height="192" fill="none" stroke="#000054" stroke-width=".6"/>
-        <rect x="11.5" y="11.5" width="274" height="187" fill="none" stroke="#b2b2cb" stroke-width=".25"/>
-        <g fill="#e61e2a"><rect x="7.5" y="7.5" width="3" height="3"/><rect x="286.5" y="7.5" width="3" height="3"/><rect x="7.5" y="199.5" width="3" height="3"/><rect x="286.5" y="199.5" width="3" height="3"/></g>
+        <g id="rosette" fill="none" stroke="#000054" stroke-width=".13" opacity=".075"></g>
+        <rect x="8" y="8" width="281" height="194" fill="none" stroke="#000054" stroke-width=".7"/>
+        <g fill="none" stroke="#b2b2cb" stroke-width=".14">
+          <rect x="9.4" y="9.4" width="278.2" height="191.2"/>
+          <rect x="13.6" y="13.6" width="269.8" height="182.8"/>
+        </g>
+        <g id="band" fill="none" stroke="#7d7da8" stroke-width=".12"></g>
+        <rect x="14.3" y="14.3" width="268.4" height="181.4" fill="none" stroke="#000054" stroke-width=".3"/>
+        <!-- microtext: each side reads left to right, or top to bottom when you turn the sheet -->
+        <g id="micro"><path id="mT" d="M17 16.35 H280"/><path id="mR" d="M280.65 17 V193"/><path id="mB" d="M17 195.05 H280"/><path id="mL" d="M16.35 193 V17"/></g>
+        <g id="corners"></g>
       </svg>
 
       <div class="content">
         <div class="top">
           <img class="logo" src="assets/rmit-logo.png" alt="RMIT University">
-          <span class="issuer">GCMC Creative Services · Vietnam</span>
+          <span class="issuer">Global Content Marketing &amp; Creative<br><i>■</i> Creative Services · Vietnam</span>
         </div>
 
-        <div class="kicker">Achievement unlocked · Certificate of Onboarding</div>
+        <div class="kicker">Achievement unlocked</div>
+        <div class="title">Certificate of <b>Onboarding</b></div>
         <div class="certify">This certifies that</div>
         <div class="name" id="cName">Nghia</div>
         <div class="rule"></div>
@@ -128,14 +150,19 @@
 
         <div class="signs">
           <div class="sig"><div class="line"></div><b>Nguyễn Tuấn Danh</b><span>Creative Services Lead</span></div>
-          <svg class="seal" viewBox="0 0 120 120" aria-hidden="true">
+          <!-- the seal: red ribbon tails behind a scalloped navy rosette -->
+          <svg class="seal" viewBox="0 0 120 138" aria-hidden="true">
             <defs>
               <path id="arcTop" d="M16 60 A44 44 0 0 1 104 60"/>
               <path id="arcBot" d="M10.5 60 A49.5 49.5 0 0 0 109.5 60"/>
             </defs>
-            <circle cx="60" cy="60" r="56" fill="#000054"/>
+            <polygon points="41,84 25,134 35,127 42,137 57,90" fill="#b3121c"/>
+            <polygon points="79,84 95,134 85,127 78,137 63,90" fill="#e61e2a"/>
+            <polygon id="sealEdge" fill="#000054"/>
             <circle cx="60" cy="60" r="52.5" fill="none" stroke="#fff" stroke-width=".6"/>
+            <circle cx="60" cy="60" r="51" fill="none" stroke="#fff" stroke-width=".25" opacity=".6"/>
             <circle cx="60" cy="60" r="40" fill="none" stroke="#fff" stroke-width=".6"/>
+            <g id="sealGuil" fill="none" stroke="#fff" stroke-width=".22" opacity=".35"></g>
             <g font-family="Helvetica Neue LT Pro, Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="6.6" letter-spacing="1.3" fill="#fff" text-anchor="middle">
               <text><textPath href="#arcTop" startOffset="50%">GCMC · CREATIVE SERVICES</textPath></text>
               <text><textPath href="#arcBot" startOffset="50%">VIETNAM · ONBOARDED</textPath></text>
@@ -197,6 +224,53 @@
         el.style.fontSize = pt + "pt";
         while (pt > 36 && el.offsetHeight > pt * 1.34 * 1.3) { pt -= 2; el.style.fontSize = pt + "pt"; }
       }
+
+      // ---------- ornament: guilloche waves, rosettes, microtext and the corner blocks (all in the SVGs' own units) ----------
+      const f = (n) => n.toFixed(2);
+      const poly = (pts, close) => "M" + pts.map(([x, y]) => f(x) + "," + f(y)).join("L") + (close ? "Z" : "");
+      // a rosette: `n` closed curves r = R + A·cos(k·t + phase), each copy's phase turned a little further
+      function rosette(cx, cy, R, A, k, n) {
+        let d = "";
+        for (let i = 0; i < n; i++) {
+          const pts = [], ph = (2 * Math.PI * i) / n;
+          for (let s = 0; s <= 720; s++) { const t = (2 * Math.PI * s) / 720, r = R + A * Math.cos(k * t + ph); pts.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); }
+          d += poly(pts, true);
+        }
+        return d;
+      }
+      function ornament() {
+        const NS = "http://www.w3.org/2000/svg", path = (d) => { const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); return p; };
+        // the band: four interlaced sine waves along each side, between the corner blocks
+        const band = $("band"), mid = 11.5, amp = 1.75, period = 4.6;
+        const run = (from, to, at, horiz) => {
+          for (let w = 0; w < 4; w++) {
+            const pts = [];
+            for (let u = from; u <= to; u += 0.2) { const v = at + amp * Math.sin((2 * Math.PI * u) / period + (w * Math.PI) / 2); pts.push(horiz ? [u, v] : [v, u]); }
+            band.append(path(poly(pts)));
+          }
+        };
+        run(15, 282, mid, true); run(15, 282, 210 - mid, true); run(15, 195, mid, false); run(15, 195, 297 - mid, false);
+        // the watermark: three braided rings behind the name
+        const ros = $("rosette");
+        ros.append(path(rosette(148.5, 104, 66, 4.2, 26, 10)), path(rosette(148.5, 104, 50, 5, 18, 12)), path(rosette(148.5, 104, 33, 3.2, 12, 8)));
+        // the corners: a navy block with a white hairline and RMIT's red pixel
+        $("corners").innerHTML = [[7.3, 7.3], [282.1, 7.3], [7.3, 195.1], [282.1, 195.1]].map(([x, y]) =>
+          `<rect x="${x}" y="${y}" width="7.6" height="7.6" fill="#000054"/><rect x="${x + 1}" y="${y + 1}" width="5.6" height="5.6" fill="none" stroke="#fff" stroke-width=".18"/><rect x="${x + 2.3}" y="${y + 2.3}" width="3" height="3" fill="#e61e2a"/>`).join("");
+        // the seal: a scalloped edge and a fine ring
+        const edge = []; for (let i = 0; i < 96; i++) { const a = (Math.PI * i) / 48, r = i % 2 ? 54.2 : 56.6; edge.push(f(60 + r * Math.cos(a)) + "," + f(60 + r * Math.sin(a))); }
+        $("sealEdge").setAttribute("points", edge.join(" "));
+        $("sealGuil").append(path(rosette(60, 60, 34.5, 2.2, 16, 5)));
+        // microtext inside the inner frame, one line per side, stretched to fill it exactly
+        const line = "RMIT UNIVERSITY · GLOBAL CONTENT MARKETING AND CREATIVE · CREATIVE SERVICES VIETNAM · READY FOR WHAT'S NEXT · ";
+        for (const id of ["mT", "mR", "mB", "mL"]) {
+          const len = $(id).getTotalLength(), text = document.createElementNS(NS, "text"), tp = document.createElementNS(NS, "textPath");
+          text.setAttribute("class", "micro"); tp.setAttribute("href", "#" + id);
+          tp.textContent = line.repeat(Math.ceil(len / (line.length * 1.1))).trim();
+          tp.setAttribute("textLength", f(len)); tp.setAttribute("lengthAdjust", "spacingAndGlyphs");
+          text.append(tp); $("micro").append(text);
+        }
+      }
+      ornament();
 
       // ---------- modes ----------
       if (real) {

@@ -727,6 +727,8 @@
       b.innerHTML = side === "a"
         ? `<span class="mi-n">${i + 1}</span><span class="t">${esc(q.pairs[p].left)}</span><span class="dot"></span>`
         : `<span class="dot"></span><span class="t">${esc(q.pairs[p].right)}</span><span class="mi-n"></span>`;
+      // marching ants round the item while the other column has a pick waiting (phone layout; see styles.css)
+      b.insertAdjacentHTML("beforeend", '<svg class="ants" aria-hidden="true"><rect width="100%" height="100%" rx="13"/></svg>');
       return b;
     };
     const aEls = ord.a.map((p, i) => item("a", p, i)), bEls = ord.b.map((p) => item("b", p));
